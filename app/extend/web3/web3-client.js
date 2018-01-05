@@ -15,7 +15,7 @@ module.exports = class Web3Client {
         this.config = app.config.web3
 
         let web3 = this[client] = new Web3(this.config.rpcUri)
-        console.log(web3)
+
         this[coinContract] = new web3.eth.Contract(ethContractInfo.Coin.abi, ethContractInfo.Coin.address)
         this[officaialOps] = new web3.eth.Contract(ethContractInfo.OfficaialOps.abi, ethContractInfo.OfficaialOps.address)
     }

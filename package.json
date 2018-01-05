@@ -12,8 +12,7 @@
     "v6": "0.0.0"
   },
   "scripts": {
-    "start": "eggctl start --env=prod --workers=2",
-    "stop": "eggctl stop"
+    "start": "node index"
   },
   "engines": {
     "node": ">=6.0.0"

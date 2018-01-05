@@ -27,7 +27,7 @@ module.exports = appInfo => {
             enable: true
         },
 
-        middleware: ['errorHandler'],
+        middleware: ['errorHandler', 'identiyAuthentication'],
 
 
         /**

@@ -1,0 +1,30 @@
+{
+  "name": "freelog-pay-service",
+  "version": "1.0.0",
+  "description": "飞致网络支付与结算服务",
+  "dependencies": {
+    "ali-oss": "^4.11.2",
+    "amqp": "^0.2.6",
+    "bluebird": "^3.5.1",
+    "egg-freelog-base": "^1.1.25",
+    "mongoose": "^4.13.7",
+    "node-uuid": "^1.4.8",
+    "v6": "0.0.0"
+  },
+  "scripts": {
+    "start": "eggctl start --env=prod --workers=2",
+    "stop": "eggctl stop"
+  },
+  "engines": {
+    "node": ">=6.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "files": [
+    "index.js"
+  ],
+  "author": "yuliang",
+  "license": "MIT"
+}

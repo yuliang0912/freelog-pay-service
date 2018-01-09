@@ -127,7 +127,7 @@ module.exports = app => {
                 count >= 5 && ctx.error({msg: `当前用户的${accountType}类型账户数量已经达到上限,无法创建`})
             })
 
-            address && await dataProvider.ethProvider.count({cardNo: address}).then(count => {
+            address && await dataProvider.accountProvider.count({cardNo: address}).then(count => {
                 count && ctx.error({msg: '当前address已经绑定到其他账号,无法重新绑定'})
             })
 

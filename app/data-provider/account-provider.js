@@ -67,6 +67,18 @@ module.exports = app => {
             }
 
             return mongoModels.account.findOne(condition)
-        }
+        },
+
+        /**
+         * 查询数量
+         * @param condition
+         */
+        count(condition) {
+            if (!type.object(condition)) {
+                return Promise.reject(new Error("condition must be object"))
+            }
+
+            return mongoModels.ethKeyStore.count(condition)
+        },
     }
 }

@@ -5,16 +5,20 @@
 'use strict'
 
 const rabbit = require('../extend/helper/rabbit_mq_client')
-const eventHandler = require('./mq-event-handler-map')
 
 module.exports = async (app) => {
 
     const dataProvider = app.dataProvider
 
-    await new rabbit(app.config.rabbitMq).connect().then((client) => {
+    await new rabbit(app.config.rabbitMq).connect().then(client => {
 
         //授权服务事件处理结果订阅
         client.subscribe('[pay]-auth-event-handle-result', async (message, headers, deliveryInfo, messageObject) => {
+
+            if (!message.message) {
+                console.log('无效的数据:', message)
+                messageObject.acknowledge(false)
+            }
 
             let model = {
                 'handleInfo.handleStatus': message.error === null ? 3 : 4,

@@ -5,7 +5,7 @@ module.exports = appInfo => {
     return {
 
         web3: {
-            rpcUri: 'http://172.18.215.225:8545'
+            rpcUri: 'http://39.108.77.211:8546'
         },
 
         gatewayUrl: "http://172.18.215.224:8895",

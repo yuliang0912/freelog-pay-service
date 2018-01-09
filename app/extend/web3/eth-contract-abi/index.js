@@ -28,18 +28,18 @@ const fs = require('fs')
 module.exports = {
 
     OfficaialOps: {
-        address: '0x8cfe2b32d09fc78efb7275b93cadc1cd2d6f7ffc',
+        address: '0x42d03f45ff1d8e09e3f7e5293239e32905088c92',
         abi: JSON.parse(fs.readFileSync(__dirname + '/OfficialOps.abi', 'utf-8'))
     },
 
     Coin: {
-        address: '0x0e9d4eb98850e26f668f8583bc480a45cb6520bd',
+        address: '0x4f7a4e7a907dc50819b669485c05966892d5743e',
         abi: JSON.parse(fs.readFileSync(__dirname + '/Coin.abi', 'utf-8'))
     },
 
     account: {
-        admin: '0x2243188a7c3735be309c3cb5eed1742ecd15da63',
-        accountOne: '0x2243188a7c3735be309c3cb5eed1742ecd15da63',
-        accountTwo: '0xab291405c24fad103d22ad712fc749ec0e0fd382'
+        admin: '0xc381d03dc7b0727cd1d7d6a6d6272f105ba02147',
+        accountOne: '0xc381d03dc7b0727cd1d7d6a6d6272f105ba02147',
+        accountTwo: '0xe604616191a5e90fb4047cda5d6184349a48ab85'
     }
 }

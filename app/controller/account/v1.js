@@ -181,5 +181,36 @@ module.exports = app => {
                 ctx.error(err)
             })
         }
+        
+        /**
+         * 给账户初始化一笔feather
+         * @returns {Promise<void>}
+         */
+        async officaialTap(ctx) {
+            let accountId = ctx.checkQuery('accountId').match(accountHelper.verify, '账户格式错误').value
+            ctx.validate()
+
+            let {ethClient} = app
+            let accountInfo = await dataProvider.accountProvider.getAccount({
+                accountId, userId: ctx.request.userId
+            })
+
+            if (!accountInfo) {
+                ctx.error({msg: `未找到用户账号${accountId}`})
+            }
+            if (accountInfo.accountType !== 1) {
+                ctx.error({msg: `账户类型错误`})
+            }
+
+            let task = ethClient.OfficaialOpsContract.methods.tap(accountInfo.cardNo, 100000).send(ethClient.adminInfo)
+
+            await new Promise((resolve, reject) => {
+                task.on('transactionHash', resolve).catch(reject)
+            }).then(hash => {
+                ctx.success(hash)
+            }).catch(error => {
+                this.ctx.error(error)
+            })
+        }
     }
 }

@@ -2,7 +2,7 @@
 
 const Subscription = require('egg').Subscription;
 
-module.exports = class UpdateNodeTemplate extends Subscription {
+module.exports = class KeepAlived extends Subscription {
 
     static get schedule() {
         return {

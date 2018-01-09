@@ -3,7 +3,7 @@
 const Subscription = require('egg').Subscription;
 const featherTransferHandlerQueue = new (require('../queue-service/feather-transfer-handler'))(2)
 
-module.exports = class UpdateNodeTemplate extends Subscription {
+module.exports = class FeatherTransferEvent extends Subscription {
 
     static get schedule() {
         return {

@@ -147,6 +147,7 @@ module.exports = app => {
          */
         async balance(ctx) {
 
+
             let accountId = ctx.checkParams('accountId').match(accountHelper.verify, '账户格式错误').value
 
             ctx.validate()
@@ -157,10 +158,10 @@ module.exports = app => {
             })
 
             if (!accountInfo) {
-                ctx.error({msg: `未找到用户账号${fromAccountId}`})
+                ctx.error({msg: `未找到用户账号${accountId}`})
             }
             if (accountInfo.status !== 1) {
-                ctx.error({msg: `账户状态异常,status:${fromAccountInfo.status}`})
+                ctx.error({msg: `账户状态异常,status:${accountInfo.status}`})
             }
 
             if (accountInfo.accountType !== 1) {
@@ -181,7 +182,7 @@ module.exports = app => {
                 ctx.error(err)
             })
         }
-        
+
         /**
          * 给账户初始化一笔feather
          * @returns {Promise<void>}

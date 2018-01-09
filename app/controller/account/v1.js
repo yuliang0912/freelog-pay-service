@@ -34,6 +34,27 @@ module.exports = app => {
         }
 
         /**
+         * 获取账户详情
+         * @param ctx
+         * @returns {Promise<void>}
+         */
+        async show(ctx) {
+
+            let accountId = ctx.checkParams('id').match(accountHelper.verify, '账户格式错误').value
+
+            ctx.validate()
+
+            let accountInfo = await dataProvider.accountProvider.getAccount({
+                accountId, userId: ctx.request.userId
+            }).catch(err => {
+                ctx.error(err)
+            })
+
+            ctx.success(accountInfo)
+        }
+
+
+        /**
          * 创建eth账户
          * @param ctx
          * @returns {Promise<void>}

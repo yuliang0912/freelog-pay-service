@@ -117,7 +117,7 @@ module.exports = class FeatherTransferHandlerQueue {
                         amount: transferEvent.returnValues.value,
                         contractId: transferEvent.returnValues.data.replace('contract:', '')
                     }
-                }).then((ret) => {
+                }).then(ret => {
                     console.log('事件发送结果:' + ret)
                     transferHandleRecord.handleInfo.handleStatus = 2
                 }).catch(error => {

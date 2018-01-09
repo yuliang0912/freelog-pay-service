@@ -78,7 +78,7 @@ module.exports = app => {
                 return Promise.reject(new Error("condition must be object"))
             }
 
-            return mongoModels.ethKeyStore.count(condition)
+            return mongoModels.account.count(condition)
         },
     }
 }

@@ -103,7 +103,7 @@ module.exports = appInfo => {
         },
 
         web3: {
-            rpcUri: 'http://120.78.136.120:8545'
+            rpcUri: 'http://39.108.77.211:8546'
         },
 
 

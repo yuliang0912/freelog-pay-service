@@ -1,0 +1,210 @@
+[
+  {
+    "name": "账户APIs",
+    "methods": [
+      "HEAD",
+      "GET"
+    ],
+    "paramNames": [],
+    "path": "/v1/pay/accounts",
+    "regexp": "/^\\/v1\\/pay\\/accounts(?:\\/(?=$))?$/",
+    "stack": [
+      "/home/yuliang/工作/freelog-pay-service/app/controller/account/v1.js#AccountController.index()"
+    ]
+  },
+  {
+    "name": "账户APIs",
+    "methods": [
+      "POST"
+    ],
+    "paramNames": [],
+    "path": "/v1/pay/accounts",
+    "regexp": "/^\\/v1\\/pay\\/accounts(?:\\/(?=$))?$/",
+    "stack": [
+      "/home/yuliang/工作/freelog-pay-service/app/controller/account/v1.js#AccountController.create()"
+    ]
+  },
+  {
+    "name": null,
+    "methods": [
+      "POST"
+    ],
+    "paramNames": [],
+    "path": "/v1/pay/accounts/createEthAccount",
+    "regexp": "/^\\/v1\\/pay\\/accounts\\/createEthAccount(?:\\/(?=$))?$/",
+    "stack": [
+      "/home/yuliang/工作/freelog-pay-service/app/controller/account/v1.js#AccountController.createEthAccount()"
+    ]
+  },
+  {
+    "name": null,
+    "methods": [
+      "HEAD",
+      "GET"
+    ],
+    "paramNames": [],
+    "path": "/v1/pay/accounts/clearKeyStore",
+    "regexp": "/^\\/v1\\/pay\\/accounts\\/clearKeyStore(?:\\/(?=$))?$/",
+    "stack": [
+      "/home/yuliang/工作/freelog-pay-service/app/controller/account/v1.js#AccountController.clearKeyStore()"
+    ]
+  },
+  {
+    "name": null,
+    "methods": [
+      "HEAD",
+      "GET"
+    ],
+    "paramNames": [],
+    "path": "/v1/pay/accounts/downLoadKeyStore",
+    "regexp": "/^\\/v1\\/pay\\/accounts\\/downLoadKeyStore(?:\\/(?=$))?$/",
+    "stack": [
+      "/home/yuliang/工作/freelog-pay-service/app/controller/account/v1.js#AccountController.downLoadKeyStore()"
+    ]
+  },
+  {
+    "name": null,
+    "methods": [
+      "HEAD",
+      "GET"
+    ],
+    "paramNames": [],
+    "path": "/v1/pay/accounts/officaialTap",
+    "regexp": "/^\\/v1\\/pay\\/accounts\\/officaialTap(?:\\/(?=$))?$/",
+    "stack": [
+      "/home/yuliang/工作/freelog-pay-service/app/controller/account/v1.js#AccountController.officaialTap()"
+    ]
+  },
+  {
+    "name": null,
+    "methods": [
+      "HEAD",
+      "GET"
+    ],
+    "paramNames": [
+      {
+        "name": "accountId",
+        "prefix": "/",
+        "delimiter": "/",
+        "optional": false,
+        "repeat": false,
+        "partial": false,
+        "asterisk": false,
+        "pattern": "[^\\/]+?"
+      }
+    ],
+    "path": "/v1/pay/accounts/balance/:accountId",
+    "regexp": "/^\\/v1\\/pay\\/accounts\\/balance\\/((?:[^\\/]+?))(?:\\/(?=$))?$/",
+    "stack": [
+      "/home/yuliang/工作/freelog-pay-service/app/controller/account/v1.js#AccountController.balance()"
+    ]
+  },
+  {
+    "name": "支付密码APIs",
+    "methods": [
+      "POST"
+    ],
+    "paramNames": [],
+    "path": "/v1/pay/password",
+    "regexp": "/^\\/v1\\/pay\\/password(?:\\/(?=$))?$/",
+    "stack": [
+      "/home/yuliang/工作/freelog-pay-service/app/controller/password/v1.js#PasswordController.create()"
+    ]
+  },
+  {
+    "name": "支付密码API",
+    "methods": [
+      "PUT"
+    ],
+    "paramNames": [
+      {
+        "name": "id",
+        "prefix": "/",
+        "delimiter": "/",
+        "optional": false,
+        "repeat": false,
+        "partial": false,
+        "asterisk": false,
+        "pattern": "[^\\/]+?"
+      }
+    ],
+    "path": "/v1/pay/password/:id",
+    "regexp": "/^\\/v1\\/pay\\/password\\/((?:[^\\/]+?))(?:\\/(?=$))?$/",
+    "stack": [
+      "/home/yuliang/工作/freelog-pay-service/app/controller/password/v1.js#PasswordController.update()"
+    ]
+  },
+  {
+    "name": "支付密码APIs",
+    "methods": [
+      "HEAD",
+      "GET"
+    ],
+    "paramNames": [],
+    "path": "/v1/pay",
+    "regexp": "/^\\/v1\\/pay(?:\\/(?=$))?$/",
+    "stack": [
+      "/home/yuliang/工作/freelog-pay-service/app/controller/pay/v1.js#PayController.index()"
+    ]
+  },
+  {
+    "name": "支付密码APIs",
+    "methods": [
+      "POST"
+    ],
+    "paramNames": [],
+    "path": "/v1/pay",
+    "regexp": "/^\\/v1\\/pay(?:\\/(?=$))?$/",
+    "stack": [
+      "/home/yuliang/工作/freelog-pay-service/app/controller/pay/v1.js#PayController.create()"
+    ]
+  },
+  {
+    "name": "支付密码API",
+    "methods": [
+      "HEAD",
+      "GET"
+    ],
+    "paramNames": [
+      {
+        "name": "id",
+        "prefix": "/",
+        "delimiter": "/",
+        "optional": false,
+        "repeat": false,
+        "partial": false,
+        "asterisk": false,
+        "pattern": "[^\\/]+?"
+      }
+    ],
+    "path": "/v1/pay/:id",
+    "regexp": "/^\\/v1\\/pay\\/((?:[^\\/]+?))(?:\\/(?=$))?$/",
+    "stack": [
+      "/home/yuliang/工作/freelog-pay-service/app/controller/pay/v1.js#PayController.show()"
+    ]
+  },
+  {
+    "name": null,
+    "methods": [
+      "HEAD",
+      "GET"
+    ],
+    "paramNames": [
+      {
+        "name": "transactionId",
+        "prefix": "/",
+        "delimiter": "/",
+        "optional": false,
+        "repeat": false,
+        "partial": false,
+        "asterisk": false,
+        "pattern": "[^\\/]+?"
+      }
+    ],
+    "path": "/v1/pay/ethTransactionReceipt/:transactionId",
+    "regexp": "/^\\/v1\\/pay\\/ethTransactionReceipt\\/((?:[^\\/]+?))(?:\\/(?=$))?$/",
+    "stack": [
+      "/home/yuliang/工作/freelog-pay-service/app/controller/pay/v1.js#PayController.ethTransactionReceipt()"
+    ]
+  }
+]

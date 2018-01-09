@@ -70,6 +70,25 @@ module.exports = app => {
         },
 
         /**
+         * 更新账户信息
+         * @param model
+         * @param condition
+         * @returns {Promise<never>}
+         */
+        updateAccount(model, condition) {
+
+            if (!type.object(model)) {
+                return Promise.reject(new Error("model must be object"))
+            }
+
+            if (!type.object(condition)) {
+                return Promise.reject(new Error("condition must be object"))
+            }
+
+            return mongoModels.account.update(condition, model)
+        },
+
+        /**
          * 查询数量
          * @param condition
          */

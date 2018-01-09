@@ -123,7 +123,7 @@ module.exports = app => {
 
             ctx.allowContentType({type: 'json'}).validate()
 
-            await dataProvider.ethProvider.count({accountType, userId: ctx.request.userId}).then(count => {
+            await dataProvider.accountProvider.count({accountType, userId: ctx.request.userId}).then(count => {
                 count >= 5 && ctx.error({msg: `当前用户的${accountType}类型账户数量已经达到上限,无法创建`})
             })
 

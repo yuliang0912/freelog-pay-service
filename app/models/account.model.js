@@ -6,7 +6,7 @@ const accountSchema = new mongoose.Schema({
     accountId: {type: String, unique: true, required: true},
     accountType: {type: Number, required: true},
     userId: {type: Number, required: true}, //创建者ID
-    balance: {type: Number, required: true},
+    balance: {type: Number, default: 0, required: true},
     status: {type: Number, default: 1, required: true}, //状态 1:正常 2:冻结 3:不启用
     cardNo: {type: String, required: false}
 }, {

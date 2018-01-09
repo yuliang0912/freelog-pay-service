@@ -57,12 +57,13 @@ module.exports = class FeatherTransferHandlerQueue {
      * @param callback 形参必须存在,提供给queue调用done函数
      */
     async taskHandler(transferEvent, callback) {
+        let {app} = globalInfo
         let ethAccounts = {}
 
-        await globalInfo.app.dataProvider.accountProvider.getAccountList({
+        await app.dataProvider.accountProvider.getAccountList({
             accountType: 1,
             cardNo: {$in: [transferEvent.to, transferEvent.from]}
-        }).catch(err=>{
+        }).catch(err => {
             console.log('定时任务获取数据失败')
         }).each(item => {
             ethAccounts[item.cardNo] = item
@@ -102,7 +103,7 @@ module.exports = class FeatherTransferHandlerQueue {
                 transferHandleRecord.handleInfo.handleStatus = 5
             }
             else {
-                await globalInfo.app.rabbitClient.publish({
+                await app.rabbitClient.publish({
                     routingKey: payServiceEvent.payForContract.routingKey,
                     eventName: payServiceEvent.payForContract.eventName,
                     options: {messageId: transferHandleRecord.otherInfo.messageId},
@@ -126,8 +127,15 @@ module.exports = class FeatherTransferHandlerQueue {
             }
         }
 
+        let task1 = app.ethClient.CoinContract.methods.balanceOf(transferEvent.from).call(ethClient.adminInfo)
+        let task2 = app.ethClient.CoinContract.methods.balanceOf(transferEvent.to).call(ethClient.adminInfo)
 
-        await globalInfo.app.dataProvider.transferHandleProvider.addTransferHandleRecord(transferHandleRecord)
+        Promise.all([task1, task2]).then(([balanceOfAccountFrom, balanceOfAccountTo]) => {
+            app.dataProvider.accountProvider.updateAccount({balance: balanceOfAccountFrom}, {cardNo: transferEvent.from})
+            app.dataProvider.accountProvider.updateAccount({balance: balanceOfAccountTo}, {cardNo: transferEvent.to})
+        }).catch(console.error)
+
+        await app.dataProvider.transferHandleProvider.addTransferHandleRecord(transferHandleRecord)
             .then(callback).catch(callback)
     }
 }

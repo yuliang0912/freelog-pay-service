@@ -23,8 +23,7 @@ module.exports = async (app) => {
     })
 
     app.ethClient = new Web3Client(app)
-
-
+    
     //app.loader.loadToApp(path.join(app.config.baseDir, 'app/event-handler'), 'eventHandler');
 
     await subscribe(app)

@@ -127,10 +127,10 @@ module.exports = class FeatherTransferHandlerQueue {
             }
         }
 
-        let task1 = app.ethClient.CoinContract.methods.balanceOf(transferEvent.from).call(app.ethClient.adminInfo)
-        let task2 = app.ethClient.CoinContract.methods.balanceOf(transferEvent.to).call(app.ethClient.adminInfo)
+        let task1 = app.ethClient.CoinContract.methods.balanceOf(transferEvent.to).call(app.ethClient.adminInfo)
+        let task2 = app.ethClient.CoinContract.methods.balanceOf(transferEvent.from).call(app.ethClient.adminInfo)
 
-        Promise.all([task1, task2]).then(([balanceOfAccountFrom, balanceOfAccountTo]) => {
+        Promise.all([task1, task2]).then(([balanceOfAccountTo, balanceOfAccountFrom]) => {
             app.dataProvider.accountProvider.updateAccount({balance: balanceOfAccountTo}, {cardNo: transferEvent.to}).exec()
             app.dataProvider.accountProvider.updateAccount({balance: balanceOfAccountFrom}, {cardNo: transferEvent.from}).exec()
         }).catch(console.error)

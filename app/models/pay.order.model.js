@@ -53,4 +53,4 @@ const PayOrderSchema = new mongoose.Schema({
 
 PayOrderSchema.index({userId: 1, transferId: 1});
 
-module.exports = mongoose.model('pay-order-schemas', PayOrderSchema)
+module.exports = mongoose.model('pay-order', PayOrderSchema)

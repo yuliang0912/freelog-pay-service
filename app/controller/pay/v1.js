@@ -141,6 +141,36 @@ module.exports = app => {
                 .bind(ctx).then(ctx.success).catch(ctx.error)
         }
 
+
+        /**
+         * 订单信息
+         * @param ctx
+         * @returns {Promise<void>}
+         */
+        async orderInfo(ctx) {
+
+            let transferId = ctx.checkQuery("transferId").optional().len(24, 70).value
+            let targetId = ctx.checkQuery("targetId").optional().isContractId().value
+            let orderType = ctx.checkQuery("orderType").optional().default(1).toInt().in([1]).value
+            ctx.validate()
+
+            let condition = {}
+            if (transferId) {
+                condition.transferId = transferId
+            }
+            if (targetId) {
+                condition.targetId = targetId
+            }
+            if (!Object.keys(condition).length) {
+                ctx.error({msg: '参数transferId和targetId最少需要一个'})
+            }
+
+            condition.orderType = orderType
+
+            await dataProvider.payOrderProvider.getModel(condition).exec()
+                .bind(ctx).then(ctx.success).catch(ctx.error)
+        }
+
         /**
          * 以太坊上的交易原始信息
          * @param ctx

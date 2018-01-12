@@ -11,7 +11,7 @@ module.exports = async app => {
         console.log(`CoinContract-symbol:${data}`)
     })
 
-
+    //
     // await OfficaialOpsContract.methods.setCoinAddress(ethContractInfo.Coin.address).send({from: ethContractInfo.account.accountOne}).on('transactionHash', console.log).then(receipt => {
     //     console.log(receipt)
     // }).catch(() => {

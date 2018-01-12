@@ -149,6 +149,7 @@ module.exports = app => {
          */
         async orderInfo(ctx) {
 
+            let orderId = ctx.checkQuery("orderId").optional().isMongoObjectId('orderId格式错误').value
             let transferId = ctx.checkQuery("transferId").optional().len(24, 70).value
             let targetId = ctx.checkQuery("targetId").optional().isContractId().value
             let orderType = ctx.checkQuery("orderType").optional().default(1).toInt().in([1]).value
@@ -160,6 +161,9 @@ module.exports = app => {
             }
             if (targetId) {
                 condition.targetId = targetId
+            }
+            if (orderId) {
+                condition._id = orderId
             }
             if (!Object.keys(condition).length) {
                 ctx.error({msg: '参数transferId和targetId最少需要一个'})

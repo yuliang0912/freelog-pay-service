@@ -14,8 +14,8 @@ RUN npm install
 #VOLUME ['/opt/logs','/data/logs']
 
 ENV EGG_SERVER_ENV prod
-ENV PORT 7055
+ENV PORT 5055
 
-EXPOSE 7055
+EXPOSE 5055
 
 CMD [ "npm", "start" ]

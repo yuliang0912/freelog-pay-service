@@ -17,6 +17,6 @@ ENV NODE_ENV test
 ENV EGG_SERVER_ENV test
 ENV PORT 5055
 
-EXPOSE 5055
+EXPOSE 7055
 
 CMD [ "npm", "start" ]

@@ -13,6 +13,7 @@ RUN npm install
 #ENV
 #VOLUME ['/opt/logs','/data/logs']
 
+ENV NODE_ENV prod
 ENV EGG_SERVER_ENV prod
 ENV PORT 7055
 

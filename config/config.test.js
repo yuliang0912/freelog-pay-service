@@ -11,15 +11,15 @@ module.exports = appInfo => {
         gatewayUrl: "http://172.18.215.224:8895",
 
         mongo: {
-            uri: "mongodb://root:Ff233109@dds-wz9b5420c30a27941546-pub.mongodb.rds.aliyuncs.com:3717,dds-wz9b5420c30a27942267-pub.mongodb.rds.aliyuncs.com:3717/pay?replicaSet=mgset-5016983"
+            uri: "mongodb://172.18.215.229/pay"
         },
 
         rabbitMq: {
             connOptions: {
                 host: '172.18.215.229',
                 port: 5672,
-                login: 'guest',
-                password: 'guest',
+                login: 'test_user_pay',
+                password: 'test_user_2018',
                 authMechanism: 'AMQPLAIN'
             }
         },

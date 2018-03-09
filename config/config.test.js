@@ -8,7 +8,7 @@ module.exports = appInfo => {
             rpcUri: 'http://39.108.77.211:8546'
         },
 
-        gatewayUrl: "http://172.18.215.224:8895",
+        gatewayUrl: "http://172.18.215.224:8895/test",
 
         mongo: {
             uri: "mongodb://172.18.215.229/pay"

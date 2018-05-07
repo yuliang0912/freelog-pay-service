@@ -78,7 +78,8 @@ module.exports = appInfo => {
                 port: 5672,
                 login: 'guest',
                 password: 'guest',
-                authMechanism: 'AMQPLAIN'
+                authMechanism: 'AMQPLAIN',
+                heartbeat: 120  //每2分钟保持一次连接
             },
             implOptions: {
                 reconnect: true,

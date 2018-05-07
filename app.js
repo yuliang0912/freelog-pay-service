@@ -5,10 +5,10 @@
 
 'use strict'
 
-const mongoDb = require('./app/models/db_start')
 const path = require('path')
+const mongoDb = require('./app/models/db_start')
 const subscribe = require('./app/mq-service/subscribe')
-const Web3Client = require('./app/extend/web3/web3-client')
+const featherInit = require('./init/feather-contract-init')
 
 module.exports = async (app) => {
 
@@ -22,11 +22,9 @@ module.exports = async (app) => {
             err.message || err.toString())
     })
 
-    app.ethClient = new Web3Client(app)
-
-    //app.loader.loadToApp(path.join(app.config.baseDir, 'app/event-handler'), 'eventHandler');
-
     await subscribe(app)
 
     await mongoDb.connect(app)
+
+    //await featherInit(app)
 }

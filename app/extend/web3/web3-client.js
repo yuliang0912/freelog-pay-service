@@ -10,9 +10,9 @@ const ethContractInfo = require('./eth-contract-abi/index')
 
 module.exports = class Web3Client {
 
-    constructor(app) {
+    constructor(config) {
 
-        this.config = app.config.web3
+        this.config = config
 
         let web3 = this[client] = new Web3(this.config.rpcUri)
 

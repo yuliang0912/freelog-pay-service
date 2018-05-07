@@ -22,9 +22,12 @@ module.exports = async (app) => {
             err.message || err.toString())
     })
 
+
+    //await featherInit(app)
+
     await subscribe(app)
 
     await mongoDb.connect(app)
 
-    //await featherInit(app)
+
 }

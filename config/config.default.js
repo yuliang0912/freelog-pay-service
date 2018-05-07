@@ -34,7 +34,7 @@ module.exports = appInfo => {
          * mongoDB配置
          */
         mongo: {
-            uri: "mongodb://192.168.0.99:27017/pay"
+            uri: "mongodb://192.168.2.239:27017/pay"
         },
 
         /**
@@ -74,7 +74,7 @@ module.exports = appInfo => {
 
         rabbitMq: {
             connOptions: {
-                host: '192.168.164.129',
+                host: '127.0.0.1',
                 port: 5672,
                 login: 'guest',
                 password: 'guest',
@@ -103,7 +103,7 @@ module.exports = appInfo => {
         },
 
         web3: {
-            rpcUri: 'http://39.108.77.211:8546'
+            rpcUri: 'http://localhost:8545'
         },
 
 

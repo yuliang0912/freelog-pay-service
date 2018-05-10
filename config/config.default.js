@@ -79,7 +79,7 @@ module.exports = appInfo => {
                 login: 'guest',
                 password: 'guest',
                 authMechanism: 'AMQPLAIN',
-                heartbeat: 120  //每2分钟保持一次连接
+                heartbeat: 300  //每5分钟保持一次连接
             },
             implOptions: {
                 reconnect: true,

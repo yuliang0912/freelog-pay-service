@@ -14,7 +14,7 @@ module.exports = class KeepAlived extends Subscription {
 
 
     async subscribe() {
-        this.keepAlivedRabbit()
+        //this.keepAlivedRabbit()
     }
 
 

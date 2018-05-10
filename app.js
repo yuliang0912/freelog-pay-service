@@ -23,7 +23,7 @@ module.exports = async (app) => {
             err.message || err.toString())
     })
 
-    app.ethClient = new Web3Client(app.config)
+    //app.ethClient = new Web3Client(app.config)
 
     //await featherInit(app)
 

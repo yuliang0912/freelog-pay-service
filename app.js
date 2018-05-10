@@ -9,6 +9,7 @@ const path = require('path')
 const mongoDb = require('./app/models/db_start')
 const subscribe = require('./app/mq-service/subscribe')
 const featherInit = require('./init/feather-contract-init')
+const Web3Client = require('./app/extend/web3/web3-client')
 
 module.exports = async (app) => {
 
@@ -22,6 +23,7 @@ module.exports = async (app) => {
             err.message || err.toString())
     })
 
+    app.ethClient = new Web3Client(app.config)
 
     //await featherInit(app)
 

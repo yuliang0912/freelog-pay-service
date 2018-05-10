@@ -14,16 +14,16 @@ module.exports = {
         return new rabbitClient(this.config.rabbitMq)
     },
 
-    get ethClient() {
-        if (webInstance == null) {
-            webInstance = new Web3Client(this.config)
-            //每小时重新创建一个web3实例
-            setTimeout(() => {
-                webInstance = null
-            }, 1000 * 60 * 60)
-        }
-        return webInstance
-    },
+    // get ethClient() {
+    //     if (webInstance == null) {
+    //         webInstance = new Web3Client(this.config)
+    //         //每小时重新创建一个web3实例
+    //         setTimeout(() => {
+    //             webInstance = null
+    //         }, 1000 * 60 * 60)
+    //     }
+    //     return webInstance
+    // },
 
     moment
 }

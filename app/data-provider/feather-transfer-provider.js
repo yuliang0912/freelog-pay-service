@@ -37,6 +37,6 @@ module.exports = class FeatherTransferProvider extends MongoBaseOperation {
      * 获取当前已经处理的最大区块ID
      */
     getMaxBlockNumber() {
-        return super.findOne(null, 'blockInfo.blockNumber').sort({'blockInfo.blockNumber': 'desc'}).limit(1)
+        return super.model.findOne({}, 'blockInfo.blockNumber').sort({'blockInfo.blockNumber': 'desc'}).limit(1)
     }
 }

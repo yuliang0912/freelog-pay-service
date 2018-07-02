@@ -8,7 +8,6 @@ module.exports = class TranscationPasswordProvider extends MongoBaseOperation {
     constructor(app) {
         super(app.model.TransactionPassword)
         this.app = app
-        this.type = app.type
     }
 
     /**
@@ -18,7 +17,7 @@ module.exports = class TranscationPasswordProvider extends MongoBaseOperation {
      */
     create(model) {
 
-        if (!this.type.object(model)) {
+        if (!this.app.type.object(model)) {
             return Promise.reject(new Error("model must be object"))
         }
 
@@ -36,7 +35,7 @@ module.exports = class TranscationPasswordProvider extends MongoBaseOperation {
      */
     updateTranscationPassword(userId, newPassword) {
 
-        if (!this.type.string(newPassword) || newPassword.length < 6) {
+        if (!this.app.type.string(newPassword) || newPassword.length < 6) {
             return Promise.reject(new Error("newPassword must be string"))
         }
         const passwordInfo = transcationPasswordHelper.generatePassword(userId, newPassword)

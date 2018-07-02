@@ -1,14 +1,13 @@
 'use strict'
 
 const uuid = require('node-uuid')
-const mongoBase = require('./mongodb-base')
-const mongoModels = require('../models/index')
+const MongoBaseOperation = require('egg-freelog-database/lib/database/mongo-base-operation')
 
-class PayOrderClass extends mongoBase {
+module.exports = class PayOrderClass extends MongoBaseOperation {
 
     constructor(app) {
-        super(app, mongoModels.paryOrder)
-        this.type = app.type
+        super(app.model.PayOrder)
+        this.app = app
     }
 
     /**
@@ -17,7 +16,7 @@ class PayOrderClass extends mongoBase {
      */
     createPayOrder(model) {
 
-        let order = {
+        const order = {
             transferId: model.transferId,
             salt: uuid.v4().replace(/-/g, ''),
             sendAccountInfo: model.sendAccountInfo,
@@ -46,26 +45,20 @@ class PayOrderClass extends mongoBase {
      */
     getPayOrderPageList(condition, projection, page, pageSize) {
 
-        let options = {}
-        if (this.type.int32(page) && this.type.int32(pageSize)) {
+        var options = {}
+        const {type} = this.app
+        if (type.int32(page) && type.int32(pageSize)) {
             options = {skip: (page - 1) * pageSize, limit: pageSize}
-        } else if (this.type.int32(pageSize)) {
+        } else if (type.int32(pageSize)) {
             options = {limit: pageSize}
         }
 
-        let totalItem = 0
+        var totalItem = 0
         return super.count(condition).then(count => {
             totalItem = count
-            if (totalItem > (page - 1) * pageSize) {
-                return super.getModelList(condition, projection, options)
-            }
-            return []
-        }).then(dataList => {
-            return {
-                page, pageSize, totalItem, dataList
-            }
-        })
+            return totalItem > (page - 1) * pageSize ? super.find(condition, projection, options) : []
+        }).then(dataList => new Object({
+            page, pageSize, totalItem, dataList
+        }))
     }
 }
-
-module.exports = app => new PayOrderClass(app)

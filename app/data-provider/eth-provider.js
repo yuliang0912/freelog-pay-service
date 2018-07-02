@@ -1,79 +1,52 @@
 'use strict'
 
 const uuid = require('node-uuid')
-const mongoModels = require('../models/index')
+const MongoBaseOperation = require('egg-freelog-database/lib/database/mongo-base-operation')
 
-module.exports = app => {
+module.exports = class EthProvider extends MongoBaseOperation {
 
-    const {type} = app
+    constructor(app) {
+        super(app.model.AccountEthStore)
+        this.app = app
+    }
 
-    return {
+    /**
+     * 创建eth账户
+     */
+    createEthAddress(userId, password) {
 
-        /**
-         * 创建eth账户
-         */
-        createEthAddress(userId, password) {
+        const {ethClient, ossClient} = this.app
 
-            let account = app.ethClient.web3.eth.accounts.create()
+        const account = ethClient.web3.eth.accounts.create()
 
-            let keystore = account.encrypt(password)
+        const keystore = account.encrypt(password)
+        const objectKey = `keystore/${uuid.v4().replace(/-/g, '')}`
 
-            let objectKey = `keystore/${uuid.v4().replace(/-/g, '')}`
-
-            return app.upload.putBuffer(objectKey, new Buffer(JSON.stringify(keystore))).then(data => {
-                return mongoModels.ethKeyStore.create({
-                    address: account.address,
-                    keyStoreUrl: data.url,
-                    userId, objectKey,
-                    status: 1
-                })
+        return ossClient.putBuffer(objectKey, new Buffer(JSON.stringify(keystore))).then(data => {
+            return super.create({
+                address: account.address,
+                keyStoreUrl: data.url,
+                userId, objectKey,
+                status: 1
             })
-        },
+        })
+    }
 
-        /**
-         * 获取eth地址信息
-         * @param condition
-         */
-        getEthAddress(condition) {
+    /**
+     * 获取eth地址信息
+     * @param condition
+     */
+    getEthAddress(condition) {
+        return super.findOne(condition)
+    }
 
-            if (!type.object(condition)) {
-                return Promise.reject(new Error("condition must be object"))
-            }
-
-            return mongoModels.ethKeyStore.findOne(condition)
-        },
-
-        /**
-         * 更新eth地址信息
-         * @param conditon
-         * @param model
-         * @returns {Promise<never>}
-         */
-        updateEthAddress(model, condition) {
-
-            if (!type.object(model)) {
-                return Promise.reject(new Error("model must be object"))
-            }
-
-            if (!type.object(condition)) {
-                return Promise.reject(new Error("condition must be object"))
-            }
-
-            return mongoModels.ethKeyStore.update(condition, model)
-        },
-
-
-        /**
-         * 查询数量
-         * @param condition
-         */
-        count(condition) {
-            if (!type.object(condition)) {
-                return Promise.reject(new Error("condition must be object"))
-            }
-
-            return mongoModels.ethKeyStore.count(condition)
-        },
-
+    /**
+     * 更新eth地址信息
+     * @param conditon
+     * @param model
+     * @returns {Promise<never>}
+     */
+    updateEthAddress(model, condition) {
+        return super.update(condition, model)
     }
 }

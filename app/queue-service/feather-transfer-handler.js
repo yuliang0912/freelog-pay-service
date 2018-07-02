@@ -57,19 +57,17 @@ module.exports = class FeatherTransferHandlerQueue {
      * @param callback 形参必须存在,提供给queue调用done函数
      */
     async taskHandler(transferEvent, callback) {
-        let {app} = globalInfo
-        let ethAccounts = {}
 
-        await app.dataProvider.accountProvider.getAccountList({
+        const {app} = globalInfo
+        const ethAccounts = {}
+        const {dal, rabbitClient, ethClient} = app
+
+        await dal.accountProvider.getAccountList({
             accountType: 1,
             cardNo: {$in: [transferEvent.to, transferEvent.from]}
-        }).catch(err => {
-            console.log('定时任务获取数据失败')
-        }).each(item => {
-            ethAccounts[item.cardNo] = item
-        })
+        }).catch(err => console.log('定时任务获取数据失败')).each(item => ethAccounts[item.cardNo] = item)
 
-        let transferHandleRecord = {
+        const transferHandleRecord = {
             transferId: transferEvent.hash,
             transferType: 1, //feather
             handleInfo: {
@@ -103,7 +101,7 @@ module.exports = class FeatherTransferHandlerQueue {
                 transferHandleRecord.handleInfo.handleStatus = 5
             }
             else {
-                await app.rabbitClient.publish({
+                await rabbitClient.publish({
                     routingKey: payServiceEvent.payForContract.routingKey,
                     eventName: payServiceEvent.payForContract.eventName,
                     options: {messageId: transferHandleRecord.otherInfo.messageId},
@@ -127,15 +125,15 @@ module.exports = class FeatherTransferHandlerQueue {
             }
         }
 
-        let task1 = app.ethClient.CoinContract.methods.balanceOf(transferEvent.to).call(app.ethClient.adminInfo)
-        let task2 = app.ethClient.CoinContract.methods.balanceOf(transferEvent.from).call(app.ethClient.adminInfo)
+        const task1 = ethClient.CoinContract.methods.balanceOf(transferEvent.to).call(ethClient.adminInfo)
+        const task2 = ethClient.CoinContract.methods.balanceOf(transferEvent.from).call(ethClient.adminInfo)
 
         Promise.all([task1, task2]).then(([balanceOfAccountTo, balanceOfAccountFrom]) => {
-            app.dataProvider.accountProvider.updateAccount({balance: balanceOfAccountTo}, {cardNo: transferEvent.to}).exec()
-            app.dataProvider.accountProvider.updateAccount({balance: balanceOfAccountFrom}, {cardNo: transferEvent.from}).exec()
+            dal.accountProvider.updateAccount({balance: balanceOfAccountTo}, {cardNo: transferEvent.to})
+            dal.accountProvider.updateAccount({balance: balanceOfAccountFrom}, {cardNo: transferEvent.from})
         }).catch(console.error)
 
-        await app.dataProvider.transferHandleProvider.addTransferHandleRecord(transferHandleRecord)
+        await dal.transferHandleProvider.addTransferHandleRecord(transferHandleRecord)
             .then(callback).catch(callback)
     }
 }

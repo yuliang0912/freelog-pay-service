@@ -10,12 +10,9 @@ const ethContractInfo = require('./eth-contract-abi/index')
 
 module.exports = class Web3Client {
 
-    constructor(app) {
-
-        this.config = app.config.web3
-
-        let web3 = this[client] = new Web3(this.config.rpcUri)
-
+    constructor(config) {
+        this.config = config
+        let web3 = this[client] = new Web3(new Web3.providers.HttpProvider(this.config.web3.rpcUri));
         this[coinContract] = new web3.eth.Contract(ethContractInfo.Coin.abi, ethContractInfo.Coin.address)
         this[officaialOps] = new web3.eth.Contract(ethContractInfo.OfficaialOps.abi, ethContractInfo.OfficaialOps.address)
     }

@@ -10,8 +10,8 @@ module.exports = appInfo => {
 
         gatewayUrl: "http://172.18.215.224:8895/test",
 
-        mongo: {
-            uri: "mongodb://172.18.215.229/pay"
+        mongoose: {
+            url: "mongodb://172.18.215.229/pay"
         },
 
         rabbitMq: {

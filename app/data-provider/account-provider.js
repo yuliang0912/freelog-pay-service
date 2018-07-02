@@ -1,103 +1,75 @@
 'use strict'
 
-const mongoModels = require('../models/index')
 const accountGenerate = require('../extend/helper/account-generate-helper')
+const MongoBaseOperation = require('egg-freelog-database/lib/database/mongo-base-operation')
 
-module.exports = app => {
+module.exports = class AccountProvider extends MongoBaseOperation {
 
-    const {type} = app
+    constructor(app) {
+        super(app.model.Account)
+        this.app = app
+    }
 
-    return {
-        /**
-         * 创建账户
-         * @param model
-         * @returns {Promise<never>}
-         */
-        async createAccount(model) {
+    /**
+     * 创建账户
+     * @param model
+     * @returns {Promise<never>}
+     */
+    async createAccount(model) {
 
-            if (!type.object(model)) {
-                return Promise.reject(new Error("model must be object"))
-            }
+        const {type, ethClient} = this.app
 
-            if (model.accountType === 1 && !app.ethClient.web3.utils.isAddress(model.cardNo)) {
-                return Promise.reject(new Error("cardNo must be eth address"))
-            }
+        if (!type.object(model)) {
+            return Promise.reject(new Error("model must be object"))
+        }
 
-            let flag = true
-            let accountId = null
+        if (model.accountType === 1 && !ethClient.web3.utils.isAddress(model.cardNo)) {
+            return Promise.reject(new Error("cardNo must be eth address"))
+        }
 
-            while (flag) {
-                accountId = accountGenerate.generateAccount(model.accountType)
-                flag = await mongoModels.account.count({accountId})
-            }
+        var flag = true
+        var accountId = null
 
-            return mongoModels.account.create({
-                accountId: accountId,
-                accountType: model.accountType,
-                userId: model.userId,
-                balance: 0,
-                status: 1,
-                cardNo: model.cardNo
-            })
-        },
+        while (flag) {
+            accountId = accountGenerate.generateAccount(model.accountType)
+            flag = await super.count({accountId})
+        }
 
-        /**
-         * 获取账户列表
-         * @param condition
-         * @returns {Promise<*>}
-         */
-        getAccountList(condition) {
+        return super.create({
+            accountId: accountId,
+            accountType: model.accountType,
+            userId: model.userId,
+            balance: 0,
+            status: 1,
+            cardNo: model.cardNo
+        })
+    }
 
-            if (!type.object(condition)) {
-                return Promise.reject(new Error("condition must be object"))
-            }
+    /**
+     * 获取账户列表
+     * @param condition
+     * @returns {Promise<*>}
+     */
+    getAccountList(condition) {
+        return super.find(condition)
+    }
 
-            return mongoModels.account.find(condition).exec()
-        },
+    /**
+     * 获取账户
+     * @param condition
+     * @returns {*}
+     */
+    getAccount(condition) {
+        return super.findOne(condition)
+    }
 
-        /**
-         * 获取账户
-         * @param condition
-         * @returns {*}
-         */
-        getAccount(condition) {
-
-            if (!type.object(condition)) {
-                return Promise.reject(new Error("condition must be object"))
-            }
-
-            return mongoModels.account.findOne(condition)
-        },
-
-        /**
-         * 更新账户信息
-         * @param model
-         * @param condition
-         * @returns {Promise<never>}
-         */
-        updateAccount(model, condition) {
-
-            if (!type.object(model)) {
-                return Promise.reject(new Error("model must be object"))
-            }
-
-            if (!type.object(condition)) {
-                return Promise.reject(new Error("condition must be object"))
-            }
-
-            return mongoModels.account.update(condition, model)
-        },
-
-        /**
-         * 查询数量
-         * @param condition
-         */
-        count(condition) {
-            if (!type.object(condition)) {
-                return Promise.reject(new Error("condition must be object"))
-            }
-
-            return mongoModels.account.count(condition)
-        },
+    /**
+     * 更新账户信息
+     * @param model
+     * @param condition
+     * @returns {Promise<never>}
+     */
+    updateAccount(model, condition) {
+        return super.update(condition, model)
     }
 }

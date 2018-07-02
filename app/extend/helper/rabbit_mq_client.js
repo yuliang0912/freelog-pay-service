@@ -6,11 +6,12 @@
 
 let instance = null
 const amqp = require('amqp')
-const uuid = require('node-uuid')
+const uuid = require('uuid')
 const Emitter = require('events')
 const Promise = require("bluebird")
 
 module.exports = class rabbitMqClient extends Emitter {
+
     constructor(rabbitConfig) {
         if (instance) {
             return instance
@@ -25,6 +26,7 @@ module.exports = class rabbitMqClient extends Emitter {
         this.connection = null
         this.queues = new Map()
         this.awitSubscribes = new Map()
+        this.awitSubscribes = new Map()
         this.instance = instance = this
     }
 
@@ -38,7 +40,7 @@ module.exports = class rabbitMqClient extends Emitter {
         if (this.isReady || this.connection) {
             return Promise.resolve(this.instance)
         }
-        return startConnect.call(this).tap(heartBeat).timeout(timeout).catch(Promise.TimeoutError, (err) => {
+        return new Promise((...args) => this._startConnect(...args)).timeout(timeout).catch(Promise.TimeoutError, (err) => {
             return Promise.reject(new Error('rabbitMQ connect timeout'))
         })
     }
@@ -61,7 +63,7 @@ module.exports = class rabbitMqClient extends Emitter {
                 messageId: uuid.v4().replace(/-/g, "")
             }, options), (ret, err) => {
                 if (err) {
-                    this.emit('publishFaile', routingKey, body, options, this.config.exchange.name)
+                    this.emit('publishFailed', routingKey, body, options, this.config.exchange.name)
                     return reject(err)
                 }
                 resolve(!ret)
@@ -127,87 +129,51 @@ module.exports = class rabbitMqClient extends Emitter {
         }
         return instance
     }
-}
 
+    /**
+     * 开始连接到rabbitmq
+     * @returns {Promise<void>}
+     * @private
+     */
+    _startConnect(resolve, reject) {
 
-/**
- * 开始链接rabbitmq服务
- */
-function startConnect() {
-    return new Promise((resolve, reject) => {
-
-        let connection = this.connection = amqp.createConnection(this.config.connOptions, this.config.implOptions)
+        const {config, queues} = this
+        const exchangeConfig = {type: 'topic', autoDelete: false, confirm: true, durable: true}
+        const connection = this.connection = amqp.createConnection(config.connOptions, config.implOptions)
 
         connection.on('ready', () => {
-            this.exchange = connection.exchange(this.config.exchange.name, {
-                type: 'topic',
-                autoDelete: false,
-                confirm: true,
-                durable: true
-            })
+            this.exchange = connection.exchange(config.exchange.name, exchangeConfig)
             this.exchange.on('open', () => {
-                this.isReady = true
-                this.config.queues.forEach(item => {
-                    connection.queue(item.name, item.options, (queue) => {
-                        Array.isArray(item.routingKeys) && item.routingKeys.forEach(router => {
-                            queue.bind(router.exchange || this.config.exchange.name, router.routingKey)
-                        })
-                        if (!this.queues.has(item.name)) {
-                            this.queues.set(item.name, {queue, consumerTag: ""})
-                        }
-                        if (this.awitSubscribes.has(item.name)) {
-                            this.subscribe(item.name, this.awitSubscribes.get(item.name))
-                        }
+                config.queues.forEach(item => connection.queue(item.name, item.options, (queue) => {
+                    Array.isArray(item.routingKeys) && item.routingKeys.forEach(router => {
+                        queue.bind(router.exchange || config.exchange.name, router.routingKey)
                     })
-                })
+                    if (!queues.has(item.name)) {
+                        queues.set(item.name, {queue, consumerTag: ""})
+                    }
+                    if (this.awitSubscribes.has(item.name)) {
+                        this.subscribe(item.name, this.awitSubscribes.get(item.name))
+                    }
+                }))
+                this.isReady = true
                 resolve(this.instance)
-                this.emit('connect', this.config)
             })
             this.exchange.on('basic-return', (args) => {
                 console.log('消息发送失败,没有匹配的路由,option:{mandatory:true}设置才会出现此消息,否则默认忽略', args)
             })
-            console.log(`rabbit connection open to ${this.config.connOptions.host}:${this.config.connOptions.port}`);
-        })
-
-        connection.on('close', () => {
+            console.log(`rabbit connection open to ${config.connOptions.host}:${config.connOptions.port}`);
+        }).on('close', () => {
             this.isReady = false
-            console.log("rabbitMQ has closed...")
-        })
-
-        connection.on('error', (err) => {
+        }).on('error', (err) => {
             reject(err)
             this.isReady = false
             console.log("rabbitMQ error," + err.toString());
-        })
-
-        connection.on('tag.change', function (event) {
-            this.queues.forEach(value => {
+        }).on('tag.change', function (event) {
+            queues.forEach(value => {
                 if (value.consumerTag === event.oldConsumerTag) {
                     value.consumerTag = event.consumerTag
                 }
             })
         });
-    })
-}
-
-/**
- * 心跳检测函数
- * @param client
- */
-function heartBeat(client) {
-    //已经在定时任务中去做心跳保持
-    return
-    setInterval(() => {
-        client.publish({
-            routingKey: 'heartBeat',
-            eventName: null,
-            body: {message: '心跳检测包'},
-            options: {mandatory: false}
-        }).then(() => {
-            console.log('发送心跳包成功')
-        }).catch((err) => {
-            console.log('发送心跳包失败')
-        })
-    }, 600000)
-    console.log('程序将在10分钟以后开始进行rabbit心跳保持')
+    }
 }

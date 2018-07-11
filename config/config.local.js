@@ -25,5 +25,9 @@ module.exports = {
         createDate: "2017-10-20T16:38:17.000Z",
         updateDate: "2017-11-01T15:53:29.000Z",
         tokenType: "jwt"
-    }
+    },
+
+    web3: {
+        rpcUri: 'http://39.108.77.211:8546'
+    },
 }

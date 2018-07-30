@@ -1,181 +1,196 @@
 'use strict'
 
 const Controller = require('egg').Controller
-const accountHelper = require('../../extend/helper/account-generate-helper')
-const commonRegex = require('egg-freelog-base/app/extend/helper/common_regex')
-const transcationPasswordHelper = require('../../extend/helper/transcation-password-helper')
+const {accountType} = require('../../enum/index')
 
 module.exports = class PayController extends Controller {
 
-    /**
-     * 订单列表
-     * @param ctx
-     * @returns {Promise<void>}
-     */
-    async index(ctx) {
-
-        const page = ctx.checkQuery("page").default(1).gt(0).toInt().value
-        const pageSize = ctx.checkQuery("pageSize").default(10).gt(0).lt(101).toInt().value
-        const orderType = ctx.checkQuery("orderType").default(1).toInt().in([1]).value
-        const accountType = ctx.checkQuery("accountType").optional().toInt().in([1, 2, 3, 4]).value
-
-        ctx.validate()
-
-        const condition = {
-            ['sendAccountInfo.userId']: ctx.request.userId
-        }
-        if (orderType) {
-            condition.orderType = orderType
-        }
-        if (accountType) {
-            condition['sendAccountInfo.accountType'] = accountType
-        }
-
-        await ctx.dal.payOrderProvider.getPayOrderPageList(condition, null, page, pageSize).then(ctx.success)
+    constructor({app}) {
+        super(...arguments)
+        this.accountProvider = app.dal.accountProvider
+        this.paymentOrderProvider = app.dal.paymentOrderProvider
+        this.accountPendTradeProvider = app.dal.accountPendTradeProvider
+        this.accountTradeRecordProvider = app.dal.accountTradeRecordProvider
     }
 
     /**
-     * 为合同支付
+     * 充值
      * @param ctx
      */
-    async create(ctx) {
+    async recharge(ctx) {
 
-        const targetId = ctx.checkBody('targetId').isContractId().value
-        const orderType = ctx.checkBody('orderType').toInt().in([1]).value
-        const fromAccountId = ctx.checkBody('fromAccountId').match(accountHelper.verify, '账户格式错误').value
-        const toAccountId = ctx.checkBody('toAccountId').match(accountHelper.verify, '账户格式错误').value
-        const amount = ctx.checkBody('amount').toInt().gt(0).value
-        const password = ctx.checkBody('password').exist().notBlank().trim().len(6, 50).value
+        const accountId = ctx.checkBody('accountId').exist().isTransferAccountId().value
+        const cardNo = ctx.checkBody('cardNo').exist().notEmpty().value
+        const amount = ctx.checkBody('amount').exist().isInt().toInt().gt(0).value
 
-        ctx.allowContentType({type: 'json'}).validate()
+        ctx.validate()
+
+        await ctx.service.payService.recharge({accountId, cardNo, amount}).then(ctx.success).catch(ctx.error)
+    }
+
+    /**
+     * 转账
+     * @param ctx
+     */
+    async transfer(ctx) {
+
+        //交易金额,以币种的最小单位为准.例如分,borb
+        const amount = ctx.checkBody('amount').exist().isInt().toInt().gt(0).value
+        const password = ctx.checkBody('password').optional().isNumeric().len(6, 6).value
+        const toAccountId = ctx.checkBody('toAccountId').exist().isTransferAccountId().value
+        const fromAccountId = ctx.checkBody('fromAccountId').exist().isTransferAccountId().value
+        const remark = ctx.checkBody('remark').optional().type('string').len(1, 200).value
+        ctx.validate()
 
         const accountInfo = {}
-        await ctx.dal.accountProvider.getAccountList({
-            accountId: {$in: [toAccountId, fromAccountId]}
-        }).each(item => {
-            accountInfo[item.accountId] = item
+        await this.accountProvider.find({accountId: {$in: [toAccountId, fromAccountId]}}).then(list => {
+            list.forEach(item => accountInfo[item.accountId] = item)
+        })
+        const fromAccountInfo = accountInfo[fromAccountId]
+        const toAccountInfo = accountInfo[toAccountId]
+
+        if (!fromAccountInfo) {
+            ctx.error({msg: `未找到付款方账号${fromAccountId}`})
+        }
+        if (!toAccountInfo) {
+            ctx.error({msg: `未找到收款方用户账号${toAccountId}`})
+        }
+
+        const result = await ctx.service.payService.transfer({
+            fromAccountInfo, toAccountInfo, password, amount, remark
         })
 
-        if (!Reflect.has(accountInfo, fromAccountId) || accountInfo[fromAccountId].userId != ctx.request.userId) {
-            ctx.error({msg: `未找到用户账号${fromAccountId}`})
-        }
-        if (!Reflect.has(accountInfo, toAccountId)) {
-            ctx.error({msg: `未找到用户账号${toAccountId}`})
-        }
-        if (accountInfo[toAccountId].accountType !== accountInfo[fromAccountId].accountType) {
-            ctx.error({msg: `源账户与目标账户类型不一致,无法执行交易操作`})
-        }
-        if (accountInfo[fromAccountId].status !== 1) {
-            ctx.error({msg: `源账户状态异常,status:${accountInfo[fromAccountId].status}`})
-        }
-        if (accountInfo[toAccountId].status !== 1) {
-            ctx.error({msg: `目标账户状态异常,status:${accountInfo[toAccountId].status}`})
-        }
-        if (accountInfo[fromAccountId].accountType !== 1) {
-            ctx.error({msg: `目前仅支持eth账户支付`})
-        }
-
-        const passwordInfo = await ctx.dal.transcationPasswordProvider.getTranscationPassword({userId: ctx.request.userId})
-        if (!passwordInfo) {
-            ctx.error({msg: '还未创建交易密码,不能执行支付操作'})
-        }
-
-        const verifyModel = {
-            userId: passwordInfo.userId,
-            password: passwordInfo.password,
-            salt: passwordInfo.salt,
-            originalPassword: password
-        }
-
-        if (!transcationPasswordHelper.verifyPassword(verifyModel)) {
-            ctx.error({msg: '支付错误错误'})
-        }
-
-        const contractExecEventCheck = await ctx.curlFromClient(`${this.config.gatewayUrl}/client/v1/contracts/isCanExecEvent?contractId=${targetId}&eventId=transaction_${toAccountId}_${amount}_event`)
-        if (!contractExecEventCheck.isCanExec) {
-            ctx.error({msg: '合同不允许执行支付事件,请检查合同状态', data: contractExecEventCheck.contractInfo})
-        }
-
-        const payOrderInfo = {
-            targetId, orderType, amount,
-            sendAccountInfo: accountInfo[fromAccountId],
-            receiveAccountInfo: accountInfo[toAccountId]
-        }
-
-        await ctx.service.payService.ethPay(payOrderInfo).then(ctx.success).catch(ctx.error)
+        await this.accountProvider.findOne({accountId: fromAccountId}).then(data => {
+            ctx.success({transferResult: result, balance: data.balance})
+        })
     }
 
     /**
-     * 查看订单信息
+     * 支付
      * @param ctx
+     */
+    async payment(ctx) {
+
+        //交易金额,以币种的最小单位为准.例如分,borb
+        const amount = ctx.checkBody('amount').exist().isInt().toInt().gt(0).value
+        const password = ctx.checkBody('password').optional().isNumeric().len(6, 6).value
+        const toAccountId = ctx.checkBody('toAccountId').exist().isTransferAccountId().value
+        const fromAccountId = ctx.checkBody('fromAccountId').exist().isTransferAccountId().value
+        //外部交易号(订单号),必须唯一,不能重复支付
+        const outsideTradeNo = ctx.checkBody('outsideTradeNo').exist().len(5, 32).value
+        const remark = ctx.checkBody('remark').optional().type('string').len(1, 200).value
+        const paymentType = ctx.checkBody('paymentType').optional().toInt().default(1).value
+        ctx.validate()
+
+        const accountInfo = {}
+        await this.accountProvider.find({accountId: {$in: [toAccountId, fromAccountId]}}, false).then(list => {
+            list.forEach(item => accountInfo[item.accountId] = item)
+        })
+        const fromAccountInfo = accountInfo[fromAccountId]
+        const toAccountInfo = accountInfo[toAccountId]
+
+        if (!fromAccountInfo) {
+            ctx.error({msg: `未找到发起方账号${fromAccountId}`})
+        }
+        if (!toAccountInfo) {
+            ctx.error({msg: `未找到收款方用户账号${toAccountId}`})
+        }
+
+        const oldOrder = await ctx.dal.paymentOrderProvider.findOne({outsideTradeNo})
+        if (oldOrder) {
+            ctx.error({msg: `当前订单号已经支付过,不能重复支付`, data: {outsideTradeNo}})
+        }
+
+        await ctx.service.payService.payment({
+            fromAccountInfo, toAccountInfo, password, amount, outsideTradeNo, remark, paymentType
+        }).then(ctx.success).catch(ctx.error)
+    }
+
+    /**
+     * 给账户初始化一笔feather
      * @returns {Promise<void>}
      */
-    async show(ctx) {
+    async officialTap(ctx) {
 
-        const id = ctx.checkParams("id").exist().len(24, 70).value
+        const cardNo = ctx.checkBody('cardNo').exist().value
+        const currencyType = ctx.checkBody('currencyType').toInt().exist().value
 
         ctx.validate()
 
+        await ctx.service.payService.tap({currencyType, cardNo}).then(data => {
+            ctx.success({outsideTradeId: data})
+        }).catch(ctx.error)
+    }
+
+    /**
+     * 支付订单列表
+     * @param ctx
+     * @returns {Promise<void>}
+     */
+    async paymentOrders(ctx) {
+
+        const page = ctx.checkQuery("page").optional().toInt().gt(0).default(1).value
+        const pageSize = ctx.checkQuery("pageSize").optional().toInt().gt(0).lt(101).default(10).value
+        const accountId = ctx.checkQuery('accountId').exist().isTransferAccountId().value
+        ctx.validate()
+
+        const ownerId = ctx.request.userId.toString()
+        const accountInfo = this.accountProvider.findOne({accountId})
+        if (!accountInfo) {
+            ctx.error({msg: '未找到账户信息'})
+        }
+        if (accountInfo.accountType === accountType.IndividualAccount && accountInfo.ownerId !== ownerId) {
+            ctx.error({msg: '没有查看权限'})
+        }
+        const condition = {accountId, status: 1}
+        const task1 = this.paymentOrderProvider.count(condition)
+        const task2 = this.paymentOrderProvider.findPageList(condition, page, pageSize, null, {createDate: -1})
+
+        await Promise.all([task1, task2]).then(([totalItem, dataList]) => ctx.success({
+            page, pageSize, totalItem, dataList
+        }))
+    }
+
+    /**
+     * 支付订单列表
+     * @param ctx
+     * @returns {Promise<void>}
+     */
+    async paymentOrderInfo(ctx) {
+
+        const paymentOrderId = ctx.checkQuery('paymentOrderId').optional().notEmpty().value
+        const outsideTradeNo = ctx.checkQuery('outsideTradeNo').optional().notEmpty().value
+        ctx.validate()
+
+        if (paymentOrderId === undefined && outsideTradeNo === undefined) {
+            ctx.error({msg: '参数缺失'})
+        }
         const condition = {}
-        if (commonRegex.mongoObjectId.test(id)) {
-            condition._id = id
+        if (paymentOrderId) {
+            condition.paymentOrderId = paymentOrderId
         }
-        else if (/^0x[a-fA-F0-9]{0,70}$/.test(id)) {
-            condition.transferId = id
-        }
-        else {
-            ctx.error({msg: 'id格式不正确:' + id})
+        if (outsideTradeNo) {
+            condition.outsideTradeNo = outsideTradeNo
         }
 
-        await ctx.dal.payOrderProvider.findOne(condition).then(ctx.success).catch(ctx.error)
-    }
-
-
-    /**
-     * 订单信息
-     * @param ctx
-     * @returns {Promise<void>}
-     */
-    async orderInfo(ctx) {
-
-        const orderId = ctx.checkQuery("orderId").optional().isMongoObjectId('orderId格式错误').value
-        const transferId = ctx.checkQuery("transferId").optional().len(24, 70).value
-        const targetId = ctx.checkQuery("targetId").optional().isContractId().value
-        const orderType = ctx.checkQuery("orderType").optional().default(1).toInt().in([1]).value
-        ctx.validate()
-
-        const condition = {}
-        if (transferId) {
-            condition.transferId = transferId
-        }
-        if (targetId) {
-            condition.targetId = targetId
-        }
-        if (orderId) {
-            condition._id = orderId
-        }
-        if (!Object.keys(condition).length) {
-            ctx.error({msg: '参数transferId和targetId最少需要一个'})
-        }
-
-        condition.orderType = orderType
-
-        await ctx.dal.payOrderProvider.findOne(condition).then(ctx.success).catch(ctx.error)
+        await this.paymentOrderProvider.findOne(condition).then(ctx.success)
     }
 
     /**
-     * 以太坊上的交易原始信息
-     * @param ctx
+     * 外部交易状态查询
      * @returns {Promise<void>}
      */
-    async ethTransactionReceipt(ctx) {
+    async outsideTradeState(ctx) {
 
-        const transactionId = ctx.checkParams("transactionId").exist().len(24, 70).value
-
+        const outsideTradeId = ctx.checkQuery('outsideTradeId').exist().len(20, 200).value
+        const currencyType = ctx.checkQuery('currencyType').exist().toInt().in([1, 2, 3, 4]).value
         ctx.validate()
 
-        const transaction = await ctx.app.ethClient.web3.eth.getTransaction(transactionId).catch(ctx.error)
+        const result = await this.accountPendTradeProvider.findOne({outsideTradeId, currencyType})
+        if (!result) {
+            ctx.error({msg: '未找到有效的交易信息'})
+        }
 
-        ctx.success(transaction)
+        ctx.success(result)
     }
 }

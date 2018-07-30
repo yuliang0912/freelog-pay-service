@@ -13,11 +13,11 @@ module.exports = class RabbitMessageQueueEventHandler {
 
     /**
      * 订阅rabbitMQ消息
-     * @returns {Promise<void>}
      */
-    async subscribe() {
-        await new rabbit(this.app.config.rabbitMq).connect().then(client => {
+    subscribe() {
+        return new rabbit(this.app.config.rabbitMq).connect().then(client => {
             client.subscribe('[pay]-auth-event-handle-result', (...args) => this.handleMessage(...args))
+            return client
         }).catch(console.error)
     }
 

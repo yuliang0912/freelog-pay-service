@@ -5,6 +5,7 @@ const MongoBaseOperation = require('egg-freelog-database/lib/database/mongo-base
 module.exports = class AccountProvider extends MongoBaseOperation {
 
     constructor(app) {
-        super(app.model.Account)
+        super(app.model.PaymentOrder)
     }
+
 }

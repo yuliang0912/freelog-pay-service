@@ -1,12 +1,10 @@
 'use strict'
 
-
 const Web3 = require('web3')
 const client = Symbol('web3#client')
 const coinContract = Symbol('web3#coinContract')
-const officaialOps = Symbol('web3#officaialOps')
+const OfficialOps = Symbol('web3#OfficialOps')
 const ethContractInfo = require('./eth-contract-abi/index')
-
 
 module.exports = class Web3Client {
 
@@ -14,7 +12,7 @@ module.exports = class Web3Client {
         this.config = config
         let web3 = this[client] = new Web3(new Web3.providers.HttpProvider(this.config.web3.rpcUri));
         this[coinContract] = new web3.eth.Contract(ethContractInfo.Coin.abi, ethContractInfo.Coin.address)
-        this[officaialOps] = new web3.eth.Contract(ethContractInfo.OfficaialOps.abi, ethContractInfo.OfficaialOps.address)
+        this[OfficialOps] = new web3.eth.Contract(ethContractInfo.OfficialOps.abi, ethContractInfo.OfficialOps.address)
     }
 
     /**
@@ -30,8 +28,8 @@ module.exports = class Web3Client {
      * 以太坊官方管理合同
      * @returns {*}
      */
-    get OfficaialOpsContract() {
-        return this[officaialOps]
+    get OfficialOpsContract() {
+        return this[OfficialOps]
     }
 
     /**
@@ -55,12 +53,19 @@ module.exports = class Web3Client {
      * @returns {{from: string}}
      */
     get adminInfo() {
-        return {
-            from: ethContractInfo.account.admin
-        }
+        return {from: ethContractInfo.account.admin}
     }
+
 
     get ethContractInfo() {
         return ethContractInfo
+    }
+
+    /**
+     * 飞致网络平台账号(非官方管理资金池账号)
+     * @returns {string}
+     */
+    get platformAccountAddress() {
+        return ethContractInfo.account.freelog
     }
 }

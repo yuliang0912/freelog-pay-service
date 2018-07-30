@@ -34,7 +34,7 @@ module.exports = appInfo => {
          * mongoDB配置
          */
         mongoose: {
-            url: "mongodb://192.168.2.239:27017/pay"
+            url: "mongodb://192.168.2.181:27017/pay"
         },
 
         /**
@@ -74,7 +74,7 @@ module.exports = appInfo => {
 
         rabbitMq: {
             connOptions: {
-                host: '127.0.0.1',
+                host: '192.168.164.163',
                 port: 5672,
                 login: 'guest',
                 password: 'guest',
@@ -112,7 +112,16 @@ module.exports = appInfo => {
             clientId: 1006,
             publicKey: 'b278214cef0ee2a9e1abde166d29d141',
             privateKey: '4c2eab93e896a53ff3f2d3770ae97d77'
-        }
+        },
+
+
+        transactionAccountCountLimit: 5,
+
+        customLoader: [{
+            name: 'eventHandler', dir: 'app/event-handler'
+        }, {
+            name: 'router1', dir: 'app/routers'
+        }]
     }
 
     return config;

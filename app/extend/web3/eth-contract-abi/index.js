@@ -4,7 +4,7 @@ const fs = require('fs')
 
 // module.exports = {
 //
-//     OfficaialOps: {
+//     OfficialOps: {
 //         address: '0x1d171bb7d33d5c228be6bbaa7fa5cd6526f5fea8',
 //         abi: JSON.parse(fs.readFileSync(__dirname + '/OfficialOps.abi', 'utf-8'))
 //     },
@@ -27,7 +27,7 @@ const fs = require('fs')
 //testrpc 环境
 module.exports = {
 
-    OfficaialOps: {
+    OfficialOps: {
         address: '0x8ef76ef5ceead1bb8b00426f8bd758ae3975dc80',
         abi: JSON.parse(fs.readFileSync(__dirname + '/OfficialOps.abi', 'utf-8'))
     },
@@ -39,7 +39,6 @@ module.exports = {
 
     account: {
         admin: '0xc43e51cbc39722c77433d92c69c17e2a85a0641a',
-        accountOne: '0xc43e51cbc39722c77433d92c69c17e2a85a0641a',
-        accountTwo: '0x1b9cba6b5b634d0e47cb60ac6cb6616eec80098f'
+        freelog: '0xc43e51cbc39722c77433d92c69c17e2a85a0641a'
     }
 }

@@ -12,7 +12,8 @@
     "bluebird": "^3.5.1",
     "egg": "^2.9.1",
     "egg-freelog-base": "^1.1.49",
-    "egg-freelog-database": "^1.0.7",
+    "egg-freelog-database": "^1.0.8",
+    "egg-scripts": "^2.6.0",
     "lodash": "^4.17.10",
     "mongoose": "^5.2.5",
     "node-uuid": "^1.4.8",
@@ -21,7 +22,8 @@
     "web3": "^1.0.0-beta.35"
   },
   "scripts": {
-    "start": "node index"
+    "start": "egg-scripts start --workers=1",
+    "stop": "egg-scripts stop"
   },
   "engines": {
     "node": ">=8.0.0"

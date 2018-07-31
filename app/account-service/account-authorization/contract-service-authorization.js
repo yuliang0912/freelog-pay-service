@@ -1,5 +1,7 @@
 'use strict'
 
+const globalInfo = require('egg-freelog-base/globalInfo')
+
 module.exports = class ContractServiceAuthorization {
 
     /**
@@ -11,11 +13,22 @@ module.exports = class ContractServiceAuthorization {
      * @param tradeType
      * @returns {boolean}
      */
-    authorization({accountInfo, userId, password, amount, tradeType}) {
+    async authorization({accountInfo, userId, password, amount, tradeType}) {
 
-        console.log('未实现的合同服务授权方式')
+        const {app} = globalInfo
 
-        return true
+        const authResult = await app.curl(`${app.webApi.contractInfo}/contractAccount/authorization`, {
+            type: 'post',
+            contentType: 'json',
+            data: {
+                amount, tradeType,
+                operationUserId: userId,
+                contractId: accountInfo.ownerId,
+                accountId: accountInfo.accountId
+            }
+        })
+
+        return authResult
 
     }
 }

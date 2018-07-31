@@ -21,7 +21,7 @@ class AccountAuthorization {
      * @param amount
      * @param tradeType
      */
-    authorization({accountInfo, userId, password, amount, tradeType}) {
+    async authorization({accountInfo, userId, password, amount, tradeType}) {
 
         accountInfo.authorizationType = accountInfo.authorizationType || accountAuthorizationType.PasswordAndIdentity
 
@@ -33,7 +33,7 @@ class AccountAuthorization {
         for (let i = 0, j = authCombinations.length; i < j; i++) {
             const authCombination = authCombinations[i]
             const authHandler = this.patrun.find({authTypeImpl: authCombination.type})
-            const authResult = authHandler.authorization(...arguments)
+            const authResult = await authHandler.authorization(...arguments)
             if (!authResult) {
                 return {authResult: false, message: `${authCombination.name}失败`}
             }

@@ -24,8 +24,16 @@ module.exports = class AccountTransferEventHandler {
     async accountAmountChangedEventHandler(args) {
 
         const {fromAccountInfo, toAccountInfo, amount, userId, remark} = args
-        this.sendAccountAmountChangedEvent({accountInfo: toAccountInfo, amount, userId, remark})
-        this.sendAccountAmountChangedEvent({accountInfo: fromAccountInfo, amount: amount * -1, userId, remark})
+        this.sendAccountAmountChangedEvent({
+            accountInfo: toAccountInfo,
+            correlativeAccountId: fromAccountInfo.accountId,
+            amount, userId, remark
+        })
+        this.sendAccountAmountChangedEvent({
+            accountInfo: fromAccountInfo,
+            correlativeAccountId: toAccountInfo.accountId,
+            amount: amount * -1, userId, remark
+        })
     }
 
     /**
@@ -33,16 +41,16 @@ module.exports = class AccountTransferEventHandler {
      * @param accountInfo
      * @param amount
      */
-    sendAccountAmountChangedEvent({accountInfo, amount, userId, remark}) {
+    sendAccountAmountChangedEvent({accountInfo, correlativeAccountId, amount, userId, remark}) {
 
         const {accountId, balance} = accountInfo
         const accountAmountChangedEventParams = {
-            amount, userId, accountId,
+            accountId, correlativeAccountId, amount, userId,
             beforeBalance: balance + amount * -1,
             remark: remark || '转账',
             tradePoundage: 0,
             tradeType: tradeType.Transfer,
-            afterBalance: balance
+            afterBalance: balance,
         }
 
         this.app.emit(accountEvent.accountAmountChangedEvent, accountAmountChangedEventParams)

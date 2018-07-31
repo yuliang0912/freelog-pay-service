@@ -2,7 +2,6 @@
 
 const Controller = require('egg').Controller
 const {accountType} = require('../../enum/index')
-const CurrencyTypes = Object.values(require('../../enum/currency-type'))
 
 module.exports = class AccountController extends Controller {
 
@@ -19,7 +18,7 @@ module.exports = class AccountController extends Controller {
      */
     async index(ctx) {
 
-        const currencyType = ctx.checkQuery('currencyType').optional().in(CurrencyTypes).toInt().value
+        const currencyType = ctx.checkQuery('currencyType').optional().toInt().in([1, 2, 3, 4]).toInt().value
         ctx.validate()
 
         const condition = {ownerId: ctx.request.userId.toString()}
@@ -52,12 +51,28 @@ module.exports = class AccountController extends Controller {
     async create(ctx) {
 
         const accountName = ctx.checkBody('accountName').optional().trim().len(2, 10).value
-        const currencyType = ctx.checkBody('currencyType').exist().toInt().in(CurrencyTypes).value
+        const currencyType = ctx.checkBody('currencyType').exist().toInt().in([1, 2, 3, 4]).value
         const password = ctx.checkBody('password').exist().isNumeric().len(6, 6).value
 
         ctx.allowContentType({type: 'json'}).validate()
 
         await ctx.service.accountService.createIndividualAccount({accountName, currencyType, password})
+            .then(ctx.success).catch(ctx.error)
+    }
+
+    /**
+     * 创建合同账户
+     * @param ctx
+     * @returns {Promise<void>}
+     */
+    async createContractAccount(ctx) {
+
+        const contractId = ctx.checkBody('contractId').exist().isContractId().value
+        const accountName = ctx.checkBody('accountName').optional().trim().len(2, 10).value
+        const currencyType = ctx.checkBody('currencyType').exist().toInt().in([1, 2, 3, 4]).value
+        ctx.validate()
+
+        await ctx.service.accountService.createContractAccount({accountName, contractId, currencyType})
             .then(ctx.success).catch(ctx.error)
     }
 

@@ -12,9 +12,9 @@ module.exports = app => {
         cardNo: {type: String, required: true},
         userId: {type: Number, required: true},
         bankName: {type: String, required: true},
-        cardType: {type: Number, required: true}, //类型 (1:普通账户 2:储蓄卡  3:信用卡)
+        cardType: {type: Number, enum: [1, 2, 3], required: true}, //类型 (1:普通账户 2:储蓄卡  3:信用卡)
         currencyType: {type: Number, required: true},
-        status: {type: Number, default: 1, required: true}, //状态 1:正常 2:删除
+        status: {type: Number, default: 1, enum: [1, 2], required: true}, //状态 1:正常 2:删除
     }, {
         versionKey: false,
         bufferCommands: false,

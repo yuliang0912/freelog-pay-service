@@ -31,10 +31,21 @@ module.exports = class AccountPaymentEventHandler {
             return
         }
 
-        this.sendAccountAmountChangedEvent({accountInfo: toAccountInfo, amount, userId, remark})
-        this.sendAccountAmountChangedEvent({accountInfo: fromAccountInfo, amount: amount * -1, userId, remark})
+        this.sendAccountAmountChangedEvent({
+            amount, userId, remark,
+            accountInfo: toAccountInfo,
+            correlativeTradeId: paymentOrderId,
+            correlativeAccountId: fromAccountInfo.accountId,
+        })
+        this.sendAccountAmountChangedEvent({
+            userId, remark,
+            accountInfo: fromAccountInfo,
+            amount: amount * -1,
+            correlativeTradeId: paymentOrderId,
+            correlativeAccountId: toAccountInfo.accountId,
+        })
 
-        //此处还需要发送消息给对应的订单方,例如合同服务
+        //此处还需要发送消息给对应的订单方,例如合同订单
 
         console.log(`支付成功,订单号:${paymentOrderId},外部订单号:${paymentOrderInfo.outsideTradeNo}`)
     }
@@ -44,11 +55,12 @@ module.exports = class AccountPaymentEventHandler {
      * @param accountInfo
      * @param amount
      */
-    sendAccountAmountChangedEvent({accountInfo, amount, userId, remark}) {
+    sendAccountAmountChangedEvent({accountInfo, amount, userId, remark, correlativeAccountId, correlativeTradeId}) {
 
         const {accountId, balance} = accountInfo
         const accountAmountChangedEventParams = {
             amount, userId, accountId,
+            correlativeAccountId, correlativeTradeId,
             beforeBalance: accountInfo.balance + amount * -1,
             remark: remark || '转账',
             tradePoundage: 0,

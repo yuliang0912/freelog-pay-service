@@ -26,7 +26,8 @@ module.exports = app => {
         amount: {type: Number, required: true}, //变动金额
         tradePoundage: {type: Number, default: 0, required: true}, //交易手续费
         operationUserId: {type: Number, default: 0, required: true}, //发起者用户ID
-        remark: {type: String, required: true}, //备注,摘要
+        remark: {type: String, required: true}, //用户备注
+        summary: {type: String, required: true}, //系统摘要
         signature: {type: String, required: true}, //签名信息
         status: {type: Number, default: 1, required: true}, //状态 1:正常 2:隐藏
         createDate: {type: Date, default: Date.now, required: true}

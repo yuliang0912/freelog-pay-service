@@ -43,7 +43,7 @@ module.exports = class AccountRechargeCompletedEventHandler {
             balance: accountInfo.balance,
             signature: accountInfo.signature
         }).then(() => {
-            this.sendAccountAmountChangedEvent({accountInfo, amount, userId, outsideTradeId})
+            this.sendAccountAmountChangedEvent({accountInfo, amount, userId, outsideTradeId, cardNo})
             console.log(`账户${accountId}完成充值${amount},充值后金额${accountInfo.balance},充值卡号:${cardNo},外部交易号:${outsideTradeId}`)
         }).catch(console.error)
     }
@@ -51,7 +51,7 @@ module.exports = class AccountRechargeCompletedEventHandler {
     /**
      * 发送账户金额变动事件
      */
-    sendAccountAmountChangedEvent({accountInfo, amount, userId, outsideTradeId}) {
+    sendAccountAmountChangedEvent({accountInfo, amount, userId, outsideTradeId, cardNo}) {
 
         const {accountId, balance} = accountInfo
         const accountAmountChangedEventParams = {
@@ -61,7 +61,10 @@ module.exports = class AccountRechargeCompletedEventHandler {
             afterBalance: balance,
             tradeType: tradeType.Recharge,
             beforeBalance: balance - amount,
+            correlativeAccountId: cardNo,
+            correlativeTradeId: outsideTradeId,
         }
+
         this.app.emit(accountEvent.accountAmountChangedEvent, accountAmountChangedEventParams)
     }
 

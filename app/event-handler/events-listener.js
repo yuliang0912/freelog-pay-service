@@ -30,43 +30,29 @@ module.exports = class EventsListener {
         const {featherTransferEvent} = outsideTradeEvent
         const {accountRechargeCompletedEvent, accountAmountChangedEvent, accountSignatureVerifyFailedEvent, accountTransferEvent, accountPaymentEvent} = accountEvent
 
-        this.app.on('error', this.appEventErrorHandler)
+        //注册内部账户事件
+        this.registerEventAndHandler(accountPaymentEvent)
+        this.registerEventAndHandler(accountTransferEvent)
+        this.registerEventAndHandler(accountAmountChangedEvent)
+        this.registerEventAndHandler(accountRechargeCompletedEvent)
+        this.registerEventAndHandler(accountSignatureVerifyFailedEvent)
 
-        //侦听内部账户事件
-        this.app.on(accountPaymentEvent, this.eventHandler(accountPaymentEvent))
-        this.app.on(accountTransferEvent, this.eventHandler(accountTransferEvent))
-        this.app.on(accountAmountChangedEvent, this.eventHandler(accountAmountChangedEvent))
-        this.app.on(accountRechargeCompletedEvent, this.eventHandler(accountRechargeCompletedEvent))
-        this.app.on(accountSignatureVerifyFailedEvent, this.eventHandler(accountSignatureVerifyFailedEvent))
-
-        //外部交易事件
-        this.app.on(featherTransferEvent, this.eventHandler(featherTransferEvent))
+        //注册外部交易事件
+        this.registerEventAndHandler(featherTransferEvent)
     }
 
     /**
-     * 获取事件处理者
+     * 注册事件以及事件处理者
      * @param eventName
-     * @returns {*}
      */
-    eventHandler(eventName) {
+    registerEventAndHandler(eventName) {
 
         const eventHandler = this.patrun.find({event: eventName.toString()})
         if (!eventHandler) {
             throw new Error(`尚未注册事件${eventName}的处理者`)
         }
 
-        return function () {
-            //console.log('接收到事件:', eventName, ...arguments)
-            return eventHandler.handler(...arguments)
-        }
-    }
-
-    /**
-     * app-error事件处理
-     * @param error
-     */
-    appEventErrorHandler(error) {
-        console.log('app-event-error', error)
+        this.app.on(eventName, (...args) => eventHandler.handler(...args))
     }
 
     /**

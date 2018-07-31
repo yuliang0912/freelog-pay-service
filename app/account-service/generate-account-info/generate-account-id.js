@@ -2,13 +2,11 @@
 
 const uuid = require('uuid')
 const lodash = require('lodash')
-const CurrencyType = require('../../enum/currency-type')
+const accountTypeEnum = require('../../enum/account-type')
+const currencyTypeEnum = require('../../enum/currency-type')
 const commRegex = require('egg-freelog-base/app/extend/helper/common_regex')
 const cryptoHelper = require('egg-freelog-base/app/extend/helper/crypto_helper')
-
-
-const NumberSections = [233, 109, 331, 209, 102]
-const CurrencyTypePrefix = lodash.invert(CurrencyType)
+const CurrencyTypePrefix = lodash.invert(currencyTypeEnum)
 
 module.exports = class GenerateAccountId {
 
@@ -17,12 +15,12 @@ module.exports = class GenerateAccountId {
      * @param currencyType
      * @returns {string}
      */
-    generateAccountId(currencyType) {
+    generateAccountId({currencyType, accountType}) {
 
         const currencyTypePrefix = CurrencyTypePrefix[currencyType]
         const accountNum = cryptoHelper.sha512(uuid.v4()).substr(0, 8) //使用sha算法保证字符在各个段位分配平均
-        const numberSection = NumberSections[parseInt(Math.random() * 10000) % NumberSections.length]
-
+        const numberSections = this._getNumberSection(accountType)
+        const numberSection = numberSections[parseInt(Math.random() * 10000) % numberSections.length]
         const accountId = `f${currencyTypePrefix}${numberSection}${accountNum}`.toLowerCase()
 
         if (!commRegex.transferAccountId.test(accountId)) {
@@ -30,5 +28,20 @@ module.exports = class GenerateAccountId {
         }
 
         return accountId
+    }
+
+    /**
+     * 获取号段
+     * @param accountType
+     */
+    _getNumberSection(accountType) {
+        if (accountType === accountTypeEnum.IndividualAccount) {
+            return ['233', '109', '331', '209', '102']
+        }
+        else if (accountType === accountTypeEnum.ContractAccount) {
+            return ['212', '305', '816', '573', '119']
+        } else {
+            return ['000']
+        }
     }
 }

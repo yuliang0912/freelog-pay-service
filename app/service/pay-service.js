@@ -145,7 +145,7 @@ module.exports = class PayService extends Service {
     async _transfer({fromAccountInfo, toAccountInfo, password, amount, tradeType}) {
 
         const {app} = this
-        this._checkTransferAuthorization({accountInfo: fromAccountInfo, amount, password, tradeType})
+        await this._checkTransferAuthorization({accountInfo: fromAccountInfo, amount, password, tradeType})
         this._checkTransferAmount({fromAccountInfo, amount})
         this._checkTransferAccountStatus({fromAccountInfo, toAccountInfo})
 
@@ -249,11 +249,11 @@ module.exports = class PayService extends Service {
      * @param fromAccountInfo
      * @private
      */
-    _checkTransferAuthorization({accountInfo, amount, password, tradeType}) {
+    async _checkTransferAuthorization({accountInfo, amount, password, tradeType}) {
 
         const {ctx} = this
         const params = {accountInfo, userId: ctx.request.userId, password, amount, tradeType}
-        const {authResult, message} = accountAuthorization.authorization(params)
+        const {authResult, message} = await accountAuthorization.authorization(params)
 
         if (!authResult) {
             ctx.error({msg: message})

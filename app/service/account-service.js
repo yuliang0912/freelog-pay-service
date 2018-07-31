@@ -1,7 +1,7 @@
 'use strict'
 
 const Service = require('egg').Service
-const accountType = require('../enum/account-type')
+const {accountType, accountAuthorizationType} = require('../enum/index')
 const {accountInfoSecurity} = require('../account-service/account-security/index')
 const {accountPasswordGenerator, accountIdGenerator} = require('../account-service/generate-account-info/index')
 
@@ -24,19 +24,47 @@ module.exports = class AccountService extends Service {
         const ownerId = ctx.request.userId
 
         await this.accountProvider.count({currencyType, ownerId}).then(count => {
-            count >= config.transactionAccountCountLimit && ctx.error({msg: `当前用户的${currencyType}类型账户数量已经达到上限,无法创建`})
+            count >= config.transactionAccountCountLimit && ctx.error({msg: `当前用户的此类型账户数量已经达到上限,无法创建`})
         })
-        const accountId = accountIdGenerator.generateAccountId(currencyType)
+        const accountId = accountIdGenerator.generateAccountId({
+            currencyType, accountType: accountType.IndividualAccount
+        })
         const encryptedPasswordInfo = accountPasswordGenerator.generatePasswordInfo(accountId, ownerId, password)
         const accountModel = {
             accountId, ownerId, currencyType,
-            accountType: accountType.IndividualAccount,
-            accountName: accountName || '我的账户',
-            balance: 0.00,
-            freezeBalance: 0.00,
+            status: 1,
+            balance: 0,
+            freezeBalance: 0,
             pwSalt: encryptedPasswordInfo.pwSalt,
+            accountName: accountName || '我的账户',
+            accountType: accountType.IndividualAccount,
             password: encryptedPasswordInfo.encryptedPassword,
-            status: 1
+            authorizationType: accountAuthorizationType.PasswordAndIdentity
+        }
+
+        this._signAccountInfo(accountModel)
+
+        return this.accountProvider.create(accountModel)
+    }
+
+    /**
+     * 创建合同交易账户
+     * @param currencyType 货币类型
+     */
+    async createContractAccount({accountName, contractId, currencyType}) {
+
+        const accountId = accountIdGenerator.generateAccountId({currencyType, accountType: accountType.ContractAccount})
+        const accountModel = {
+            accountId, currencyType,
+            status: 1,
+            balance: 0,
+            pwSalt: '',
+            password: '',
+            freezeBalance: 0,
+            ownerId: contractId,
+            accountName: accountName || '合同账户',
+            accountType: accountType.ContractAccount,
+            authorizationType: accountAuthorizationType.ContractServiceAuthorization
         }
 
         this._signAccountInfo(accountModel)

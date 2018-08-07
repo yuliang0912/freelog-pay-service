@@ -31,9 +31,9 @@ module.exports = class RabbitMessageQueueEventHandler {
     async handleMessage(message, headers, deliveryInfo, messageObject) {
 
         const givenEventHandler = this.handlerPatrun.find({
+            eventName: headers.eventName,
             queueName: deliveryInfo.queue,
             routingKey: messageObject.routingKey,
-            eventName: headers.eventName
         })
 
         if (givenEventHandler) {

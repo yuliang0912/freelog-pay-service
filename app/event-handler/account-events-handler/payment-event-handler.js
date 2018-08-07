@@ -2,6 +2,7 @@
 
 const queue = require('async/queue')
 const {tradeType, accountEvent} = require('../../enum/index')
+const {PaymentOutsideOrder} = require('../../enum/rabbit-mq-event')
 
 module.exports = class AccountPaymentEventHandler {
 
@@ -44,6 +45,7 @@ module.exports = class AccountPaymentEventHandler {
             correlativeTradeId: paymentOrderId,
             correlativeAccountId: toAccountInfo.accountId,
         })
+        this.sendPaymentEventToMessageQueue(paymentOrderInfo)
 
         //此处还需要发送消息给对应的订单方,例如合同订单
 
@@ -69,6 +71,19 @@ module.exports = class AccountPaymentEventHandler {
         }
 
         this.app.emit(accountEvent.accountAmountChangedEvent, accountAmountChangedEventParams)
+    }
+
+    /**
+     * 发送支付事件到消息队列
+     */
+    sendPaymentEventToMessageQueue(paymentOrderInfo) {
+        this.app.rabbitClient.publish({
+            routingKey: PaymentOutsideOrder.routingKey,
+            eventName: PaymentOutsideOrder.eventName,
+            body: paymentOrderInfo
+        }).catch(error => {
+            console.error('支付事件通知MQ失败', paymentOrderInfo, error)
+        })
     }
 
     /**

@@ -13,7 +13,7 @@ const AccountRechargeCompletedEventHandler = require('./account-events-handler/r
 const AccountSignatureVerifyFailedEventHandler = require('./account-events-handler/signature-verify-failed-event-handler')
 const FeatherTransferEventHandler = require('./outside-account-events-handler/feather-transfer-event-handler')
 
-module.exports = class EventsListener {
+module.exports = class AppEventsListener {
 
     constructor(app) {
         this.app = app

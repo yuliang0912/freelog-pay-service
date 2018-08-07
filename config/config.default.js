@@ -33,7 +33,6 @@ module.exports = appInfo => {
 
         middleware: ['errorHandler', 'identiyAuthentication'],
 
-
         /**
          * mongoDB配置
          */
@@ -78,7 +77,7 @@ module.exports = appInfo => {
 
         rabbitMq: {
             connOptions: {
-                host: '192.168.164.163',
+                host: '192.168.164.166',
                 port: 5672,
                 login: 'guest',
                 password: 'guest',
@@ -111,20 +110,16 @@ module.exports = appInfo => {
             rpcUri: 'http://localhost:8545'
         },
 
-
         clientCredentialInfo: {
             clientId: 1006,
             publicKey: 'b278214cef0ee2a9e1abde166d29d141',
             privateKey: '4c2eab93e896a53ff3f2d3770ae97d77'
         },
 
-
         transactionAccountCountLimit: 5,
 
         customLoader: [{
             name: 'eventHandler', dir: 'app/event-handler'
-        }, {
-            name: 'router1', dir: 'app/routers'
         }]
     }
 

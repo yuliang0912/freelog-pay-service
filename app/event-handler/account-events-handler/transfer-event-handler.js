@@ -19,20 +19,24 @@ module.exports = class AccountTransferEventHandler {
 
     /**
      * 账户金额变动事件处理函数
-     * @param accountInfo
      */
-    async accountAmountChangedEventHandler(args) {
+    async accountAmountChangedEventHandler({transferRecordInfo, fromAccountInfo, toAccountInfo}) {
 
-        const {fromAccountInfo, toAccountInfo, amount, userId, remark} = args
+        const {transferId, amount, operationUserId, remark} = transferRecordInfo
         this.sendAccountAmountChangedEvent({
             accountInfo: toAccountInfo,
             correlativeAccountId: fromAccountInfo.accountId,
-            amount, userId, remark
+            amount, userId: operationUserId, remark,
+            correlativeInfo: {
+                transactionId: transferId, accountInfo: fromAccountInfo
+            }
         })
         this.sendAccountAmountChangedEvent({
             accountInfo: fromAccountInfo,
-            correlativeAccountId: toAccountInfo.accountId,
-            amount: amount * -1, userId, remark
+            amount: amount * -1, userId: operationUserId, remark,
+            correlativeInfo: {
+                transactionId: transferId, accountInfo: toAccountInfo
+            }
         })
     }
 
@@ -41,11 +45,12 @@ module.exports = class AccountTransferEventHandler {
      * @param accountInfo
      * @param amount
      */
-    sendAccountAmountChangedEvent({accountInfo, correlativeAccountId, amount, userId, remark}) {
+    sendAccountAmountChangedEvent({accountInfo, correlativeInfo, amount, userId, remark}) {
 
         const {accountId, balance} = accountInfo
         const accountAmountChangedEventParams = {
-            accountId, correlativeAccountId, amount, userId,
+            accountId, correlativeInfo, amount, userId,
+            tradeDesc: '转账',
             beforeBalance: balance + amount * -1,
             remark: remark || '转账',
             tradePoundage: 0,

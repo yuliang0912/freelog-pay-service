@@ -1,6 +1,6 @@
 'use strict'
 
-module.exports = {
+module.exports = Object.freeze({
 
     /**
      * 普通个人账户
@@ -13,8 +13,12 @@ module.exports = {
     ContractAccount: 2,
 
     /**
+     * 节点账户
+     */
+    NodeAccount: 3,
+
+    /**
      * 机构组织账户
      */
-    OrgAccount: 3
-
-}
+    OrgAccount: 4
+})

@@ -17,7 +17,7 @@ module.exports = app => {
         }
     }
 
-    const accountSchema = new mongoose.Schema({
+    const paymentOrderSchema = new mongoose.Schema({
         paymentOrderId: {type: String, unique: true, required: true},
         accountId: {type: String, required: true}, //账户ID
         toAccountId: {type: String, required: true}, //收款ID
@@ -26,9 +26,11 @@ module.exports = app => {
         tradePoundage: {type: Number, min: 0, default: 0, required: true}, //交易手续费
         operationUserId: {type: Number, default: 0, required: true}, //发起者用户ID
         remark: {type: String, default: '', required: false}, //备注,摘要
+        outsideTradeDesc: {type: String, required: true}, //外部交易订单说明
         outsideTradeNo: {type: String, unique: true, required: true}, //外部交易号,外部订单号.
         signature: {type: String, required: true}, //签名信息
-        status: {type: Number, default: 0, required: true}, //状态 0:临时 1:正常 2:隐藏
+        paymentStatus: {type: Number, default: 1, required: true}, //支付状态 1:发起支付中 2:支付确认中 3:支付成功 4:支付失败 5:发起方放弃支付
+        status: {type: Number, default: 1, required: true}, //状态 1:正常  2:隐藏
     }, {
         versionKey: false,
         bufferCommands: false,
@@ -36,7 +38,11 @@ module.exports = app => {
         timestamps: {createdAt: 'createDate', updatedAt: 'updateDate'}
     })
 
-    accountSchema.index({paymentOrderId: 1, accountId: 1, outsideTradeNo: 1});
+    paymentOrderSchema.virtual('isPaymentSuccess').get(function () {
+        return this.paymentStatus === 3
+    })
 
-    return mongoose.model('payment-orders', accountSchema)
+    paymentOrderSchema.index({paymentOrderId: 1, accountId: 1, outsideTradeNo: 1})
+
+    return mongoose.model('payment-orders', paymentOrderSchema)
 }

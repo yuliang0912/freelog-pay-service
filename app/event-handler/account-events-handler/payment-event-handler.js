@@ -27,24 +27,27 @@ module.exports = class AccountPaymentEventHandler {
 
         const {fromAccountInfo, toAccountInfo, amount, userId, paymentOrderId, remark} = args
         const paymentOrderInfo = await this.paymentOrderProvider.findOne({paymentOrderId})
-        if (!paymentOrderInfo || paymentOrderInfo.status === 0) {
-            console.log('错误的事件触发,请排查系统BUG')
+        if (!paymentOrderInfo || !paymentOrderInfo.isPaymentSuccess) {
+            console.log('错误的事件触发,请排查系统BUG', paymentOrderInfo)
             return
         }
 
         this.sendAccountAmountChangedEvent({
-            amount, userId, remark,
-            accountInfo: toAccountInfo,
-            correlativeTradeId: paymentOrderId,
-            correlativeAccountId: fromAccountInfo.accountId,
+            amount, userId, remark, accountInfo: toAccountInfo,
+            tradeDesc: paymentOrderInfo.outsideTradeDesc,
+            correlativeInfo: {
+                transactionId: paymentOrderId, accountInfo: fromAccountInfo
+            }
         })
+
         this.sendAccountAmountChangedEvent({
-            userId, remark,
-            accountInfo: fromAccountInfo,
-            amount: amount * -1,
-            correlativeTradeId: paymentOrderId,
-            correlativeAccountId: toAccountInfo.accountId,
+            userId, remark, accountInfo: fromAccountInfo, amount: amount * -1,
+            tradeDesc: paymentOrderInfo.outsideTradeDesc,
+            correlativeInfo: {
+                transactionId: paymentOrderId, accountInfo: toAccountInfo
+            }
         })
+
         this.sendPaymentEventToMessageQueue(paymentOrderInfo)
 
         //此处还需要发送消息给对应的订单方,例如合同订单
@@ -57,12 +60,11 @@ module.exports = class AccountPaymentEventHandler {
      * @param accountInfo
      * @param amount
      */
-    sendAccountAmountChangedEvent({accountInfo, amount, userId, remark, correlativeAccountId, correlativeTradeId}) {
+    sendAccountAmountChangedEvent({accountInfo, tradeDesc, amount, userId, remark, correlativeInfo}) {
 
         const {accountId, balance} = accountInfo
         const accountAmountChangedEventParams = {
-            amount, userId, accountId,
-            correlativeAccountId, correlativeTradeId,
+            amount, userId, accountId, tradeDesc, correlativeInfo,
             beforeBalance: accountInfo.balance + amount * -1,
             remark: remark || '转账',
             tradePoundage: 0,

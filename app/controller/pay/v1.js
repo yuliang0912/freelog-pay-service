@@ -56,12 +56,12 @@ module.exports = class PayController extends Controller {
             ctx.error({msg: `未找到收款方用户账号${toAccountId}`})
         }
 
-        const result = await ctx.service.payService.transfer({
+        const transferRecordInfo = await ctx.service.payService.transfer({
             fromAccountInfo, toAccountInfo, password, amount, remark
         })
 
         await this.accountProvider.findOne({accountId: fromAccountId}).then(data => {
-            ctx.success({transferResult: result, balance: data.balance})
+            ctx.success({transferResult: transferRecordInfo, balance: data.balance})
         })
     }
 
@@ -78,17 +78,17 @@ module.exports = class PayController extends Controller {
         const fromAccountId = ctx.checkBody('fromAccountId').exist().isTransferAccountId().value
         //外部交易号(订单号),必须唯一,不能重复支付
         const outsideTradeNo = ctx.checkBody('outsideTradeNo').exist().len(5, 32).value
+        const outsideTradeDesc = ctx.checkBody('outsideTradeDesc').exist().len(1, 100).value
         const remark = ctx.checkBody('remark').optional().type('string').len(1, 200).value
         const paymentType = ctx.checkBody('paymentType').optional().toInt().default(1).value
+
         ctx.validate()
 
-        const accountInfo = {}
-        await this.accountProvider.find({accountId: {$in: [toAccountId, fromAccountId]}}, false).then(list => {
+        const {fromAccountInfo, toAccountInfo} = await this.accountProvider.find({accountId: {$in: [fromAccountId, toAccountId]}}).then(list => {
+            const accountInfo = {}
             list.forEach(item => accountInfo[item.accountId] = item)
+            return {fromAccountInfo: accountInfo[fromAccountId], toAccountInfo: accountInfo[toAccountId]}
         })
-        const fromAccountInfo = accountInfo[fromAccountId]
-        const toAccountInfo = accountInfo[toAccountId]
-
         if (!fromAccountInfo) {
             ctx.error({msg: `未找到发起方账号${fromAccountId}`})
         }
@@ -102,7 +102,48 @@ module.exports = class PayController extends Controller {
         }
 
         await ctx.service.payService.payment({
-            fromAccountInfo, toAccountInfo, password, amount, outsideTradeNo, remark, paymentType
+            fromAccountInfo, toAccountInfo, password, amount, outsideTradeNo, outsideTradeDesc, remark, paymentType
+        }).then(ctx.success).catch(ctx.error)
+    }
+
+    /**
+     * 询问支付(先冻结金额,等待发起方确认后再决定扣款或者解除冻结)
+     * @param ctx
+     * @returns {Promise<void>}
+     */
+    async inquirePayment(ctx) {
+
+        //交易金额,以币种的最小单位为准.例如分,borb
+        const amount = ctx.checkBody('amount').exist().isInt().toInt().gt(0).value
+        const password = ctx.checkBody('password').optional().isNumeric().len(6, 6).value
+        const toAccountId = ctx.checkBody('toAccountId').exist().isTransferAccountId().value
+        const fromAccountId = ctx.checkBody('fromAccountId').exist().isTransferAccountId().value
+        //外部交易号(订单号),必须唯一,不能重复支付
+        const outsideTradeNo = ctx.checkBody('outsideTradeNo').exist().len(5, 32).value
+        const remark = ctx.checkBody('remark').optional().type('string').len(1, 200).value
+        const paymentType = ctx.checkBody('paymentType').optional().toInt().default(1).value
+
+        ctx.validate()
+
+        const {fromAccountInfo, toAccountInfo} = await this.accountProvider.find({accountId: {$in: [fromAccountId, toAccountId]}}).then(list => {
+            const accountInfo = {}
+            list.forEach(item => accountInfo[item.accountId] = item)
+            return {fromAccountInfo: accountInfo[fromAccountId], toAccountInfo: accountInfo[toAccountId]}
+        })
+        if (!fromAccountInfo) {
+            ctx.error({msg: `未找到发起方账号${fromAccountId}`})
+        }
+        if (!toAccountInfo) {
+            ctx.error({msg: `未找到收款方用户账号${toAccountId}`})
+        }
+
+        const oldOrder = await ctx.dal.paymentOrderProvider.findOne({outsideTradeNo})
+        if (oldOrder) {
+            ctx.error({msg: `当前订单号已经支付过,不能重复支付`, data: {outsideTradeNo}})
+        }
+
+        await ctx.service.payService.inquirePayment({
+            fromAccountInfo, toAccountInfo, password, amount, paymentType, outsideTradeNo, remark
         }).then(ctx.success).catch(ctx.error)
     }
 
@@ -152,7 +193,7 @@ module.exports = class PayController extends Controller {
     }
 
     /**
-     * 支付订单列表
+     * 支付订单详情
      * @param ctx
      * @returns {Promise<void>}
      */

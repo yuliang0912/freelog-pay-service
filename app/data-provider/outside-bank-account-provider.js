@@ -14,9 +14,8 @@ module.exports = class OutsideBankAccountProvider extends MongoBaseOperation {
      * @returns {model}
      */
     create(model) {
-        return super.findOneAndUpdate({cardNo: model.cardNo}, {status: 1}).then(oldInfo => {
-            return oldInfo ? Object.assign(oldInfo, {status: 1}) : super.create(model)
+        return super.findOneAndUpdate({cardNo: model.cardNo}, {status: 1}, {new: true}).then(bankAccount => {
+            return bankAccount ? bankAccount : super.create(model)
         })
     }
-
 }

@@ -13,7 +13,7 @@ module.exports = class ContractServiceAuthorization {
      * @param tradeType
      * @returns {boolean}
      */
-    async authorization({accountInfo, userId, password, amount, tradeType}) {
+    async authorization({accountInfo, userId, password, amount, tradeType, outsideTradeNo}) {
 
         const {app} = globalInfo
 
@@ -21,7 +21,7 @@ module.exports = class ContractServiceAuthorization {
             type: 'post',
             contentType: 'json',
             data: {
-                amount, tradeType,
+                amount, tradeType, outsideTradeNo,
                 operationUserId: userId,
                 contractId: accountInfo.ownerId,
                 accountId: accountInfo.accountId
@@ -29,6 +29,5 @@ module.exports = class ContractServiceAuthorization {
         })
 
         return authResult
-
     }
 }

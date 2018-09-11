@@ -24,7 +24,7 @@ module.exports = app => {
         ownerId: {type: String, required: true}, //所属者ID
         currencyType: {type: Number, required: true, enum: [1, 2, 3, 4]}, //货币类型
         balance: {type: Number, default: 0, required: true},
-        freezeBalance: {type: Number, default: 0, required: true}, //冻结余额
+        freezeBalance: {type: Number, default: 0, required: true}, //冻结金额
         authorizationType: {type: Number, default: 1, required: true, enum: [1, 2]},
         password: {type: String, default: '', required: false}, //支付密码(6位数字的加密值)
         pwSalt: {type: String, default: '', required: false},

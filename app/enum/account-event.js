@@ -27,4 +27,8 @@ module.exports = {
      */
     accountRechargeCompletedEvent: Symbol('account#rechargeCompletedEvent'),
 
+    /**
+     * 发起询问支付事件
+     */
+    emitInquirePaymentEvent: Symbol('account#emitInquirePaymentEvent')
 }

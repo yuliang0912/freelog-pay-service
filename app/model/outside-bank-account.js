@@ -4,9 +4,17 @@
 
 'use strict'
 
+const lodash = require('lodash')
+
 module.exports = app => {
 
     const mongoose = app.mongoose
+
+    const toJsonOptions = {
+        transform(doc, ret, options) {
+            return Object.assign(lodash.omit(ret, ['_id', 'cardType']))
+        }
+    }
 
     const accountSchema = new mongoose.Schema({
         cardNo: {type: String, required: true},
@@ -18,10 +26,11 @@ module.exports = app => {
     }, {
         versionKey: false,
         bufferCommands: false,
+        toJSON: toJsonOptions,
         timestamps: {createdAt: 'createDate', updatedAt: 'updateDate'}
     })
 
-    accountSchema.index({userId: 1, cardNo: 1}, {unique: true});
+    accountSchema.index({userId: 1, currencyType: 1, cardNo: 1}, {unique: true});
 
     return mongoose.model('card-clips', accountSchema)
 }

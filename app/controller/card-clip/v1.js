@@ -39,6 +39,12 @@ module.exports = class CardClipController extends Controller {
         const currencyType = ctx.checkBody('currencyType').exist().toInt().in(CurrencyTypes).value
 
         ctx.validate()
+        const userId = ctx.request.userId
+
+        const cardInfo = await ctx.dal.outsideBankAccountProvider.findOne({userId, currencyType, cardNo})
+        if (cardInfo) {
+            return ctx.success(cardInfo)
+        }
 
         await ctx.dal.outsideBankAccountProvider.create({
             cardNo, currencyType,

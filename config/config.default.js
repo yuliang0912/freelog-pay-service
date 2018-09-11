@@ -1,6 +1,5 @@
 'use strict';
 
-
 module.exports = appInfo => {
 
     const config = {
@@ -77,7 +76,7 @@ module.exports = appInfo => {
 
         rabbitMq: {
             connOptions: {
-                host: '192.168.164.166',
+                host: '192.168.164.165',
                 port: 5672,
                 login: 'guest',
                 password: 'guest',
@@ -102,6 +101,16 @@ module.exports = appInfo => {
                             routingKey: 'auth.event.handle.result.pay.payment.contract'
                         }
                     ]
+                },
+                {
+                    name: '[pay]-inquire-payment-result',
+                    options: {autoDelete: false, durable: true},
+                    routingKeys: [
+                        {
+                            exchange: 'freelog-contract-exchange',
+                            routingKey: 'inquire.payment.result'
+                        }
+                    ]
                 }
             ]
         },
@@ -118,9 +127,7 @@ module.exports = appInfo => {
 
         transactionAccountCountLimit: 5,
 
-        customLoader: [{
-            name: 'eventHandler', dir: 'app/event-handler'
-        }]
+        customLoader: ['app/event-handler', 'app/mq-service/index.js']
     }
 
     return config;

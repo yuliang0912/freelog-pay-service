@@ -9,9 +9,11 @@ const {accountEvent, outsideTradeEvent} = require('../enum/index')
 const AccountPaymentEventHandler = require('./account-events-handler/payment-event-handler')
 const AccountTransferEventHandler = require('./account-events-handler/transfer-event-handler')
 const AccountAmountChangedEventHandler = require('./account-events-handler/amount-changed-event-handler')
+const EmitInquirePaymentEventHandler = require('./account-events-handler/emit-inquire-payment-event-handler')
 const AccountRechargeCompletedEventHandler = require('./account-events-handler/recharge-completed-event-handler')
 const AccountSignatureVerifyFailedEventHandler = require('./account-events-handler/signature-verify-failed-event-handler')
 const FeatherTransferEventHandler = require('./outside-account-events-handler/feather-transfer-event-handler')
+const ObtainInquirePaymentResultEventHandler = require('./outside-account-events-handler/obtain-inquire-payment-result-event-handler')
 
 module.exports = class AppEventsListener {
 
@@ -27,18 +29,23 @@ module.exports = class AppEventsListener {
      */
     registerEventListener() {
 
-        const {featherTransferEvent} = outsideTradeEvent
-        const {accountRechargeCompletedEvent, accountAmountChangedEvent, accountSignatureVerifyFailedEvent, accountTransferEvent, accountPaymentEvent} = accountEvent
+        const {featherTransferEvent, obtainInquirePaymentResultEvent} = outsideTradeEvent
+        const {
+            accountRechargeCompletedEvent, accountAmountChangedEvent, accountSignatureVerifyFailedEvent,
+            accountTransferEvent, accountPaymentEvent, emitInquirePaymentEvent
+        } = accountEvent
 
         //注册内部账户事件
         this.registerEventAndHandler(accountPaymentEvent)
         this.registerEventAndHandler(accountTransferEvent)
+        this.registerEventAndHandler(emitInquirePaymentEvent)
         this.registerEventAndHandler(accountAmountChangedEvent)
         this.registerEventAndHandler(accountRechargeCompletedEvent)
         this.registerEventAndHandler(accountSignatureVerifyFailedEvent)
 
         //注册外部交易事件
         this.registerEventAndHandler(featherTransferEvent)
+        this.registerEventAndHandler(obtainInquirePaymentResultEvent)
     }
 
     /**
@@ -60,19 +67,24 @@ module.exports = class AppEventsListener {
      */
     registerEventHandler() {
 
-        const {patrun} = this
+        const {patrun, app} = this
 
-        const {featherTransferEvent} = outsideTradeEvent
-        const {accountRechargeCompletedEvent, accountAmountChangedEvent, accountSignatureVerifyFailedEvent, accountTransferEvent, accountPaymentEvent} = accountEvent
+        const {featherTransferEvent, obtainInquirePaymentResultEvent} = outsideTradeEvent
+        const {
+            accountRechargeCompletedEvent, accountAmountChangedEvent, accountSignatureVerifyFailedEvent,
+            accountTransferEvent, accountPaymentEvent, emitInquirePaymentEvent
+        } = accountEvent
 
         //内部账户事件注册
-        patrun.add({event: accountPaymentEvent.toString()}, new AccountPaymentEventHandler(this.app))
-        patrun.add({event: accountTransferEvent.toString()}, new AccountTransferEventHandler(this.app))
-        patrun.add({event: accountAmountChangedEvent.toString()}, new AccountAmountChangedEventHandler(this.app))
-        patrun.add({event: accountRechargeCompletedEvent.toString()}, new AccountRechargeCompletedEventHandler(this.app))
-        patrun.add({event: accountSignatureVerifyFailedEvent.toString()}, new AccountSignatureVerifyFailedEventHandler(this.app))
+        patrun.add({event: accountPaymentEvent.toString()}, new AccountPaymentEventHandler(app))
+        patrun.add({event: accountTransferEvent.toString()}, new AccountTransferEventHandler(app))
+        patrun.add({event: emitInquirePaymentEvent.toString()}, new EmitInquirePaymentEventHandler(app))
+        patrun.add({event: accountAmountChangedEvent.toString()}, new AccountAmountChangedEventHandler(app))
+        patrun.add({event: accountRechargeCompletedEvent.toString()}, new AccountRechargeCompletedEventHandler(app))
+        patrun.add({event: accountSignatureVerifyFailedEvent.toString()}, new AccountSignatureVerifyFailedEventHandler(app))
 
         //外部交易事件注册
-        patrun.add({event: featherTransferEvent.toString()}, new FeatherTransferEventHandler(this.app))
+        patrun.add({event: featherTransferEvent.toString()}, new FeatherTransferEventHandler(app))
+        patrun.add({event: obtainInquirePaymentResultEvent.toString()}, new ObtainInquirePaymentResultEventHandler(app))
     }
 }

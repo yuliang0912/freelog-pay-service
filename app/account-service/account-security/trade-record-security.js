@@ -49,7 +49,7 @@ module.exports = class TradeRecordSecurity {
         const signModelKeys = Object.keys(signModel).sort()
 
         if (signModelKeys.length !== signTradeRecordFields.length) {
-            throw new Error('账户信息不全,缺少加密用的必要字段')
+            throw new Error('账户交易记录信息不全,缺少加密用的必要字段')
         }
 
         const signString = signModelKeys.reduce((acc, field) => `${acc}_${field}:${signModel[field]}`, 'trade_record_sign_string')

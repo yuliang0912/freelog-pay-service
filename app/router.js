@@ -10,6 +10,8 @@ module.exports = app => {
     router.post('/v1/pay/recharge', pay.v1.recharge)
     router.post('/v1/pay/transfer', pay.v1.transfer)
     router.post('/v1/pay/officialTap', pay.v1.officialTap)
+    router.post('/v1/pay/inquirePayment', pay.v1.inquirePayment)
+
     router.get('/v1/pay/paymentOrders', pay.v1.paymentOrders)
     router.get('/v1/pay/paymentOrderInfo', pay.v1.paymentOrderInfo)
     router.get('/v1/pay/outsideTradeState', pay.v1.outsideTradeState)

@@ -7,7 +7,7 @@
 const lodash = require('lodash')
 const signKey = 'freelog#account#payment#order#security#hamac#key'
 const crypto = require('egg-freelog-base/app/extend/helper/crypto_helper')
-const signPaymentOrderFields = ['paymentOrderId', 'accountId', 'toAccountId', 'outsideTradeNo', 'paymentType', 'tradePoundage', 'operationUserId', 'status', 'amount', 'createDate']
+const signPaymentOrderFields = ['paymentOrderId', 'accountId', 'toAccountId', 'outsideTradeNo', 'paymentType', 'tradePoundage', 'operationUserId', 'paymentStatus', 'amount', 'createDate']
 
 module.exports = class PaymentOrderSecurity {
 
@@ -49,7 +49,8 @@ module.exports = class PaymentOrderSecurity {
         const signModelKeys = Object.keys(signModel).sort()
 
         if (signModelKeys.length !== signPaymentOrderFields.length) {
-            throw new Error('账户信息不全,缺少加密用的必要字段')
+            console.log(signModelKeys, signPaymentOrderFields)
+            throw new Error('支付订单信息不全,缺少加密用的必要字段')
         }
 
         const signString = signModelKeys.reduce((acc, field) => `${acc}_${field}:${signModel[field]}`, 'payment_order_sign_string')

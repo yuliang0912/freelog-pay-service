@@ -26,17 +26,25 @@ module.exports = class AccountChangedEventHandler {
      */
     async accountAmountChangedEventHandler(args) {
 
-        const {accountId, beforeBalance, afterBalance, amount, tradeType, tradePoundage, userId, remark} = args
+        const {tradeDesc, accountId, correlativeInfo, beforeBalance, afterBalance, amount, tradeType, tradePoundage, userId, remark} = args
 
         const tradeRecordInfo = {
             tradeId: uuid.v4().replace(/-/g, ''),
-            accountId, beforeBalance, afterBalance, tradeType, amount, tradePoundage,
+            accountId, beforeBalance, afterBalance, tradeType, amount, tradePoundage, tradeDesc,
             status: 1,
             operationUserId: userId,
             remark: remark || '暂无',
             summary: this.generateSummary(args),
             createDate: new Date().toISOString()
         }
+
+        tradeRecordInfo.correlativeInfo = {
+            transactionId: correlativeInfo.transactionId,
+            accountId: correlativeInfo.accountInfo.accountId,
+            accountType: correlativeInfo.accountInfo.accountType,
+            ownerId: correlativeInfo.accountInfo.ownerId
+        }
+
         accountTradeRecordSecurity.accountTradeRecordSignature(tradeRecordInfo)
         //流水记录后期可以考虑在其他地方单独记录,例如账户收到款项处理完以后,发送消息到MQ.
         await this.accountTradeRecordProvider.create(tradeRecordInfo)
@@ -47,17 +55,18 @@ module.exports = class AccountChangedEventHandler {
      * @param correlativeAccountId
      * @param tradeType
      */
-    generateSummary({correlativeAccountId, correlativeTradeId, tradeType, amount}) {
+    generateSummary({correlativeInfo, tradeType, amount}) {
 
         const accountName = amount > 0 ? '付款方' : '收款方'
+        const {accountInfo, transactionId} = correlativeInfo
 
         switch (tradeType) {
             case tradeTypeEnum.Transfer:
-                return `转账,${accountName}:${correlativeAccountId}`
+                return `转账,${accountName}:${accountInfo.accountId},记录号:${transactionId}`
             case tradeTypeEnum.Recharge:
-                return `充值,卡号:${correlativeAccountId},银行交易号:${correlativeTradeId}`
+                return `充值,记录号:${transactionId}`
             case tradeTypeEnum.Payment:
-                return `支付订单,${accountName}:${correlativeAccountId},订单号:${correlativeTradeId}`
+                return `支付订单,${accountName}:${accountInfo.accountId},订单号:${transactionId}`
             default:
                 return '未知'
         }

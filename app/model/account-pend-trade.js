@@ -26,7 +26,7 @@ module.exports = app => {
         amount: {type: Number, min: 1, required: true}, // 1:交易金额
         currencyType: {type: Number, required: true, enum: [1, 2, 3, 4]}, //货币类型
         cardNo: {type: String, required: true}, //交易卡号
-        tradeStatus: {type: Number, default: 1, required: true}, //交易状态
+        tradeStatus: {type: Number, default: 1, required: true}
     }, {
         versionKey: false,
         bufferCommands: false,

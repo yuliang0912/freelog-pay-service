@@ -21,7 +21,7 @@ class AccountAuthorization {
      * @param amount
      * @param tradeType
      */
-    async authorization({accountInfo, userId, password, amount, tradeType}) {
+    async authorization({accountInfo, userId, password, amount, tradeType, outsideTradeNo}) {
 
         accountInfo.authorizationType = accountInfo.authorizationType || accountAuthorizationType.PasswordAndIdentity
 

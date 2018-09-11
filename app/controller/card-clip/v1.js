@@ -17,7 +17,7 @@ module.exports = class CardClipController extends Controller {
      */
     async index(ctx) {
 
-        const currencyType = ctx.checkBody('currencyType').optional().toInt().in(CurrencyTypes).value
+        const currencyType = ctx.checkQuery('currencyType').optional().toInt().in(CurrencyTypes).value
         ctx.validate()
 
         const condition = {userId: ctx.request.userId, status: 1}

@@ -1,39 +1,36 @@
 'use strict'
 
-const queue = require('async/queue')
-const {tradeType, accountEvent} = require('../../enum/index')
-const {PaymentOutsideOrder} = require('../../enum/rabbit-mq-event')
+const {tradeType, tradeStatus, accountEvent} = require('../../enum/index')
+const {PaymentOrderTradeStatusChanged} = require('../../enum/rabbit-mq-event')
 
 module.exports = class AccountPaymentEventHandler {
 
     constructor(app) {
         this.app = app
         this.paymentOrderProvider = app.dal.paymentOrderProvider
-        this.queue = queue(this.accountPaymentEventHandler.bind(this), 3)
     }
 
     /**
      * 事件处理函数
      */
     handler() {
-        this.queue.push(...arguments, this.callback.bind(this))
+        return this.accountPaymentEventHandler(...arguments)
     }
 
     /**
-     * 账户金额变动事件处理函数
-     * @param accountInfo
+     * 支付订单成功事件
      */
-    async accountPaymentEventHandler(args) {
+    async accountPaymentEventHandler({fromAccountInfo, toAccountInfo, paymentOrderInfo}) {
 
-        const {fromAccountInfo, toAccountInfo, amount, userId, paymentOrderId, remark} = args
-        const paymentOrderInfo = await this.paymentOrderProvider.findOne({paymentOrderId})
-        if (!paymentOrderInfo || !paymentOrderInfo.isPaymentSuccess) {
+        if (!paymentOrderInfo || paymentOrderInfo.tradeStatus !== tradeStatus.Successful) {
             console.log('错误的事件触发,请排查系统BUG', paymentOrderInfo)
             return
         }
 
+        const {amount, operationUserId, paymentOrderId, remark} = paymentOrderInfo
+
         this.sendAccountAmountChangedEvent({
-            amount, userId, remark, accountInfo: toAccountInfo,
+            amount, userId: operationUserId, remark, accountInfo: toAccountInfo,
             tradeDesc: paymentOrderInfo.outsideTradeDesc,
             correlativeInfo: {
                 transactionId: paymentOrderId, accountInfo: fromAccountInfo
@@ -41,16 +38,14 @@ module.exports = class AccountPaymentEventHandler {
         })
 
         this.sendAccountAmountChangedEvent({
-            userId, remark, accountInfo: fromAccountInfo, amount: amount * -1,
+            userId: operationUserId, remark, accountInfo: fromAccountInfo, amount: amount * -1,
             tradeDesc: paymentOrderInfo.outsideTradeDesc,
             correlativeInfo: {
                 transactionId: paymentOrderId, accountInfo: toAccountInfo
             }
         })
 
-        this.sendPaymentEventToMessageQueue(paymentOrderInfo)
-
-        //此处还需要发送消息给对应的订单方,例如合同订单
+        this.app.rabbitClient.publish(Object.assign({}, PaymentOrderTradeStatusChanged, {body: paymentOrderInfo}))
 
         console.log(`支付成功,订单号:${paymentOrderId},外部订单号:${paymentOrderInfo.outsideTradeNo}`)
     }
@@ -75,18 +70,6 @@ module.exports = class AccountPaymentEventHandler {
         this.app.emit(accountEvent.accountAmountChangedEvent, accountAmountChangedEventParams)
     }
 
-    /**
-     * 发送支付事件到消息队列
-     */
-    sendPaymentEventToMessageQueue(paymentOrderInfo) {
-        this.app.rabbitClient.publish({
-            routingKey: PaymentOutsideOrder.routingKey,
-            eventName: PaymentOutsideOrder.eventName,
-            body: paymentOrderInfo
-        }).catch(error => {
-            console.error('支付事件通知MQ失败', paymentOrderInfo, error)
-        })
-    }
 
     /**
      * 错误处理

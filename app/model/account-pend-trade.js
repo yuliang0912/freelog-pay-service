@@ -6,6 +6,7 @@
 'use strict'
 
 const omitFields = ['_id']
+const {tradeStatus} = require('../enum/index')
 const lodash = require('lodash')
 
 module.exports = app => {
@@ -14,7 +15,7 @@ module.exports = app => {
 
     const toJsonOptions = {
         transform(doc, ret, options) {
-            return lodash.omit(ret, omitFields)
+            return Object.assign({tradeId: doc.id}, lodash.omit(ret, omitFields))
         }
     }
 
@@ -26,7 +27,11 @@ module.exports = app => {
         amount: {type: Number, min: 1, required: true}, // 1:交易金额
         currencyType: {type: Number, required: true, enum: [1, 2, 3, 4]}, //货币类型
         cardNo: {type: String, required: true}, //交易卡号
-        tradeStatus: {type: Number, default: 1, required: true}
+        tradeStatus: {
+            type: Number, default: 1, required: true,
+            enum: [tradeStatus.Pending, tradeStatus.Successful, tradeStatus.Failed],
+        },
+        status: {type: Number, default: 1, required: true}, //状态 1:显示 2:隐藏
     }, {
         versionKey: false,
         bufferCommands: false,
@@ -35,6 +40,10 @@ module.exports = app => {
     })
 
     accountPendTradeSchema.index({outsideTradeId: 1, currencyType: 1}, {unique: true});
+
+    accountPendTradeSchema.virtual('tradeId').get(function () {
+        return this.id
+    })
 
     return mongoose.model('account-pend-trades', accountPendTradeSchema)
 }

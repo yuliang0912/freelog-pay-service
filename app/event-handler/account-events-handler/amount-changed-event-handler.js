@@ -9,7 +9,7 @@ module.exports = class AccountChangedEventHandler {
 
     constructor(app) {
         this.app = app
-        this.queue = queue(this.accountAmountChangedEventHandler.bind(this), 3)
+        this.queue = queue(this.accountAmountChangedEventHandler.bind(this), 30)
         this.accountTradeRecordProvider = app.dal.accountTradeRecordProvider
     }
 
@@ -22,7 +22,6 @@ module.exports = class AccountChangedEventHandler {
 
     /**
      * 账户金额变动事件处理函数
-     * @param accountInfo
      */
     async accountAmountChangedEventHandler(args) {
 

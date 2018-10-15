@@ -6,6 +6,7 @@
 
 const lodash = require('lodash')
 const omitFields = ['_id', 'signature']
+const {tradeStatus} = require('../enum/index')
 
 module.exports = app => {
 
@@ -24,9 +25,13 @@ module.exports = app => {
         amount: {type: Number, required: true}, //变动金额
         tradePoundage: {type: Number, default: 0, required: true}, //交易手续费
         operationUserId: {type: Number, default: 0, required: true}, //发起者用户ID
-        remark: {type: String, required: true}, //用户备注
-        status: {type: Number, default: 1, required: true}, //状态 1:交易发起中 2:交易成功 3:交易失败
-        createDate: {type: Date, default: Date.now, required: true}
+        remark: {type: String, default: '', required: false}, //用户备注
+        createDate: {type: Date, default: Date.now, required: true},
+        tradeStatus: {
+            type: Number, default: 1, required: true,
+            enum: [tradeStatus.Pending, tradeStatus.InitiatorAbandon, tradeStatus.InitiatorConfirmed, tradeStatus.Successful, tradeStatus.Failed],
+        },
+        status: {type: Number, default: 1, required: true}, //状态 1:显示 2:隐藏
     }, {
         versionKey: false,
         bufferCommands: false,

@@ -11,6 +11,7 @@ module.exports = app => {
     router.post('/v1/pay/transfer', pay.v1.transfer)
     router.post('/v1/pay/officialTap', pay.v1.officialTap)
     router.post('/v1/pay/inquirePayment', pay.v1.inquirePayment)
+    router.post('/v1/pay/inquireTransfer', pay.v1.inquireTransfer)
 
     router.get('/v1/pay/paymentOrders', pay.v1.paymentOrders)
     router.get('/v1/pay/paymentOrderInfo', pay.v1.paymentOrderInfo)
@@ -23,6 +24,7 @@ module.exports = app => {
 
     //账户接口
     router.get('/v1/pay/accounts/tradeRecords', account.v1.tradeRecords)
+    router.post('/v1/pay/accounts/createNodeAccount', account.v1.createNodeAccount)
     router.post('/v1/pay/accounts/createContractAccount', account.v1.createContractAccount)
 
     //rest-ful接口

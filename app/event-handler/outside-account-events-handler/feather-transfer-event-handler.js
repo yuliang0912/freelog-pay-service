@@ -10,6 +10,7 @@ module.exports = class FeatherTransferEventHandler {
         this.app = app
         this.maxBlockNumber = 0
         this.accountPendTradeProvider = app.dal.accountPendTradeProvider
+        this.ethTransferBlockNumProvider = app.dal.ethTransferBlockNumProvider
         this.queue = queue(this.featherTransferEventHandler.bind(this), concurrencyCount)
     }
 
@@ -36,22 +37,22 @@ module.exports = class FeatherTransferEventHandler {
         const {transactionHash, blockNumber, type} = transferEvent
         const {from, to, value, _data} = transferEvent.returnValues
 
-        const pendingInfo = await this.accountPendTradeProvider.findOne({
+        const accountPendTrade = await this.accountPendTradeProvider.findOne({
             outsideTradeId: transactionHash,
             currencyType: currencyType.ETH
         })
 
-        if (!pendingInfo) {
+        if (!accountPendTrade) {
             return this.retry(transferEvent, callback)
         }
-        if (pendingInfo.cardNo.toLowerCase() !== from.toLowerCase() || pendingInfo.tradeStatus !== tradeStatus.Pending || pendingInfo.amount.toString() !== value.toString()) {
+        if (accountPendTrade.cardNo.toLowerCase() !== from.toLowerCase() || accountPendTrade.tradeStatus !== tradeStatus.Pending || accountPendTrade.amount.toString() !== value.toString()) {
             return this.handComplete(transferEvent, callback)
         }
 
-        await this.accountPendTradeProvider.update({outsideTradeId: transactionHash}, {tradeStatus: tradeStatus.Complete})
+        await accountPendTrade.updateOne({tradeStatus: tradeStatus.Successful})
 
-        if (pendingInfo.tradeType === tradeType.Recharge) {
-            app.emit(accountEvent.accountRechargeCompletedEvent, pendingInfo)
+        if (accountPendTrade.tradeType === tradeType.Recharge) {
+            app.emit(accountEvent.accountRechargeCompletedEvent, accountPendTrade)
         } else {
             console.log('不支持的交易类型,目前只支持充值类型的事件,请检查代码')
         }
@@ -75,8 +76,7 @@ module.exports = class FeatherTransferEventHandler {
      * 定时同步更新处理的区块编号
      */
     updateBlockNumber() {
-        const {ethTransferBlockNumProvider} = this.app.dal
-        setInterval(() => ethTransferBlockNumProvider.setBlockNumber(this.maxBlockNumber), 2000)
+        setInterval(() => this.ethTransferBlockNumProvider.setBlockNumber(this.maxBlockNumber), 2000)
     }
 
     /**

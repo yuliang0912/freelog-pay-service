@@ -1,7 +1,7 @@
 'use strict'
 
 const queue = require('async/queue')
-const {tradeType, accountEvent} = require('../../enum/index')
+const {tradeType, tradeStatus, accountEvent} = require('../../enum/index')
 
 module.exports = class AccountTransferEventHandler {
 
@@ -21,6 +21,10 @@ module.exports = class AccountTransferEventHandler {
      * 账户金额变动事件处理函数
      */
     async accountAmountChangedEventHandler({transferRecordInfo, fromAccountInfo, toAccountInfo}) {
+
+        if (transferRecordInfo.tradeStatus !== tradeStatus.Successful) {
+            return
+        }
 
         const {transferId, amount, operationUserId, remark} = transferRecordInfo
         this.sendAccountAmountChangedEvent({

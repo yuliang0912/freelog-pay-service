@@ -6,6 +6,7 @@
 
 const lodash = require('lodash')
 const omitFields = ['_id', 'signature']
+const {tradeStatus} = require('../enum/index')
 
 module.exports = app => {
 
@@ -29,7 +30,10 @@ module.exports = app => {
         outsideTradeDesc: {type: String, required: true}, //外部交易订单说明
         outsideTradeNo: {type: String, unique: true, required: true}, //外部交易号,外部订单号.
         signature: {type: String, required: true}, //签名信息
-        paymentStatus: {type: Number, default: 1, required: true}, //支付状态 1:发起支付中 2:支付确认中 3:支付成功 4:支付失败 5:发起方放弃支付
+        tradeStatus: {
+            type: Number, default: 1, required: true,
+            enum: [tradeStatus.Pending, tradeStatus.InitiatorAbandon, tradeStatus.InitiatorConfirmed, tradeStatus.Successful, tradeStatus.Failed],
+        },
         status: {type: Number, default: 1, required: true}, //状态 1:正常  2:隐藏
     }, {
         versionKey: false,
@@ -39,7 +43,7 @@ module.exports = app => {
     })
 
     paymentOrderSchema.virtual('isPaymentSuccess').get(function () {
-        return this.paymentStatus === 3
+        return this.tradeStatus === tradeStatus.Successful
     })
 
     paymentOrderSchema.index({paymentOrderId: 1, accountId: 1, outsideTradeNo: 1})

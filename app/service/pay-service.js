@@ -48,15 +48,18 @@ module.exports = class PayService extends Service {
             operationUserId: userId,
             accountId: fromAccountInfo.accountId,
             toAccountId: toAccountInfo.accountId,
-            paymentStatus: 3,
+            tradeStatus: tradeStatus.Successful,
             createDate: new Date().toISOString(),
-            tradePoundage: 0,
-            status: 1,
+            tradePoundage: 0
         }
         paymentOrderSecurity.paymentOrderSignature(paymentOrderInfo)
-        this._sendAccountPaymentEvent({fromAccountInfo, toAccountInfo, amount, paymentOrderId, remark})
 
-        return this.paymentOrderProvider.create(paymentOrderInfo).catch(error => {
+        return this.paymentOrderProvider.create(paymentOrderInfo).then(orderInfo => {
+            this.app.emit(accountEvent.accountPaymentEvent, {
+                fromAccountInfo, toAccountInfo, paymentOrderInfo: orderInfo
+            })
+            return orderInfo
+        }).catch(error => {
             this.app.logger.error(`交易成功,但是创建支付订单失败`, paymentOrderInfo)
             throw error
         })
@@ -69,7 +72,7 @@ module.exports = class PayService extends Service {
 
         const {app} = this
         await this._checkTransferAuthorization({
-            accountInfo: fromAccountInfo, outsideTradeNo,
+            accountInfo: fromAccountInfo,
             amount, password, tradeType: tradeType.Payment
         })
         this._checkTransferAmount({fromAccountInfo, amount})
@@ -80,7 +83,6 @@ module.exports = class PayService extends Service {
         this._signAccountInfo(fromAccountInfo)
 
         await this.accountProvider.update(fromAccountUpdateCondition, {
-            balance: fromAccountInfo.balance,
             freezeBalance: fromAccountInfo.freezeBalance,
             signature: fromAccountInfo.signature
         })
@@ -92,7 +94,7 @@ module.exports = class PayService extends Service {
             accountId: fromAccountInfo.accountId,
             toAccountId: toAccountInfo.accountId,
             createDate: new Date().toISOString(),
-            paymentStatus: 1, tradePoundage: 0
+            tradeStatus: tradeStatus.Pending, tradePoundage: 0
         }
 
         paymentOrderSecurity.paymentOrderSignature(paymentOrderInfo)
@@ -104,39 +106,31 @@ module.exports = class PayService extends Service {
 
     /**
      * 充值
-     * @param accountId 充值账户
-     * @param cardNo 扣费银行卡号
-     * @param amount 扣飞金额
-     * @returns {Promise<void>}
      */
-    async recharge({accountId, cardNo, amount, password}) {
+    async recharge({accountInfo, cardNo, amount, password}) {
 
-        const {ctx} = this
-        const accountInfo = await this.accountProvider.findOne({accountId})
-        if (!accountInfo) {
-            ctx.error({msg: '账户ID错误'})
-        }
+        const {userId} = this
+        const {accountId, currencyType} = accountInfo
+        const paymentService = new PaymentService(currencyType)
 
-        const paymentService = new PaymentService(accountInfo.currencyType)
         //后续需要做安全性检查,限额检查,以及用户认证检查等
         const outsideTradeInfo = await paymentService.recharge({fromCardNo: cardNo, amount, password})
         if (outsideTradeInfo.tradeStatus !== tradeStatus.Pending) {
             console.log('待实现.目前没有同步场景')
+            return
         }
 
-        return this._saveAccountPendTrade({
-            accountInfo, cardNo, amount,
+        const model = {
+            accountId, amount, userId, currencyType, cardNo,
             outsideTradeId: outsideTradeInfo.tradeNumber,
-            tradeStatus: outsideTradeInfo.tradeStatus,
-            tradeType: tradeType.Recharge
-        })
+            tradeStatus: outsideTradeInfo.tradeStatus
+        }
+
+        return this.accountPendTradeProvider.create(model)
     }
 
     /**
      * 转账
-     * @param fromAccountInfo
-     * @param toAccountInfo
-     * @param amount
      */
     async transfer({fromAccountInfo, toAccountInfo, password, amount, remark}) {
 
@@ -146,19 +140,59 @@ module.exports = class PayService extends Service {
             toAccountId: toAccountInfo.accountId,
             operationUserId: this.userId,
             tradePoundage: 0,
-            status: 1, amount, remark,
+            tradeStatus: tradeStatus.Pending,
+            amount, remark,
         })
         const {result} = await this._transfer({
             fromAccountInfo, toAccountInfo, password, amount, tradeType: tradeType.Transfer
         })
-        transferRecordInfo.status = result ? 2 : 3
-        await transferRecordInfo.update({status: transferRecordInfo.status})
+        transferRecordInfo.tradeStatus = result ? tradeStatus.Successful : tradeStatus.Failed
+        transferRecordInfo.updateOne({tradeStatus: transferRecordInfo.tradeStatus}).exec()
         if (result) {
             this.app.emit(accountEvent.accountTransferEvent, {transferRecordInfo, fromAccountInfo, toAccountInfo})
         }
         return transferRecordInfo
     }
 
+    /**
+     * 问询转账(发起确认函)
+     */
+    async inquireTransfer({fromAccountInfo, toAccountInfo, authCode, transferType, amount, remark, refParam}) {
+
+        if (transferType === 2) {
+            amount = fromAccountInfo.balance
+        }
+
+        await this._checkTransferAuthorization({
+            accountInfo: fromAccountInfo, amount, password: authCode, tradeType: tradeType.Transfer, transferType
+        })
+
+        this._checkTransferAmount({fromAccountInfo, amount})
+        this._checkTransferAccountStatus({fromAccountInfo, toAccountInfo})
+
+        const transferRecordInfo = await this.accountTransferRecordProvider.create({
+            transferId: uuid.v4().replace(/-/g, ''),
+            fromAccountId: fromAccountInfo.accountId,
+            toAccountId: toAccountInfo.accountId,
+            operationUserId: this.userId,
+            tradePoundage: 0,
+            tradeStatus: tradeStatus.Pending,
+            amount, remark
+        })
+
+        const fromAccountUpdateCondition = lodash.pick(fromAccountInfo, ['accountId', 'signature'])
+        fromAccountInfo.freezeBalance = fromAccountInfo.freezeBalance + amount
+        this._signAccountInfo(fromAccountInfo)
+
+        await this.accountProvider.update(fromAccountUpdateCondition, {
+            freezeBalance: fromAccountInfo.freezeBalance,
+            signature: fromAccountInfo.signature
+        })
+
+        this.app.emit(accountEvent.emitInquireTransferEvent, transferRecordInfo, refParam)
+
+        return transferRecordInfo
+    }
 
     /**
      * 官方给用户tap货币
@@ -180,14 +214,8 @@ module.exports = class PayService extends Service {
         return paymentService.tap(cardNo)
     }
 
-
     /**
      * 账户之间的转账
-     * @param fromAccountInfo
-     * @param toAccountInfo
-     * @param password
-     * @param amount
-     * @param remark
      * @returns {Promise<any[]>}
      * @private
      */
@@ -298,48 +326,14 @@ module.exports = class PayService extends Service {
      * @param fromAccountInfo
      * @private
      */
-    async _checkTransferAuthorization({accountInfo, amount, password, tradeType, outsideTradeNo}) {
+    async _checkTransferAuthorization({accountInfo, amount, password, tradeType, transferType}) {
 
-        const {ctx} = this
-        const params = {accountInfo, userId: ctx.request.userId, password, amount, tradeType, outsideTradeNo}
+        const {ctx, userId} = this
+        const params = {accountInfo, userId, password, amount, tradeType, transferType}
         const {authResult, message} = await accountAuthorization.authorization(params)
 
         if (!authResult) {
             ctx.error({msg: message})
         }
-    }
-
-    /**
-     * 保存正在处理的外部交易记录
-     * @private
-     */
-    _saveAccountPendTrade({accountInfo, cardNo, amount, outsideTradeId, tradeStatus, tradeType}) {
-
-        const {ctx} = this
-        const {userId} = ctx.request
-        const {accountId, currencyType} = accountInfo
-        const model = {
-            accountId, currencyType, amount, userId, outsideTradeId, tradeType, cardNo, tradeStatus
-        }
-
-        return this.accountPendTradeProvider.create(model)
-    }
-
-    /**
-     * 发送支付事件
-     * @param fromAccountInfo
-     * @param toAccountInfo
-     * @param amount
-     * @param payOrderId
-     * @param remark
-     * @private
-     */
-    _sendAccountPaymentEvent({fromAccountInfo, toAccountInfo, amount, paymentOrderId, remark}) {
-        const {app, ctx} = this
-        const {userId} = ctx.request
-        const accountPaymentEventParams = {
-            fromAccountInfo, toAccountInfo, amount, remark, paymentOrderId, userId
-        }
-        app.emit(accountEvent.accountPaymentEvent, accountPaymentEventParams)
     }
 }

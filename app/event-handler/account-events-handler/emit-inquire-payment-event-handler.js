@@ -1,5 +1,6 @@
 'use strict'
 
+const {tradeStatus} = require('../../enum/index')
 const {EmitInquirePayment} = require('../../enum/rabbit-mq-event')
 const {paymentOrderSecurity} = require('../../account-service/account-security/index')
 
@@ -15,27 +16,24 @@ module.exports = class EmitInquirePaymentEventHandler {
      * 设置支付订单状态为支付确认中
      */
     handler(paymentOrderInfo) {
-
-        const {paymentOrderId} = paymentOrderInfo
-
         this.app.rabbitClient.publish(Object.assign({}, EmitInquirePayment, {body: paymentOrderInfo}))
-            .then(() => this.updatePaymentOrderProviderStatus(paymentOrderInfo, 2))
+            .then(() => this.updatePaymentOrderTradeStatus(paymentOrderInfo, tradeStatus.InitiatorConfirmed))
             .catch(error => this.callback(error, paymentOrderInfo))
     }
 
     /**
      * 更新支付订单状态
-     * @param paymentOrderId
-     * @param paymentStatus
      */
-    updatePaymentOrderProviderStatus(paymentOrderInfo, paymentStatus) {
+    updatePaymentOrderTradeStatus(paymentOrderInfo, tradeStatus) {
 
-        paymentOrderInfo.paymentStatus = paymentStatus
+        paymentOrderInfo.tradeStatus = tradeStatus
         paymentOrderSecurity.paymentOrderSignature(paymentOrderInfo)
 
         const {paymentOrderId, signature} = paymentOrderInfo
 
-        return this.paymentOrderProvider.update({paymentOrderId}, {paymentStatus, signature})
+        return this.paymentOrderProvider.update({paymentOrderId, tradeStatus: tradeStatus.Pending}, {
+            tradeStatus, signature
+        })
     }
 
     /**

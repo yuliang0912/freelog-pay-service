@@ -1,21 +1,21 @@
 'use strict'
 
 module.exports = {
-
+    
     /**
-     * 支付外部订单事件
+     * 支付订单状态变更事件
      */
-    PaymentOutsideOrder: Object.freeze({
+    PaymentOrderTradeStatusChanged: Object.freeze({
         routingKey: 'event.payment.order',
-        eventName: 'outsideOrderPaymentEvent'
+        eventName: 'PaymentOrderTradeStatusChanged'
     }),
 
     /**
      * 支付订单状态变更事件
      */
-    PaymentOrderStatusChanged: Object.freeze({
+    TransferRecordTradeStatusChanged: Object.freeze({
         routingKey: 'event.payment.order',
-        eventName: 'paymentOrderStatusChangedEvent'
+        eventName: 'TransferRecordTradeStatusChanged'
     }),
 
     /**
@@ -24,5 +24,13 @@ module.exports = {
     EmitInquirePayment: Object.freeze({
         routingKey: 'event.payment.order',
         eventName: 'inquirePaymentEvent'
+    }),
+
+    /**
+     * 发起转账确认函
+     */
+    EmitInquireTransfer: Object.freeze({
+        routingKey: 'event.payment.order',
+        eventName: 'inquireTransferEvent'
     })
 }

@@ -22,6 +22,7 @@ module.exports = app => {
         accountName: {type: String, required: true},
         accountType: {type: Number, required: true},
         ownerId: {type: String, required: true}, //所属者ID
+        userId: {type: Number, default: 0, required: false}, //用户ID
         currencyType: {type: Number, required: true, enum: [1, 2, 3, 4]}, //货币类型
         balance: {type: Number, default: 0, required: true},
         freezeBalance: {type: Number, default: 0, required: true}, //冻结金额

@@ -61,6 +61,29 @@ module.exports = class AccountController extends Controller {
     }
 
     /**
+     * 创建节点账户
+     * @param ctx
+     * @returns {Promise<void>}
+     */
+    async createNodeAccount(ctx) {
+
+        const nodeId = ctx.checkBody('nodeId').toInt().gt(0).value
+        const accountName = ctx.checkBody('accountName').optional().trim().len(2, 10).value
+        const currencyType = ctx.checkBody('currencyType').exist().toInt().in([1, 2, 3, 4]).value
+        const password = ctx.checkBody('password').exist().isNumeric().len(6, 6).value
+
+        ctx.allowContentType({type: 'json'}).validate()
+
+        const nodeInfo = await ctx.curlIntranetApi(`${ctx.webApi.nodeInfo}/${nodeId}`)
+        if (!nodeInfo || nodeInfo.ownerUserId !== ctx.request.userId) {
+            ctx.error({msg: '未找到节点信息或者没有节点操作权限', data: {nodeInfo}})
+        }
+
+        await ctx.service.accountService.createNodeAccount({accountName, currencyType, password, nodeId})
+            .then(ctx.success).catch(ctx.error)
+    }
+
+    /**
      * 创建合同账户
      * @param ctx
      * @returns {Promise<void>}

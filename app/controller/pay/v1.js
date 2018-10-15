@@ -1,7 +1,7 @@
 'use strict'
 
 const Controller = require('egg').Controller
-const {accountType} = require('../../enum/index')
+const {accountType, tradeStatus} = require('../../enum/index')
 
 module.exports = class PayController extends Controller {
 
@@ -25,7 +25,12 @@ module.exports = class PayController extends Controller {
 
         ctx.validate()
 
-        await ctx.service.payService.recharge({accountId, cardNo, amount}).then(ctx.success).catch(ctx.error)
+        const accountInfo = await this.accountProvider.findOne({accountId})
+        if (!accountInfo) {
+            ctx.error({msg: `未找到有效账号信息,请确认账户ID是否正确`, data: {accountInfo}})
+        }
+
+        await ctx.service.payService.recharge({accountInfo, cardNo, amount}).then(ctx.success).catch(ctx.error)
     }
 
     /**
@@ -82,7 +87,7 @@ module.exports = class PayController extends Controller {
         const remark = ctx.checkBody('remark').optional().type('string').len(1, 200).value
         const paymentType = ctx.checkBody('paymentType').optional().toInt().default(1).value
 
-        ctx.validate()
+        ctx.allowContentType({type: 'json'}).validate()
 
         const {fromAccountInfo, toAccountInfo} = await this.accountProvider.find({accountId: {$in: [fromAccountId, toAccountId]}}).then(list => {
             const accountInfo = {}
@@ -97,7 +102,7 @@ module.exports = class PayController extends Controller {
         }
 
         const oldOrder = await ctx.dal.paymentOrderProvider.findOne({outsideTradeNo})
-        if (oldOrder) {
+        if (oldOrder && oldOrder.tradeStatus !== tradeStatus.Failed) {
             ctx.error({msg: `当前订单号已经支付过,不能重复支付`, data: {outsideTradeNo}})
         }
 
@@ -120,6 +125,7 @@ module.exports = class PayController extends Controller {
         const fromAccountId = ctx.checkBody('fromAccountId').exist().isTransferAccountId().value
         //外部交易号(订单号),必须唯一,不能重复支付
         const outsideTradeNo = ctx.checkBody('outsideTradeNo').exist().len(5, 32).value
+        const outsideTradeDesc = ctx.checkBody('outsideTradeDesc').exist().len(1, 100).value
         const remark = ctx.checkBody('remark').optional().type('string').len(1, 200).value
         const paymentType = ctx.checkBody('paymentType').optional().toInt().default(1).value
 
@@ -143,7 +149,48 @@ module.exports = class PayController extends Controller {
         }
 
         await ctx.service.payService.inquirePayment({
-            fromAccountInfo, toAccountInfo, password, amount, paymentType, outsideTradeNo, remark
+            fromAccountInfo, toAccountInfo, password, amount, paymentType, outsideTradeNo, outsideTradeDesc, remark
+        }).then(ctx.success).catch(ctx.error)
+    }
+
+
+    /**
+     * 询问转账(先冻结金额,等待发起方确认后再决定扣款或者解除冻结)
+     * @param ctx
+     */
+    async inquireTransfer(ctx) {
+
+        //交易金额,以币种的最小单位为准.例如分,borb
+        let amount = ctx.checkBody('amount').optional().toInt().gt(0).value
+        //转账类型(1:定额 2:全额度) 定额需要传入交易金额
+        const transferType = ctx.checkBody('transferType').default(1).optional().toInt().in([1, 2]).value
+        const authCode = ctx.checkBody('authCode').optional().type('string').len(1, 1000).value
+        const toAccountId = ctx.checkBody('toAccountId').exist().isTransferAccountId().value
+        const fromAccountId = ctx.checkBody('fromAccountId').exist().isTransferAccountId().value
+        const remark = ctx.checkBody('remark').optional().type('string').len(1, 200).value
+        const refParam = ctx.checkBody('refParam').optional().type('string').len(1, 200).value
+
+        if (transferType === 1 && !amount) {
+            ctx.errors.push({amount: '缺少参数amount'})
+        }
+        ctx.validate()
+
+        const accountInfo = {}
+        await this.accountProvider.find({accountId: {$in: [toAccountId, fromAccountId]}}).then(list => {
+            list.forEach(item => accountInfo[item.accountId] = item)
+        })
+        const fromAccountInfo = accountInfo[fromAccountId]
+        const toAccountInfo = accountInfo[toAccountId]
+
+        if (!fromAccountInfo) {
+            ctx.error({msg: `未找到付款方账号${fromAccountId}`})
+        }
+        if (!toAccountInfo) {
+            ctx.error({msg: `未找到收款方用户账号${toAccountId}`})
+        }
+
+        await ctx.service.payService.inquireTransfer({
+            fromAccountInfo, toAccountInfo, authCode, amount, remark, transferType, refParam
         }).then(ctx.success).catch(ctx.error)
     }
 

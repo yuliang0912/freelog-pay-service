@@ -3,22 +3,27 @@
 module.exports = {
 
     /**
+     * 支付发起中
+     */
+    Pending: 1,
+
+    /**
+     * 发起方已确认
+     */
+    InitiatorConfirmed: 2,
+
+    /**
      * 完成交易
      */
-    Complete: 1,
+    Successful: 3,
 
     /**
      * 交易失败
      */
-    Failed: 2,
+    Failed: 4,
 
     /**
-     * 发起中
+     * 发起方放弃交易(确认函被否)
      */
-    Pending: 3,
-
-    /**
-     * 超时未处理
-     */
-    TimeOut: 4
+    InitiatorAbandon: 5
 }

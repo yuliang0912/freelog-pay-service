@@ -1,10 +1,9 @@
 'use strict'
 
 const lodash = require('lodash')
-const {accountEvent} = require('../../enum/index')
-const {PaymentOrderStatusChanged} = require('../../enum/rabbit-mq-event')
+const {accountEvent, tradeStatus} = require('../../enum/index')
+const {PaymentOrderTradeStatusChanged} = require('../../enum/rabbit-mq-event')
 const {accountInfoSecurity, paymentOrderSecurity} = require('../../account-service/account-security/index')
-
 /**
  * 获取到询问支付结果事件处理(得到确认函的结果)
  */
@@ -27,7 +26,8 @@ module.exports = class ObtainInquirePaymentResultEventHandler {
         const {accountProvider, paymentOrderProvider} = this
 
         const paymentOrderInfo = await paymentOrderProvider.findOne({paymentOrderId})
-        if (!paymentOrderInfo || paymentOrderInfo.paymentStatus !== 2) {
+        if (!paymentOrderInfo || paymentOrderInfo.tradeStatus === tradeStatus.Successful
+            || paymentOrderInfo.tradeStatus === tradeStatus.Failed || paymentOrderInfo.tradeStatus === tradeStatus.InitiatorAbandon) {
             return
         }
 
@@ -39,7 +39,7 @@ module.exports = class ObtainInquirePaymentResultEventHandler {
         })
 
         if (!inquireResult) {
-            const task1 = this.updatePaymentOrderProviderStatus(paymentOrderInfo, 5)
+            const task1 = this.updatePaymentOrderProviderStatus(paymentOrderInfo, tradeStatus.InitiatorAbandon)
             const task2 = this.thawAccountFreeBalance(fromAccountInfo, amount)
             await Promise.all([task1, task2])
             return
@@ -49,7 +49,7 @@ module.exports = class ObtainInquirePaymentResultEventHandler {
             fromAccountInfo, toAccountInfo, amount,
             paymentType, outsideTradeNo, remark, paymentOrderId, userId: operationUserId
         }).then(data => {
-            return this.updatePaymentOrderProviderStatus(paymentOrderInfo, 3)
+            return this.updatePaymentOrderProviderStatus(paymentOrderInfo, tradeStatus.Successful)
         })
     }
 
@@ -65,8 +65,8 @@ module.exports = class ObtainInquirePaymentResultEventHandler {
         accountInfoSecurity.accountInfoSignature(fromAccountInfo)
         accountInfoSecurity.accountInfoSignature(toAccountInfo)
 
-        const task1 = toAccountInfo.update(lodash.pick(toAccountInfo, ['balance', 'signature']))
-        const task2 = fromAccountInfo.update(lodash.pick(fromAccountInfo, ['balance', 'freezeBalance', 'signature']))
+        const task1 = toAccountInfo.updateOne(lodash.pick(toAccountInfo, ['balance', 'signature']))
+        const task2 = fromAccountInfo.updateOne(lodash.pick(fromAccountInfo, ['balance', 'freezeBalance', 'signature']))
 
         return Promise.all([task1, task2])
             .then(result => this.app.emit(accountEvent.accountPaymentEvent, ...arguments))
@@ -85,25 +85,33 @@ module.exports = class ObtainInquirePaymentResultEventHandler {
 
         accountInfoSecurity.accountInfoSignature(accountInfo)
 
-        return accountInfo.update(lodash.pick(accountInfo, ['freezeBalance', 'signature']))
+        return accountInfo.updateOne(lodash.pick(accountInfo, ['freezeBalance', 'signature']))
             .catch(error => this.errorHandler(error, ...arguments))
     }
 
     /**
      * 更新支付订单状态
-     * @param paymentOrderId
-     * @param paymentStatus
      */
-    updatePaymentOrderProviderStatus(paymentOrderInfo, paymentStatus) {
+    async updatePaymentOrderProviderStatus(paymentOrderInfo, tradeStatus) {
 
-        paymentOrderInfo.paymentStatus = paymentStatus
+        paymentOrderInfo.tradeStatus = tradeStatus
         paymentOrderSecurity.paymentOrderSignature(paymentOrderInfo)
 
         const {signature} = paymentOrderInfo
 
-        return paymentOrderInfo.update({paymentStatus, signature})
-            .then(data => this.app.rabbitClient.publish(Object.assign({}, PaymentOrderStatusChanged, {body: paymentOrderInfo})))
+        return paymentOrderInfo.updateOne({tradeStatus, signature})
+            .then(() => this.sendMessageToRabbit(paymentOrderInfo))
             .catch(error => this.errorHandler(error, ...arguments))
+    }
+
+    /**
+     * 发送订单状态变更信息到MQ
+     * @param paymentOrderInfo
+     */
+    sendMessageToRabbit(paymentOrderInfo) {
+        if (paymentOrderInfo.tradeStatus === tradeStatus.Successful || paymentOrderInfo.tradeStatus === tradeStatus.Failed) {
+            return this.app.rabbitClient.publish(Object.assign({}, PaymentOrderTradeStatusChanged, {body: paymentOrderInfo}))
+        }
     }
 
     /**

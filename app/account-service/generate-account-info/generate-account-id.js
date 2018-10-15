@@ -40,7 +40,11 @@ module.exports = class GenerateAccountId {
         }
         else if (accountType === accountTypeEnum.ContractAccount) {
             return ['212', '305', '816', '573', '119']
-        } else {
+        }
+        else if (accountType === accountTypeEnum.NodeAccount) {
+            return ['706', '912', '107', '227', '339']
+        }
+        else {
             return ['000']
         }
     }

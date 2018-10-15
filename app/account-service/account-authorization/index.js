@@ -5,6 +5,7 @@ const {accountAuthorizationType} = require('../../enum/index')
 const PasswordAuthorization = require('./password-authorization')
 const IdentityAuthorization = require('./identity-authorization')
 const ContractServiceAuthorization = require('./contract-service-authorization')
+const ContractServiceSignAuthorization = require('./contract-service-sign-authorization')
 
 class AccountAuthorization {
 
@@ -15,13 +16,8 @@ class AccountAuthorization {
 
     /**
      * 合同授权
-     * @param accountInfo
-     * @param userId
-     * @param password
-     * @param amount
-     * @param tradeType
      */
-    async authorization({accountInfo, userId, password, amount, tradeType, outsideTradeNo}) {
+    async authorization({accountInfo, userId, password, transferType, amount, tradeType}) {
 
         accountInfo.authorizationType = accountInfo.authorizationType || accountAuthorizationType.PasswordAndIdentity
 
@@ -63,7 +59,7 @@ class AccountAuthorization {
         //具体授权模式实现
         patrun.add({authTypeImpl: 'password'}, new PasswordAuthorization())
         patrun.add({authTypeImpl: 'identity'}, new IdentityAuthorization())
-        patrun.add({authTypeImpl: 'contract-service'}, new ContractServiceAuthorization())
+        patrun.add({authTypeImpl: 'contract-service'}, new ContractServiceSignAuthorization())
     }
 }
 

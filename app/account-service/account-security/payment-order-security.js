@@ -7,7 +7,7 @@
 const lodash = require('lodash')
 const signKey = 'freelog#account#payment#order#security#hamac#key'
 const crypto = require('egg-freelog-base/app/extend/helper/crypto_helper')
-const signPaymentOrderFields = ['paymentOrderId', 'accountId', 'toAccountId', 'outsideTradeNo', 'paymentType', 'tradePoundage', 'operationUserId', 'paymentStatus', 'amount', 'createDate']
+const signPaymentOrderFields = ['paymentOrderId', 'accountId', 'toAccountId', 'outsideTradeNo', 'paymentType', 'tradePoundage', 'operationUserId', 'tradeStatus', 'amount', 'createDate']
 
 module.exports = class PaymentOrderSecurity {
 

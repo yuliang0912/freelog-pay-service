@@ -30,5 +30,10 @@ module.exports = {
     /**
      * 发起询问支付事件
      */
-    emitInquirePaymentEvent: Symbol('account#emitInquirePaymentEvent')
+    emitInquirePaymentEvent: Symbol('account#emitInquirePaymentEvent'),
+
+    /**
+     * 发起询问转账事件
+     */
+    emitInquireTransferEvent: Symbol('account#emitInquireTransferEvent'),
 }

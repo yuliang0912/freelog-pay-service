@@ -27,7 +27,7 @@ module.exports = class AccountRechargeCompletedEventHandler {
     async accountRechargeCompletedEventHandler(pendTradeInfo) {
 
         const {app} = this
-        const {id, accountId, amount, userId, cardNo, outsideTradeId} = pendTradeInfo
+        const {tradeId, accountId, amount, userId, cardNo, outsideTradeId} = pendTradeInfo
 
         const accountInfo = await this.accountProvider.findOne({accountId})
         if (!accountInfoSecurity.accountSignVerify(accountInfo)) {
@@ -45,7 +45,7 @@ module.exports = class AccountRechargeCompletedEventHandler {
             balance: accountInfo.balance,
             signature: accountInfo.signature
         }).then(() => {
-            this.sendAccountAmountChangedEvent({accountInfo, amount, userId, transactionId: id})
+            this.sendAccountAmountChangedEvent({accountInfo, amount, userId, transactionId: tradeId})
             console.log(`账户${accountId}完成充值${amount},充值后金额${accountInfo.balance},充值卡号:${cardNo},外部交易号:${outsideTradeId}`)
         }).catch(console.error)
     }

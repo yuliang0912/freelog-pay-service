@@ -32,6 +32,7 @@ module.exports = class AccountService extends Service {
         const encryptedPasswordInfo = accountPasswordGenerator.generatePasswordInfo(accountId, ownerId, password)
         const accountModel = {
             accountId, ownerId, currencyType,
+            userId: ownerId,
             status: 1,
             balance: 0,
             freezeBalance: 0,
@@ -56,15 +57,46 @@ module.exports = class AccountService extends Service {
         const accountId = accountIdGenerator.generateAccountId({currencyType, accountType: accountType.ContractAccount})
         const accountModel = {
             accountId, currencyType,
-            status: 1,
-            balance: 0,
-            pwSalt: '',
-            password: '',
-            freezeBalance: 0,
-            ownerId: contractId,
+            userId: 0, status: 1, balance: 0, pwSalt: '', password: '',
+            freezeBalance: 0, ownerId: contractId,
             accountName: accountName || '合同账户',
             accountType: accountType.ContractAccount,
             authorizationType: accountAuthorizationType.ContractServiceAuthorization
+        }
+
+        this._signAccountInfo(accountModel)
+
+        return this.accountProvider.create(accountModel)
+    }
+
+    /**
+     * 创建节点交易账户
+     * @param currencyType 货币类型
+     * @param password 密码
+     */
+    async createNodeAccount({accountName, currencyType, password, nodeId}) {
+
+        const {ctx, config} = this
+        const userId = ctx.request.userId
+
+        await this.accountProvider.count({currencyType, ownerId: nodeId}).then(count => {
+            count >= config.transactionAccountCountLimit && ctx.error({msg: `当前节点的此货币账户数量已经达到上限,无法创建`})
+        })
+        const accountId = accountIdGenerator.generateAccountId({
+            currencyType, accountType: accountType.NodeAccount
+        })
+        const encryptedPasswordInfo = accountPasswordGenerator.generatePasswordInfo(accountId, nodeId, password)
+        const accountModel = {
+            accountId, currencyType, userId,
+            ownerId: nodeId,
+            status: 1,
+            balance: 0,
+            freezeBalance: 0,
+            pwSalt: encryptedPasswordInfo.pwSalt,
+            accountName: accountName || '我的账户',
+            accountType: accountType.IndividualAccount,
+            password: encryptedPasswordInfo.encryptedPassword,
+            authorizationType: accountAuthorizationType.PasswordAndIdentity
         }
 
         this._signAccountInfo(accountModel)

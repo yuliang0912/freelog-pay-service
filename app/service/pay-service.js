@@ -3,8 +3,9 @@
 const uuid = require('uuid')
 const lodash = require('lodash')
 const Service = require('egg').Service
-const PaymentService = require('../payment-service/index')
 const CurrencyTypeEnum = require('../enum/currency-type')
+const PaymentService = require('../payment-service/index')
+const {ApplicationError} = require('egg-freelog-base/error')
 const {tradeType, tradeStatus, accountEvent} = require('../enum/index')
 const accountAuthorization = require('../account-service/account-authorization/index')
 const {accountInfoSecurity, paymentOrderSecurity} = require('../account-service/account-security/index')
@@ -38,14 +39,13 @@ module.exports = class PayService extends Service {
         })
 
         if (!result) {
-            return Promise.reject('支付失败')
+            throw new ApplicationError('交易失败')
         }
 
-        const {userId} = this.ctx.request
         const paymentOrderId = uuid.v4().replace(/-/g, '')
         const paymentOrderInfo = {
             paymentOrderId, paymentType, amount, remark, outsideTradeNo, outsideTradeDesc,
-            operationUserId: userId,
+            operationUserId: this.userId,
             accountId: fromAccountInfo.accountId,
             toAccountId: toAccountInfo.accountId,
             tradeStatus: tradeStatus.Successful,
@@ -246,7 +246,6 @@ module.exports = class PayService extends Service {
             const result = fromResult.nModified > 0 && toResult.nModified > 0
             if (!result) {
                 app.logger.error("account-transfer-exception", fromAccountInfo, toAccountInfo, {fromResult, toResult})
-                return Promise.reject('交易异常')
             }
             return {result, fromAccountInfo, toAccountInfo}
         })
@@ -289,6 +288,9 @@ module.exports = class PayService extends Service {
     _checkTransferAccountStatus({fromAccountInfo, toAccountInfo}) {
 
         const {ctx} = this
+        if (fromAccountInfo.accountId === toAccountInfo.accountId) {
+            ctx.error({msg: `发起方账户与收款方账户不能一致`})
+        }
         if (fromAccountInfo.currencyType !== toAccountInfo.currencyType) {
             ctx.error({msg: `发起方账户与收款方账户币种不一致,无法执行交易操作`})
         }

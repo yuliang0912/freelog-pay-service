@@ -69,7 +69,7 @@ module.exports = class CardClipController extends Controller {
             ctx.error({msg: '卡号错误,没有找到有效卡片信息'})
         }
 
-        await this.outsideBankAccountProvider.update({cardNo}, {status: 2})
+        await this.outsideBankAccountProvider.updateOne({cardNo}, {status: 2})
             .then(data => ctx.success(true)).catch(ctx.error)
     }
 }

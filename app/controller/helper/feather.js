@@ -73,7 +73,7 @@ module.exports = class FeatherController extends Controller {
             return ctx.success(true)
         }
 
-        await this.ethKeyStoreProvider.update({address}, {
+        await this.ethKeyStoreProvider.updateOne({address}, {
             objectKey: '', keyStoreUrl: '', status: 2
         }).then(() => ctx.success(true))
 

@@ -16,7 +16,7 @@ module.exports = class EthTransferBlockNumProvider extends MongoBaseOperation {
         if (blockNumber < 1) {
             return
         }
-        return super.update({seqId: 1, blockNumber: {$lt: blockNumber}}, {blockNumber})
+        return super.updateOne({seqId: 1, blockNumber: {$lt: blockNumber}}, {blockNumber})
     }
 
     /**

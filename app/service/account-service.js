@@ -142,7 +142,7 @@ module.exports = class AccountService extends Service {
             status: accountInfo.status
         }
 
-        return this.accountProvider.update({accountId}, updateModel)
+        return this.accountProvider.updateOne({accountId}, updateModel)
     }
 
     /**

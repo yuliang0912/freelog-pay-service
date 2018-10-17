@@ -31,7 +31,7 @@ module.exports = class EmitInquirePaymentEventHandler {
 
         const {paymentOrderId, signature} = paymentOrderInfo
 
-        return this.paymentOrderProvider.update({paymentOrderId, tradeStatus: tradeStatus.Pending}, {
+        return this.paymentOrderProvider.updateOne({paymentOrderId, tradeStatus: tradeStatus.Pending}, {
             tradeStatus, signature
         })
     }

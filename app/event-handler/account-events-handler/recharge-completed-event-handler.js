@@ -41,7 +41,7 @@ module.exports = class AccountRechargeCompletedEventHandler {
         accountInfo.balance = accountInfo.balance + amount
         accountInfoSecurity.accountInfoSignature(accountInfo)
 
-        await this.accountProvider.update({accountId}, {
+        await this.accountProvider.updateOne({accountId}, {
             balance: accountInfo.balance,
             signature: accountInfo.signature
         }).then(() => {

@@ -82,7 +82,7 @@ module.exports = class PayService extends Service {
         fromAccountInfo.freezeBalance = fromAccountInfo.freezeBalance + amount
         this._signAccountInfo(fromAccountInfo)
 
-        await this.accountProvider.update(fromAccountUpdateCondition, {
+        await this.accountProvider.updateOne(fromAccountUpdateCondition, {
             freezeBalance: fromAccountInfo.freezeBalance,
             signature: fromAccountInfo.signature
         })
@@ -184,7 +184,7 @@ module.exports = class PayService extends Service {
         fromAccountInfo.freezeBalance = fromAccountInfo.freezeBalance + amount
         this._signAccountInfo(fromAccountInfo)
 
-        await this.accountProvider.update(fromAccountUpdateCondition, {
+        await this.accountProvider.updateOne(fromAccountUpdateCondition, {
             freezeBalance: fromAccountInfo.freezeBalance,
             signature: fromAccountInfo.signature
         })
@@ -233,11 +233,11 @@ module.exports = class PayService extends Service {
         fromAccountInfo.balance = fromAccountInfo.balance - amount
         this._signAccountInfo(fromAccountInfo, toAccountInfo)
 
-        const task1 = this.accountProvider.update(fromAccountUpdateCondition, {
+        const task1 = this.accountProvider.updateOne(fromAccountUpdateCondition, {
             balance: fromAccountInfo.balance,
             signature: fromAccountInfo.signature
         })
-        const task2 = this.accountProvider.update(toAccountUpdateCondition, {
+        const task2 = this.accountProvider.updateOne(toAccountUpdateCondition, {
             balance: toAccountInfo.balance,
             signature: toAccountInfo.signature
         })

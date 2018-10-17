@@ -19,7 +19,7 @@
     "node-uuid": "^1.4.8",
     "patrun": "^1.0.0",
     "uuid": "^3.3.2",
-    "web3": "^1.0.0-beta2"
+    "web3": "^1.0.0-beta.36"
   },
   "scripts": {
     "start": "egg-scripts start --workers=1",

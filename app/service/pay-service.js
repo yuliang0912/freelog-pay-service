@@ -70,22 +70,26 @@ module.exports = class PayService extends Service {
      */
     async inquirePayment({fromAccountInfo, toAccountInfo, password, amount, paymentType, outsideTradeNo, outsideTradeDesc, remark}) {
 
-        const {app} = this
-        await this._checkTransferAuthorization({
-            accountInfo: fromAccountInfo,
-            amount, password, tradeType: tradeType.Payment
-        })
-        this._checkTransferAmount({fromAccountInfo, amount})
-        this._checkTransferAccountStatus({fromAccountInfo, toAccountInfo})
+        try {
+            const {app} = this
+            await this._checkTransferAuthorization({
+                accountInfo: fromAccountInfo,
+                amount, password, tradeType: tradeType.Payment
+            })
+            this._checkTransferAmount({fromAccountInfo, amount})
+            this._checkTransferAccountStatus({fromAccountInfo, toAccountInfo})
 
-        const fromAccountUpdateCondition = lodash.pick(fromAccountInfo, ['accountId', 'signature'])
-        fromAccountInfo.freezeBalance = fromAccountInfo.freezeBalance + amount
-        this._signAccountInfo(fromAccountInfo)
+            const fromAccountUpdateCondition = lodash.pick(fromAccountInfo, ['accountId', 'signature'])
+            fromAccountInfo.freezeBalance = fromAccountInfo.freezeBalance + amount
+            this._signAccountInfo(fromAccountInfo)
 
-        await this.accountProvider.updateOne(fromAccountUpdateCondition, {
-            freezeBalance: fromAccountInfo.freezeBalance,
-            signature: fromAccountInfo.signature
-        })
+            await this.accountProvider.updateOne(fromAccountUpdateCondition, {
+                freezeBalance: fromAccountInfo.freezeBalance,
+                signature: fromAccountInfo.signature
+            })
+        } catch (e) {
+            console.log(111111, e)
+        }
 
         const paymentOrderId = uuid.v4().replace(/-/g, '')
         const paymentOrderInfo = {

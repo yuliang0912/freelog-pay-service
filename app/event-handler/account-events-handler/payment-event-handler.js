@@ -14,6 +14,7 @@ module.exports = class AccountPaymentEventHandler {
      * 事件处理函数
      */
     handler() {
+        console.log('handler', ...arguments)
         return this.accountPaymentEventHandler(...arguments)
     }
 
@@ -21,6 +22,8 @@ module.exports = class AccountPaymentEventHandler {
      * 支付订单成功事件
      */
     async accountPaymentEventHandler({fromAccountInfo, toAccountInfo, paymentOrderInfo}) {
+
+        console.log('accountPaymentEventHandler', ...arguments)
 
         if (!paymentOrderInfo || paymentOrderInfo.tradeStatus !== tradeStatus.Successful) {
             console.log('错误的事件触发,请排查系统BUG', paymentOrderInfo)

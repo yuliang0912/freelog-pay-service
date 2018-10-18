@@ -71,25 +71,21 @@ module.exports = class PayService extends Service {
     async inquirePayment({fromAccountInfo, toAccountInfo, password, amount, paymentType, outsideTradeNo, outsideTradeDesc, remark}) {
 
         const {app} = this
-        try {
-            await this._checkTransferAuthorization({
-                accountInfo: fromAccountInfo,
-                amount, password, tradeType: tradeType.Payment
-            })
-            this._checkTransferAmount({fromAccountInfo, amount})
-            this._checkTransferAccountStatus({fromAccountInfo, toAccountInfo})
+        await this._checkTransferAuthorization({
+            accountInfo: fromAccountInfo,
+            amount, password, tradeType: tradeType.Payment
+        })
+        this._checkTransferAmount({fromAccountInfo, amount})
+        this._checkTransferAccountStatus({fromAccountInfo, toAccountInfo})
 
-            const fromAccountUpdateCondition = lodash.pick(fromAccountInfo, ['accountId', 'signature'])
-            fromAccountInfo.freezeBalance = fromAccountInfo.freezeBalance + amount
-            this._signAccountInfo(fromAccountInfo)
+        const fromAccountUpdateCondition = lodash.pick(fromAccountInfo, ['accountId', 'signature'])
+        fromAccountInfo.freezeBalance = fromAccountInfo.freezeBalance + amount
+        this._signAccountInfo(fromAccountInfo)
 
-            await this.accountProvider.updateOne(fromAccountUpdateCondition, {
-                freezeBalance: fromAccountInfo.freezeBalance,
-                signature: fromAccountInfo.signature
-            })
-        } catch (e) {
-            console.log(111111, e)
-        }
+        await this.accountProvider.updateOne(fromAccountUpdateCondition, {
+            freezeBalance: fromAccountInfo.freezeBalance,
+            signature: fromAccountInfo.signature
+        })
 
         const paymentOrderId = uuid.v4().replace(/-/g, '')
         const paymentOrderInfo = {
@@ -332,8 +328,7 @@ module.exports = class PayService extends Service {
      */
     async _checkTransferAuthorization({accountInfo, amount, password, tradeType, transferType}) {
 
-        const {ctx, userId} = this
-        console.log('_checkTransferAuthorization', ctx.request.userId, ctx)
+        const {userId} = this
         const params = {accountInfo, userId, password, amount, tradeType, transferType}
         const {authResult, message} = await accountAuthorization.authorization(params)
 

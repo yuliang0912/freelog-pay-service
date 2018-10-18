@@ -19,9 +19,6 @@ module.exports = () => async (ctx, next) => {
 
     let authToken = JSON.parse(new Buffer(authTokenStr, 'base64').toString())
 
-    console.log(authToken)
-
-
     let authInfo = {}
     switch (authToken.type) {
         case 'jwt':

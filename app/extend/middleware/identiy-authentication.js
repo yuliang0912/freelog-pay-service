@@ -13,13 +13,14 @@ module.exports = () => async (ctx, next) => {
     //此处的header信息是由gateway服务器追加.由gateway服务来做签名校验,上层服务只需要解析身份信息即可
     let authTokenStr = ctx.headers['auth-token']
 
-    console.log(authTokenStr)
-
     if (!authTokenStr) {
         return await next()
     }
 
     let authToken = JSON.parse(new Buffer(authTokenStr, 'base64').toString())
+
+    console.log(authToken)
+
 
     let authInfo = {}
     switch (authToken.type) {

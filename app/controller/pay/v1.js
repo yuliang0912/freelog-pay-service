@@ -148,8 +148,6 @@ module.exports = class PayController extends Controller {
             ctx.error({msg: `当前订单号已经支付过,不能重复支付`, data: {outsideTradeNo}})
         }
 
-        console.log(ctx.request.identityInfo, ctx.request.userId, 'end')
-
         await ctx.service.payService.inquirePayment({
             fromAccountInfo, toAccountInfo, password, amount, paymentType, outsideTradeNo, outsideTradeDesc, remark
         }).then(ctx.success).catch(ctx.error)

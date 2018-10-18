@@ -204,7 +204,7 @@ module.exports = class PayService extends Service {
 
         const {ctx} = this
         if (currencyType !== CurrencyTypeEnum.ETH) {
-            ctx.error('目前只支持ETH货币')
+            throw new ApplicationError('目前只支持ETH货币')
         }
         /**
          * TODO:后续需要在业务中自动判断是否tap过.
@@ -263,21 +263,20 @@ module.exports = class PayService extends Service {
         const availableAmount = fromAccountInfo.balance - fromAccountInfo.freezeBalance
 
         if (amount <= 0) {
-            ctx.error({msg: '交易金额必须大于0', data: {amount}})
+            throw new ApplicationError('交易金额必须大于0', {amount})
         }
         if (amount > fromAccountInfo.balance) {
-            ctx.error({
-                msg: '余额不足,不能完成本次转账',
-                data: {balance: fromAccountInfo.balance, freezeBalance: fromAccountInfo.freezeBalance}
+            throw new ApplicationError('余额不足,不能完成本次转账', {
+                balance: fromAccountInfo.balance,
+                freezeBalance: fromAccountInfo.freezeBalance
             })
         }
         if (amount > availableAmount) {
-            ctx.error({
-                msg: '可用余额不足,不能完成本次转账',
-                data: {balance: fromAccountInfo.balance, freezeBalance: fromAccountInfo.freezeBalance}
+            throw new ApplicationError('余额不足,不能完成本次转账', {
+                balance: fromAccountInfo.balance,
+                freezeBalance: fromAccountInfo.freezeBalance
             })
         }
-
         return true
     }
 
@@ -289,25 +288,25 @@ module.exports = class PayService extends Service {
 
         const {ctx} = this
         if (fromAccountInfo.accountId === toAccountInfo.accountId) {
-            ctx.error({msg: `发起方账户与收款方账户不能一致`})
+            throw new ApplicationError('发起方账户与收款方账户不能一致')
         }
         if (fromAccountInfo.currencyType !== toAccountInfo.currencyType) {
-            ctx.error({msg: `发起方账户与收款方账户币种不一致,无法执行交易操作`})
+            throw new ApplicationError('发起方账户与收款方账户币种不一致,无法执行交易操作')
         }
         if (fromAccountInfo.status !== 1) {
-            ctx.error({msg: `发起方账户状态异常,status:${fromAccountInfo.status}`})
+            throw new ApplicationError(`发起方账户状态异常,status:${fromAccountInfo.status}`)
         }
         if (toAccountInfo.status !== 1) {
-            ctx.error({msg: `收款方账户状态异常,status:${toAccountInfo.status}`})
+            throw new ApplicationError(`收款方账户状态异常,status:${toAccountInfo.status}`)
         }
         if (toAccountInfo.status === 5 || fromAccountInfo.status === 5) {
-            ctx.error({msg: `账户正在进行其他交易中,请稍后再试`})
+            throw new ApplicationError('账户正在进行其他交易中,请稍后再试')
         }
         if (!accountInfoSecurity.accountSignVerify(fromAccountInfo)) {
-            ctx.error({msg: '发起方账户数据异常,请联系客服'})
+            throw new ApplicationError('发起方账户数据异常,请联系客服')
         }
         if (!accountInfoSecurity.accountSignVerify(toAccountInfo)) {
-            ctx.error({msg: '收款方账户数据异常,请联系客服'})
+            throw new ApplicationError('收款方账户数据异常,请联系客服')
         }
         return true
     }
@@ -335,7 +334,7 @@ module.exports = class PayService extends Service {
         const {authResult, message} = await accountAuthorization.authorization(params)
 
         if (!authResult) {
-            ctx.error({msg: message})
+            throw new ApplicationError(message || '授权错误')
         }
     }
 }

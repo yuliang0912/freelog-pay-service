@@ -1,6 +1,7 @@
 'use strict'
 
 const Service = require('egg').Service
+const {ApplicationError} = require('egg-freelog-base/error')
 const {accountType, accountAuthorizationType} = require('../enum/index')
 const {accountInfoSecurity} = require('../account-service/account-security/index')
 const {accountPasswordGenerator, accountIdGenerator} = require('../account-service/generate-account-info/index')
@@ -24,7 +25,9 @@ module.exports = class AccountService extends Service {
         const ownerId = ctx.request.userId
 
         await this.accountProvider.count({currencyType, ownerId}).then(count => {
-            count >= config.transactionAccountCountLimit && ctx.error({msg: `当前用户的此类型账户数量已经达到上限,无法创建`})
+            if (count >= config.transactionAccountCountLimit) {
+                throw ApplicationError('当前用户的此类型账户数量已经达到上限,无法创建', {limit: config.transactionAccountCountLimit})
+            }
         })
         const accountId = accountIdGenerator.generateAccountId({
             currencyType, accountType: accountType.IndividualAccount
@@ -80,7 +83,9 @@ module.exports = class AccountService extends Service {
         const userId = ctx.request.userId
 
         await this.accountProvider.count({currencyType, ownerId: nodeId}).then(count => {
-            count >= config.transactionAccountCountLimit && ctx.error({msg: `当前节点的此货币账户数量已经达到上限,无法创建`})
+            if (count >= config.transactionAccountCountLimit) {
+                throw ApplicationError('当前用户的此类型账户数量已经达到上限,无法创建', {limit: config.transactionAccountCountLimit})
+            }
         })
         const accountId = accountIdGenerator.generateAccountId({
             currencyType, accountType: accountType.NodeAccount
@@ -119,10 +124,10 @@ module.exports = class AccountService extends Service {
 
         const accountInfo = await this.accountProvider.findOne({accountId, ownerId})
         if (!accountInfo || accountInfo.status !== 1) {
-            ctx.error({msg: '账户信息或者状态不正确'})
+            throw ApplicationError('账户信息或者状态不正确', {status: accountInfo ? -100 : accountInfo.status})
         }
         if (!accountInfoSecurity.accountSignVerify(accountInfo)) {
-            ctx.error({msg: '账号数据异常,请联系客服'})
+            throw ApplicationError('账号数据异常,请联系客服')
         }
         if (accountName) {
             accountInfo.accountName = accountName
@@ -165,12 +170,11 @@ module.exports = class AccountService extends Service {
      */
     _updateTransactionPassword({accountInfo, originalPassword, newPassword}) {
 
-        const {ctx} = this
         if (!originalPassword && !newPassword) {
             return
         }
         if (!originalPassword || !newPassword) {
-            ctx.error({msg: '参数originalPassword和newPassword不全', data: {originalPassword, newPassword}})
+            throw new ApplicationError('参数originalPassword和newPassword不全', {originalPassword, newPassword})
         }
 
         const {accountId, ownerId, password, pwSalt} = accountInfo
@@ -196,10 +200,8 @@ module.exports = class AccountService extends Service {
      * @private
      */
     _verifyTransferPassword({accountId, ownerId, originalPassword, pwSalt, encryptedPassword}) {
-
-        const {ctx} = this
         if (!accountPasswordGenerator.verifyTransferPassword(...arguments)) {
-            ctx.error({msg: '原始交易密码不正确'})
+            throw new ApplicationError('原始交易密码不正确')
         }
         return true
     }

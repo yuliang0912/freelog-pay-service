@@ -9,7 +9,7 @@ module.exports = class AccountSignatureVerifyFailedEventHandler {
     /**
      * 事件处理函数
      */
-    handler() {
+    async handler() {
         this.accountSignatureVerifyFailedEventHandler(...arguments)
     }
 

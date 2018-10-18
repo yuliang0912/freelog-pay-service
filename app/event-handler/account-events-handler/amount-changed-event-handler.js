@@ -16,7 +16,7 @@ module.exports = class AccountChangedEventHandler {
     /**
      * 事件处理函数
      */
-    handler() {
+    async handler() {
         this.queue.push(...arguments, this.callback.bind(this))
     }
 

@@ -15,7 +15,7 @@ module.exports = class EmitInquirePaymentEventHandler {
      * 发起询问支付事件
      * 设置支付订单状态为支付确认中
      */
-    handler(paymentOrderInfo) {
+    async handler(paymentOrderInfo) {
         this.app.rabbitClient.publish(Object.assign({}, EmitInquirePayment, {body: paymentOrderInfo}))
             .then(() => this.updatePaymentOrderTradeStatus(paymentOrderInfo, tradeStatus.InitiatorConfirmed))
             .catch(error => this.callback(error, paymentOrderInfo))

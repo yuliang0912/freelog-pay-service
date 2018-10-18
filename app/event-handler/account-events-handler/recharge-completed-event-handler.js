@@ -15,7 +15,7 @@ module.exports = class AccountRechargeCompletedEventHandler {
     /**
      * 事件处理函数
      */
-    handler() {
+    async handler() {
         this.queue.push(...arguments, this.errorHandler.bind(this))
     }
 

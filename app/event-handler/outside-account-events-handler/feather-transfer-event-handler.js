@@ -18,7 +18,7 @@ module.exports = class FeatherTransferEventHandler {
      * feather交易事件处理
      * @param transferEvents
      */
-    handler(transferEvents) {
+    async handler(transferEvents) {
         if (Array.isArray(transferEvents)) {
             transferEvents.forEach(event => this.queue.push(event))
         } else if (transferEvents) {

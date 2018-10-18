@@ -39,70 +39,53 @@ module.exports = class ObtainInquirePaymentResultEventHandler {
         })
 
         if (!inquireResult) {
-            const task1 = this.updatePaymentOrderProviderStatus(paymentOrderInfo, tradeStatus.InitiatorAbandon)
-            const task2 = this.thawAccountFreeBalance(fromAccountInfo, amount)
-            await Promise.all([task1, task2])
-            return
+            await this.fallbackHandle({fromAccountInfo, amount, paymentOrderInfo})
+        } else {
+            await this.inquireSuccessfulConfirmHandle({fromAccountInfo, toAccountInfo, amount, paymentOrderInfo})
         }
-
-        await this.freezeBalanceTransfer({
-            fromAccountInfo, toAccountInfo, amount, paymentOrderInfo
-        }).then(data => {
-            return this.updatePaymentOrderProviderStatus(paymentOrderInfo, tradeStatus.Successful)
-        })
     }
 
     /**
-     * 使用冻结金额交易
+     * 支付问询确认被拒绝的回退处理
      */
-    async freezeBalanceTransfer({fromAccountInfo, toAccountInfo, amount, paymentOrderInfo}) {
+    async fallbackHandle({fromAccountInfo, amount, paymentOrderInfo}) {
+
+        fromAccountInfo.freezeBalance = fromAccountInfo.freezeBalance - amount
+        accountInfoSecurity.accountInfoSignature(fromAccountInfo)
+
+        paymentOrderInfo.tradeStatus = tradeStatus.InitiatorAbandon
+        paymentOrderSecurity.paymentOrderSignature(paymentOrderInfo)
+
+        const task1 = fromAccountInfo.updateOne(lodash.pick(fromAccountInfo, ['freezeBalance', 'signature']))
+        const task2 = paymentOrderInfo.updateOne(lodash.pick(paymentOrderInfo, ['tradeStatus', 'signature']))
+
+        return Promise.all([task1, task2]).then(() => {
+            return this.sendMessageToRabbit(paymentOrderInfo)
+        }).catch(error => this.errorHandler(error, ...arguments))
+    }
+
+    /**
+     * 支付问询确认成功处理
+     */
+    async inquireSuccessfulConfirmHandle({fromAccountInfo, toAccountInfo, amount, paymentOrderInfo}) {
 
         fromAccountInfo.balance = fromAccountInfo.balance - amount
         fromAccountInfo.freezeBalance = fromAccountInfo.freezeBalance - amount
         toAccountInfo.balance = toAccountInfo.balance + amount
+        paymentOrderInfo.tradeStatus = tradeStatus.Successful
 
-        accountInfoSecurity.accountInfoSignature(fromAccountInfo)
         accountInfoSecurity.accountInfoSignature(toAccountInfo)
+        accountInfoSecurity.accountInfoSignature(fromAccountInfo)
+        paymentOrderSecurity.paymentOrderSignature(paymentOrderInfo)
 
         const task1 = toAccountInfo.updateOne(lodash.pick(toAccountInfo, ['balance', 'signature']))
         const task2 = fromAccountInfo.updateOne(lodash.pick(fromAccountInfo, ['balance', 'freezeBalance', 'signature']))
+        const task3 = paymentOrderInfo.updateOne(lodash.pick(paymentOrderInfo, ['tradeStatus', 'signature']))
 
-        return Promise.all([task1, task2])
-            .then(result => this.app.emit(accountEvent.accountPaymentEvent, {
-                fromAccountInfo, toAccountInfo, paymentOrderInfo
-            }))
-            .catch(error => this.errorHandler(error, ...arguments))
-    }
-
-    /**
-     * 解冻保证金
-     * @param accountInfo
-     * @param amount
-     * @returns {Promise<void>}
-     */
-    async thawAccountFreeBalance(accountInfo, amount) {
-
-        accountInfo.freezeBalance = accountInfo.freezeBalance - amount
-
-        accountInfoSecurity.accountInfoSignature(accountInfo)
-
-        return accountInfo.updateOne(lodash.pick(accountInfo, ['freezeBalance', 'signature']))
-            .catch(error => this.errorHandler(error, ...arguments))
-    }
-
-    /**
-     * 更新支付订单状态
-     */
-    async updatePaymentOrderProviderStatus(paymentOrderInfo, tradeStatus) {
-
-        paymentOrderInfo.tradeStatus = tradeStatus
-        paymentOrderSecurity.paymentOrderSignature(paymentOrderInfo)
-
-        const {signature} = paymentOrderInfo
-
-        return paymentOrderInfo.updateOne({tradeStatus, signature})
-            .then(() => this.sendMessageToRabbit(paymentOrderInfo))
-            .catch(error => this.errorHandler(error, ...arguments))
+        return Promise.all([task1, task2, task3]).then(() => {
+            this.app.emit(accountEvent.accountPaymentEvent, {fromAccountInfo, toAccountInfo, paymentOrderInfo})
+            return this.sendMessageToRabbit(paymentOrderInfo)
+        }).catch(error => this.errorHandler(error, ...arguments))
     }
 
     /**

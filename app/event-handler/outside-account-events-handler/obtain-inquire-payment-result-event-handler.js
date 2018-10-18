@@ -31,7 +31,7 @@ module.exports = class ObtainInquirePaymentResultEventHandler {
             return
         }
 
-        const {accountId, toAccountId, amount, paymentType, outsideTradeNo, remark, operationUserId} = paymentOrderInfo
+        const {accountId, toAccountId, amount} = paymentOrderInfo
         const {fromAccountInfo, toAccountInfo} = await accountProvider.find({accountId: {$in: [accountId, toAccountId]}}).then(list => {
             const accountInfo = {}
             list.forEach(item => accountInfo[item.accountId] = item)
@@ -46,8 +46,7 @@ module.exports = class ObtainInquirePaymentResultEventHandler {
         }
 
         await this.freezeBalanceTransfer({
-            fromAccountInfo, toAccountInfo, amount,
-            paymentType, outsideTradeNo, remark, paymentOrderId, userId: operationUserId
+            fromAccountInfo, toAccountInfo, amount, paymentOrderInfo
         }).then(data => {
             return this.updatePaymentOrderProviderStatus(paymentOrderInfo, tradeStatus.Successful)
         })
@@ -56,7 +55,7 @@ module.exports = class ObtainInquirePaymentResultEventHandler {
     /**
      * 使用冻结金额交易
      */
-    async freezeBalanceTransfer({fromAccountInfo, toAccountInfo, amount, paymentType, outsideTradeNo, remark, paymentOrderId, userId}) {
+    async freezeBalanceTransfer({fromAccountInfo, toAccountInfo, amount, paymentOrderInfo}) {
 
         fromAccountInfo.balance = fromAccountInfo.balance - amount
         fromAccountInfo.freezeBalance = fromAccountInfo.freezeBalance - amount
@@ -69,7 +68,9 @@ module.exports = class ObtainInquirePaymentResultEventHandler {
         const task2 = fromAccountInfo.updateOne(lodash.pick(fromAccountInfo, ['balance', 'freezeBalance', 'signature']))
 
         return Promise.all([task1, task2])
-            .then(result => this.app.emit(accountEvent.accountPaymentEvent, ...arguments))
+            .then(result => this.app.emit(accountEvent.accountPaymentEvent, {
+                fromAccountInfo, toAccountInfo, paymentOrderInfo
+            }))
             .catch(error => this.errorHandler(error, ...arguments))
     }
 

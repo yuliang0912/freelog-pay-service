@@ -4,7 +4,6 @@ const Patrun = require('patrun')
 const {accountAuthorizationType} = require('../../enum/index')
 const PasswordAuthorization = require('./password-authorization')
 const IdentityAuthorization = require('./identity-authorization')
-const ContractServiceAuthorization = require('./contract-service-authorization')
 const ContractServiceSignAuthorization = require('./contract-service-sign-authorization')
 
 class AccountAuthorization {

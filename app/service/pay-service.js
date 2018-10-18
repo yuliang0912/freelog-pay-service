@@ -70,8 +70,8 @@ module.exports = class PayService extends Service {
      */
     async inquirePayment({fromAccountInfo, toAccountInfo, password, amount, paymentType, outsideTradeNo, outsideTradeDesc, remark}) {
 
+        const {app} = this
         try {
-            const {app} = this
             await this._checkTransferAuthorization({
                 accountInfo: fromAccountInfo,
                 amount, password, tradeType: tradeType.Payment
@@ -290,7 +290,6 @@ module.exports = class PayService extends Service {
      */
     _checkTransferAccountStatus({fromAccountInfo, toAccountInfo}) {
 
-        const {ctx} = this
         if (fromAccountInfo.accountId === toAccountInfo.accountId) {
             throw new ApplicationError('发起方账户与收款方账户不能一致')
         }
@@ -334,6 +333,7 @@ module.exports = class PayService extends Service {
     async _checkTransferAuthorization({accountInfo, amount, password, tradeType, transferType}) {
 
         const {ctx, userId} = this
+        console.log('_checkTransferAuthorization', ctx.request.userId, ctx)
         const params = {accountInfo, userId, password, amount, tradeType, transferType}
         const {authResult, message} = await accountAuthorization.authorization(params)
 

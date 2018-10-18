@@ -25,7 +25,6 @@ module.exports = class ObtainInquireTransferResultEventHandler {
     async handler({transferId, inquireResult}) {
 
         const {accountProvider, accountTransferRecordProvider} = this
-
         const transferRecordInfo = await accountTransferRecordProvider.findOne({transferId})
 
         if (!transferRecordInfo || transferRecordInfo.tradeStatus === tradeStatus.Successful
@@ -41,65 +40,51 @@ module.exports = class ObtainInquireTransferResultEventHandler {
         })
 
         if (!inquireResult) {
-            const task1 = this.updateTransferRecordTradeStatus(transferRecordInfo, tradeStatus.InitiatorAbandon)
-            const task2 = this.thawAccountFreeBalance(fromAccountInfo, amount)
-            await Promise.all([task1, task2])
-            return
+            await this.fallbackHandle({fromAccountInfo, amount, transferRecordInfo})
+        } else {
+            await this.inquireSuccessfulConfirmHandle({fromAccountInfo, toAccountInfo, amount, transferRecordInfo})
         }
-
-        await this.freezeBalanceTransfer({
-            fromAccountInfo, toAccountInfo, transferRecordInfo
-        }).then(data => {
-            return this.updateTransferRecordTradeStatus(transferRecordInfo, tradeStatus.Successful)
-        })
     }
 
     /**
-     * 使用冻结金额交易
+     * 转账问询确认被拒绝的回退处理
      */
-    async freezeBalanceTransfer({fromAccountInfo, toAccountInfo, transferRecordInfo}) {
+    async fallbackHandle({fromAccountInfo, amount, transferRecordInfo}) {
 
-        const {amount} = transferRecordInfo
+        fromAccountInfo.freezeBalance = fromAccountInfo.freezeBalance - amount
+        accountInfoSecurity.accountInfoSignature(fromAccountInfo)
+
+        transferRecordInfo.tradeStatus = tradeStatus.InitiatorAbandon
+
+        const task1 = transferRecordInfo.updateOne({tradeStatus: tradeStatus.InitiatorAbandon})
+        const task2 = fromAccountInfo.updateOne(lodash.pick(fromAccountInfo, ['freezeBalance', 'signature']))
+
+        return Promise.all([task1, task2]).then(() => {
+            return this.sendMessageToRabbit(transferRecordInfo)
+        }).catch(error => this.errorHandler(error, ...arguments))
+    }
+
+    /**
+     * 支付问询确认成功处理
+     */
+    async inquireSuccessfulConfirmHandle({fromAccountInfo, toAccountInfo, amount, transferRecordInfo}) {
+
         fromAccountInfo.balance = fromAccountInfo.balance - amount
         fromAccountInfo.freezeBalance = fromAccountInfo.freezeBalance - amount
         toAccountInfo.balance = toAccountInfo.balance + amount
+        transferRecordInfo.tradeStatus = tradeStatus.Successful
 
         accountInfoSecurity.accountInfoSignature(fromAccountInfo)
         accountInfoSecurity.accountInfoSignature(toAccountInfo)
 
         const task1 = toAccountInfo.updateOne(lodash.pick(toAccountInfo, ['balance', 'signature']))
         const task2 = fromAccountInfo.updateOne(lodash.pick(fromAccountInfo, ['balance', 'freezeBalance', 'signature']))
+        const task3 = transferRecordInfo.updateOne({tradeStatus: tradeStatus.Successful})
 
-        return Promise.all([task1, task2]).then(result => this.app.emit(accountEvent.accountTransferEvent, {
-            fromAccountInfo, toAccountInfo, transferRecordInfo
-        })).catch(error => this.errorHandler(error, ...arguments))
-    }
-
-    /**
-     * 解冻保证金
-     * @param accountInfo
-     * @param amount
-     * @returns {Promise<void>}
-     */
-    async thawAccountFreeBalance(accountInfo, amount) {
-
-        accountInfo.freezeBalance = accountInfo.freezeBalance - amount
-
-        accountInfoSecurity.accountInfoSignature(accountInfo)
-
-        return accountInfo.updateOne(lodash.pick(accountInfo, ['freezeBalance', 'signature']))
-            .catch(error => this.errorHandler(error, ...arguments))
-    }
-
-    /**
-     * 更新转账记录交易状态
-     */
-    updateTransferRecordTradeStatus(transferRecord, tradeStatus) {
-
-        transferRecord.tradeStatus = tradeStatus
-
-        return transferRecord.updateOne({tradeStatus}).then(() => this.sendMessageToRabbit(transferRecord))
-            .catch(error => this.errorHandler(error, ...arguments))
+        return Promise.all([task1, task2, task3]).then(() => {
+            this.app.emit(accountEvent.accountTransferEvent, {fromAccountInfo, toAccountInfo, transferRecordInfo})
+            return this.sendMessageToRabbit(transferRecordInfo)
+        }).catch(error => this.errorHandler(error, ...arguments))
     }
 
     /**

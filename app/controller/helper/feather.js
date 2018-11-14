@@ -87,7 +87,7 @@ module.exports = class FeatherController extends Controller {
      */
     async ethTransactionReceipt(ctx) {
 
-        const transactionId = ctx.checkParams("transactionId").exist().len(24, 70).value
+        const transactionId = ctx.checkQuery("transactionId").exist().len(24, 70).value
 
         ctx.validate()
 

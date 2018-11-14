@@ -8,7 +8,7 @@ module.exports = class AccountRechargeCompletedEventHandler {
 
     constructor(app) {
         this.app = app
-        this.queue = queue(this.accountRechargeCompletedEventHandler.bind(this), 3)
+        this.queue = queue(this.accountRechargeCompletedEventHandler.bind(this), 1)
         this.accountProvider = app.dal.accountProvider
     }
 
@@ -29,7 +29,7 @@ module.exports = class AccountRechargeCompletedEventHandler {
         const {app} = this
         const {tradeId, accountId, amount, userId, cardNo, outsideTradeId} = pendTradeInfo
 
-        const accountInfo = await this.accountProvider.findOne({accountId})
+        var accountInfo = await this.accountProvider.findOne({accountId})
         if (!accountInfoSecurity.accountSignVerify(accountInfo)) {
             app.emit(accountEvent.accountSignatureVerifyFailedEvent, accountInfo)
             return
@@ -38,16 +38,14 @@ module.exports = class AccountRechargeCompletedEventHandler {
             console.error('请检查系统异常')
         }
 
-        accountInfo.balance = accountInfo.balance + amount
-        accountInfoSecurity.accountInfoSignature(accountInfo)
+        await this.accountProvider.findOneAndUpdate({accountId}, {$inc: {balance: amount}}, {new: true}).then(model => {
+            accountInfo = model
+            accountInfoSecurity.accountInfoSignature(accountInfo)
+            return accountInfo.updateOne({signature: accountInfo.signature})
+        })
 
-        await this.accountProvider.updateOne({accountId}, {
-            balance: accountInfo.balance,
-            signature: accountInfo.signature
-        }).then(() => {
-            this.sendAccountAmountChangedEvent({accountInfo, amount, userId, transactionId: tradeId})
-            console.log(`账户${accountId}完成充值${amount},充值后金额${accountInfo.balance},充值卡号:${cardNo},外部交易号:${outsideTradeId}`)
-        }).catch(console.error)
+        this.sendAccountAmountChangedEvent({accountInfo, amount, userId, transactionId: tradeId})
+        console.log(`账户${accountId}完成充值${amount},充值后金额${accountInfo.balance},充值卡号:${cardNo},外部交易号:${outsideTradeId}`)
     }
 
     /**

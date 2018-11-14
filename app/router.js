@@ -20,7 +20,9 @@ module.exports = app => {
     //eth工具接口
     router.get('/v1/pay/helper/feather/clearKeyStore', helper.feather.clearKeyStore)
     router.get('/v1/pay/helper/feather/downLoadKeyStore', helper.feather.downLoadKeyStore)
+    router.get('/v1/pay/helper/feather/ethTransactionReceipt',helper.feather.ethTransactionReceipt)
     router.post('/v1/pay/helper/feather/createEthAccount', helper.feather.createEthAddress)
+
 
     //账户接口
     router.get('/v1/pay/accounts/tradeRecords', account.v1.tradeRecords)

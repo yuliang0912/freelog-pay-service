@@ -33,11 +33,11 @@ module.exports = class FeatherTransferEventHandler {
      */
     async featherTransferEventHandler(transferEvent, callback) {
 
-        const {app} = this
-        const {transactionHash, blockNumber, type} = transferEvent
-        const {from, to, value, _data} = transferEvent.returnValues
+        const {app, accountPendTradeProvider} = this
+        const {transactionHash, returnValues, blockNumber, type} = transferEvent
+        const {from, to, value, _data} = returnValues
 
-        const accountPendTrade = await this.accountPendTradeProvider.findOne({
+        const accountPendTrade = await accountPendTradeProvider.findOne({
             outsideTradeId: transactionHash,
             currencyType: currencyType.ETH
         })

@@ -2,17 +2,17 @@
 
 const Web3 = require('web3')
 const client = Symbol('web3#client')
-const coinContract = Symbol('web3#coinContract')
-const OfficialOps = Symbol('web3#OfficialOps')
-const ethContractInfo = require('./eth-contract-abi/index')
+const coinContractSymbol = Symbol('web3#coinContract')
+const OfficialOpsSymbol = Symbol('web3#OfficialOps')
 
 module.exports = class Web3Client {
 
     constructor(config) {
-        this.config = config
-        let web3 = this[client] = new Web3(new Web3.providers.HttpProvider(this.config.web3.rpcUri));
-        this[coinContract] = new web3.eth.Contract(ethContractInfo.Coin.abi, ethContractInfo.Coin.address)
-        this[OfficialOps] = new web3.eth.Contract(ethContractInfo.OfficialOps.abi, ethContractInfo.OfficialOps.address)
+        const {ethereum} = config
+        this.accountInfo = ethereum.account
+        const web3 = this[client] = new Web3(new Web3.providers.HttpProvider(ethereum.web3RpcUri));
+        this[coinContractSymbol] = new web3.eth.Contract(ethereum.Coin.abi, ethereum.Coin.address)
+        this[OfficialOpsSymbol] = new web3.eth.Contract(ethereum.OfficialOps.abi, ethereum.OfficialOps.address)
     }
 
     /**
@@ -20,7 +20,7 @@ module.exports = class Web3Client {
      * @returns {*}
      */
     get CoinContract() {
-        return this[coinContract]
+        return this[coinContractSymbol]
     }
 
 
@@ -29,7 +29,7 @@ module.exports = class Web3Client {
      * @returns {*}
      */
     get OfficialOpsContract() {
-        return this[OfficialOps]
+        return this[OfficialOpsSymbol]
     }
 
     /**
@@ -53,12 +53,7 @@ module.exports = class Web3Client {
      * @returns {{from: string}}
      */
     get adminInfo() {
-        return {from: ethContractInfo.account.admin}
-    }
-
-
-    get ethContractInfo() {
-        return ethContractInfo
+        return {from: this.accountInfo.admin}
     }
 
     /**
@@ -66,6 +61,6 @@ module.exports = class Web3Client {
      * @returns {string}
      */
     get platformAccountAddress() {
-        return ethContractInfo.account.freelog
+        return this.accountInfo.freelog
     }
 }

@@ -33,9 +33,10 @@ module.exports = class FeatherTransferEvent extends Subscription {
         }
 
         ethClient.CoinContract.getPastEvents('Transfer', {fromBlock: latestBlockNumber}).then(events => {
+            console.log(events)
             events.length && this.app.emit(outsideTradeEvent.featherTransferEvent, events)
         }).catch(error => {
-            logger.error(`无法连接到本地eth服务器:${config.web3.rpcUri}`, error)
+            logger.error(`无法连接到本地eth服务器:${config.ethereum.web3RpcUri}`, error)
         })
     }
 

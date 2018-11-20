@@ -1,6 +1,6 @@
 'use strcit'
 
-const fs = require('fs')
+//const fs = require('fs')
 
 // module.exports = {
 //
@@ -22,23 +22,23 @@ const fs = require('fs')
 //
 //     newManagingContractAddress: '0x8e84fa09bd55faa1eca14760877a89bce6af3bb1'
 // }
-
-
-//testrpc 环境
-module.exports = {
-
-    OfficialOps: {
-        address: '0xe3241568d73b3750b3e9a079e56c538c85457186',
-        abi: JSON.parse(fs.readFileSync(__dirname + '/OfficialOps.abi', 'utf-8'))
-    },
-
-    Coin: {
-        address: '0x61c03c84de46a6bd6cb63c1b63690a04f69a5986',
-        abi: JSON.parse(fs.readFileSync(__dirname + '/Coin.abi', 'utf-8'))
-    },
-
-    account: {
-        admin: '0xff56bfc2f267ac81ed70213db0839c3daea273f6',
-        freelog: '0xff56bfc2f267ac81ed70213db0839c3daea273f6'
-    }
-}
+//
+//
+// //testrpc 环境
+// module.exports = {
+//
+//     OfficialOps: {
+//         address: '0xe3241568d73b3750b3e9a079e56c538c85457186',
+//         abi: JSON.parse(fs.readFileSync(__dirname + '/OfficialOps.abi', 'utf-8'))
+//     },
+//
+//     Coin: {
+//         address: '0x61c03c84de46a6bd6cb63c1b63690a04f69a5986',
+//         abi: JSON.parse(fs.readFileSync(__dirname + '/Coin.abi', 'utf-8'))
+//     },
+//
+//     account: {
+//         admin: '0xff56bfc2f267ac81ed70213db0839c3daea273f6',
+//         freelog: '0xff56bfc2f267ac81ed70213db0839c3daea273f6'
+//     }
+// }

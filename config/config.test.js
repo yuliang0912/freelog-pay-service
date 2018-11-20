@@ -1,5 +1,8 @@
 'use strict'
 
+const fs = require('fs')
+const path = require('path')
+
 module.exports = {
 
     cluster: {listen: {port: 5055}},
@@ -31,4 +34,27 @@ module.exports = {
         },
         amzS3: {}
     },
+
+    /**
+     * 以太坊相关配置
+     */
+    ethereum: {
+
+        web3RpcUri: 'http://172.18.215.231:8546',
+
+        Coin: {
+            address: '0x61c03c84de46a6bd6cb63c1b63690a04f69a5986',
+            abi: JSON.parse(fs.readFileSync(path.join(__dirname, '../app/extend/web3/eth-contract-abi/Coin.abi'), 'utf-8'))
+        },
+
+        OfficialOps: {
+            address: '0xe3241568d73b3750b3e9a079e56c538c85457186',
+            abi: JSON.parse(fs.readFileSync(path.join(__dirname, '../app/extend/web3/eth-contract-abi/OfficialOps.abi'), 'utf-8'))
+        },
+
+        account: {
+            admin: '0xff56bfc2f267ac81ed70213db0839c3daea273f6',
+            freelog: '0xff56bfc2f267ac81ed70213db0839c3daea273f6'
+        }
+    }
 }

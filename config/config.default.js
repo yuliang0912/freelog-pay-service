@@ -104,10 +104,6 @@ module.exports = {
         ]
     },
 
-    web3: {
-        rpcUri: 'http://localhost:8545'
-    },
-
     clientCredentialInfo: {
         clientId: 1006,
         publicKey: 'b278214cef0ee2a9e1abde166d29d141',

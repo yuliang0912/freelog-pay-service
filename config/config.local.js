@@ -1,10 +1,7 @@
 'use strict'
 
-/**
- * 本地开发配置.会与config.default进行合并
- * @param appInfo
- * @returns {{middleware: [string]}}
- */
+const fs = require('fs')
+const path = require('path')
 
 module.exports = {
 
@@ -27,7 +24,29 @@ module.exports = {
         tokenType: "jwt"
     },
 
-    web3: {
-        rpcUri: 'http://119.23.45.143:8546'
-    },
+    /**
+     * 以太坊相关配置
+     */
+    ethereum: {
+
+        web3RpcUri: 'http://119.23.45.143:8546',
+
+        Coin: {
+            address: '0x61c03c84de46a6bd6cb63c1b63690a04f69a5986',
+            abi: JSON.parse(fs.readFileSync(path.join(__dirname, '../app/extend/web3/eth-contract-abi/Coin.abi'), 'utf-8'))
+        },
+
+        OfficialOps: {
+            address: '0xe3241568d73b3750b3e9a079e56c538c85457186',
+            abi: JSON.parse(fs.readFileSync(path.join(__dirname, '../app/extend/web3/eth-contract-abi/OfficialOps.abi'), 'utf-8'))
+        },
+
+        account: {
+            admin: '0xff56bfc2f267ac81ed70213db0839c3daea273f6',
+            freelog: '0xff56bfc2f267ac81ed70213db0839c3daea273f6'
+        }
+    }
 }
+
+
+

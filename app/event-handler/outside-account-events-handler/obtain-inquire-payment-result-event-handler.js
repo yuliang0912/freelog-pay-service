@@ -50,13 +50,13 @@ module.exports = class ObtainInquirePaymentResultEventHandler {
      */
     async fallbackHandle({fromAccountInfo, amount, paymentOrderInfo}) {
 
-        fromAccountInfo.freezeBalance = fromAccountInfo.freezeBalance - amount
-        accountInfoSecurity.accountInfoSignature(fromAccountInfo)
+        const task1 = this.accountProvider.findOneAndUpdate({accountId: fromAccountInfo.accountId}, {$inc: {freezeBalance: -amount}}, {new: true}).then(accountInfo => {
+            accountInfoSecurity.accountInfoSignature(accountInfo)
+            return accountInfo.updateOne({signature: accountInfo.signature})
+        })
 
         paymentOrderInfo.tradeStatus = tradeStatus.InitiatorAbandon
         paymentOrderSecurity.paymentOrderSignature(paymentOrderInfo)
-
-        const task1 = fromAccountInfo.updateOne(lodash.pick(fromAccountInfo, ['freezeBalance', 'signature']))
         const task2 = paymentOrderInfo.updateOne(lodash.pick(paymentOrderInfo, ['tradeStatus', 'signature']))
 
         return Promise.all([task1, task2]).then(() => {
@@ -74,18 +74,44 @@ module.exports = class ObtainInquirePaymentResultEventHandler {
         toAccountInfo.balance = toAccountInfo.balance + amount
         paymentOrderInfo.tradeStatus = tradeStatus.Successful
 
-        accountInfoSecurity.accountInfoSignature(toAccountInfo)
-        accountInfoSecurity.accountInfoSignature(fromAccountInfo)
-        paymentOrderSecurity.paymentOrderSignature(paymentOrderInfo)
+        const task1 = this.accountProvider.findOneAndUpdate({accountId: fromAccountInfo.accountId}, {
+            $inc: {balance: -amount, freezeBalance: -amount}
+        }, {new: true})
+        const task2 = this.accountProvider.findOneAndUpdate({accountId: toAccountInfo.accountId}, {$inc: {balance: amount}}, {new: true})
 
-        const task1 = toAccountInfo.updateOne(lodash.pick(toAccountInfo, ['balance', 'signature']))
-        const task2 = fromAccountInfo.updateOne(lodash.pick(fromAccountInfo, ['balance', 'freezeBalance', 'signature']))
-        const task3 = paymentOrderInfo.updateOne(lodash.pick(paymentOrderInfo, ['tradeStatus', 'signature']))
+        return Promise.all([task1, task2]).then(([newFromAccountInfo, newToAccountInfo]) => {
 
-        return Promise.all([task1, task2, task3]).then(() => {
+            accountInfoSecurity.accountInfoSignature(newToAccountInfo)
+            accountInfoSecurity.accountInfoSignature(newFromAccountInfo)
+            paymentOrderSecurity.paymentOrderSignature(paymentOrderInfo)
+
+            const task3 = newToAccountInfo.updateOne({signature: newToAccountInfo.signature})
+            const task4 = newFromAccountInfo.updateOne({signature: newFromAccountInfo.signature})
+            const task5 = paymentOrderInfo.updateOne(lodash.pick(paymentOrderInfo, ['tradeStatus', 'signature']))
+
+            Promise.all([task3, task4, task5]).catch(error => {
+                this.errorHandler(error, fromAccountInfo, toAccountInfo, paymentOrderInfo)
+            })
             this.app.emit(accountEvent.accountPaymentEvent, {fromAccountInfo, toAccountInfo, paymentOrderInfo})
-            return this.sendMessageToRabbit(paymentOrderInfo)
         }).catch(error => this.errorHandler(error, ...arguments))
+
+        // fromAccountInfo.balance = fromAccountInfo.balance - amount
+        // fromAccountInfo.freezeBalance = fromAccountInfo.freezeBalance - amount
+        // toAccountInfo.balance = toAccountInfo.balance + amount
+        // paymentOrderInfo.tradeStatus = tradeStatus.Successful
+        //
+        // accountInfoSecurity.accountInfoSignature(toAccountInfo)
+        // accountInfoSecurity.accountInfoSignature(fromAccountInfo)
+        // paymentOrderSecurity.paymentOrderSignature(paymentOrderInfo)
+        //
+        // const task1 = toAccountInfo.updateOne(lodash.pick(toAccountInfo, ['balance', 'signature']))
+        // const task2 = fromAccountInfo.updateOne(lodash.pick(fromAccountInfo, ['balance', 'freezeBalance', 'signature']))
+        // const task3 = paymentOrderInfo.updateOne(lodash.pick(paymentOrderInfo, ['tradeStatus', 'signature']))
+        //
+        // return Promise.all([task1, task2, task3]).then(() => {
+        //     this.app.emit(accountEvent.accountPaymentEvent, {fromAccountInfo, toAccountInfo, paymentOrderInfo})
+        //     return this.sendMessageToRabbit(paymentOrderInfo)
+        // }).catch(error => this.errorHandler(error, ...arguments))
     }
 
     /**

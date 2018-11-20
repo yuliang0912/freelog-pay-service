@@ -28,6 +28,6 @@ module.exports = {
     },
 
     web3: {
-        rpcUri: 'http://39.108.77.211:8546'
+        rpcUri: 'http://119.23.45.143:8546'
     },
 }

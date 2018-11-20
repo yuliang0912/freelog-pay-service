@@ -60,7 +60,7 @@ module.exports = class AccountPaymentEventHandler {
         const {accountId, balance} = accountInfo
         const accountAmountChangedEventParams = {
             amount, userId, accountId, tradeDesc, correlativeInfo,
-            beforeBalance: accountInfo.balance + amount * -1,
+            beforeBalance: balance + amount * -1,
             remark: remark || '转账',
             tradePoundage: 0,
             tradeType: tradeType.Payment,

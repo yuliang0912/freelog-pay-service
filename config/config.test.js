@@ -4,20 +4,20 @@ module.exports = {
 
     cluster: {listen: {port: 5055}},
 
-    web3: {rpcUri: 'http://39.108.77.211:8546'},
+    web3: {rpcUri: 'http://172.18.215.231:8546'},
 
     gatewayUrl: "http://172.18.215.224:8895/test",
 
     mongoose: {
-        url: "mongodb://172.18.215.229:27017/pay"
+        url: "mongodb://172.18.215.231:27018/pay"
     },
 
     rabbitMq: {
         connOptions: {
-            host: '172.18.215.229',
-            port: 5672,
+            host: '172.18.215.231',
+            port: 5673,
             login: 'test_user_pay',
-            password: 'test_user_2018',
+            password: 'rabbit@freelog',
             authMechanism: 'AMQPLAIN'
         }
     },

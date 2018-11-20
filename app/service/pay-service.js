@@ -78,13 +78,9 @@ module.exports = class PayService extends Service {
         this._checkTransferAmount({fromAccountInfo, amount})
         this._checkTransferAccountStatus({fromAccountInfo, toAccountInfo})
 
-        const fromAccountUpdateCondition = lodash.pick(fromAccountInfo, ['accountId', 'signature'])
-        fromAccountInfo.freezeBalance = fromAccountInfo.freezeBalance + amount
-        this._signAccountInfo(fromAccountInfo)
-
-        await this.accountProvider.updateOne(fromAccountUpdateCondition, {
-            freezeBalance: fromAccountInfo.freezeBalance,
-            signature: fromAccountInfo.signature
+        await this.accountProvider.findOneAndUpdate({accountId: fromAccountInfo.accountId}, {$inc: {freezeBalance: amount}}, {new: true}).then(accountInfo => {
+            this._signAccountInfo(accountInfo)
+            return accountInfo.updateOne({signature: accountInfo.signature})
         })
 
         const paymentOrderId = uuid.v4().replace(/-/g, '')
@@ -180,13 +176,9 @@ module.exports = class PayService extends Service {
             amount, remark
         })
 
-        const fromAccountUpdateCondition = lodash.pick(fromAccountInfo, ['accountId', 'signature'])
-        fromAccountInfo.freezeBalance = fromAccountInfo.freezeBalance + amount
-        this._signAccountInfo(fromAccountInfo)
-
-        await this.accountProvider.updateOne(fromAccountUpdateCondition, {
-            freezeBalance: fromAccountInfo.freezeBalance,
-            signature: fromAccountInfo.signature
+        await this.accountProvider.findOneAndUpdate({accountId: fromAccountInfo.accountId}, {$inc: {freezeBalance: amount}}, {new: true}).then(accountInfo => {
+            this._signAccountInfo(accountInfo)
+            return accountInfo.updateOne({signature: accountInfo.signature})
         })
 
         this.app.emit(accountEvent.emitInquireTransferEvent, transferRecordInfo, refParam)
@@ -216,7 +208,6 @@ module.exports = class PayService extends Service {
 
     /**
      * 账户之间的转账
-     * @returns {Promise<any[]>}
      * @private
      */
     async _transfer({fromAccountInfo, toAccountInfo, password, amount, tradeType}) {
@@ -226,28 +217,20 @@ module.exports = class PayService extends Service {
         this._checkTransferAmount({fromAccountInfo, amount})
         this._checkTransferAccountStatus({fromAccountInfo, toAccountInfo})
 
-        const toAccountUpdateCondition = lodash.pick(toAccountInfo, ['accountId', 'signature'])
-        const fromAccountUpdateCondition = lodash.pick(fromAccountInfo, ['accountId', 'signature'])
+        const task1 = this.accountProvider.findOneAndUpdate({accountId: fromAccountInfo.accountId}, {$inc: {balance: -amount}}, {new: true})
+        const task2 = this.accountProvider.findOneAndUpdate({accountId: toAccountInfo.accountId}, {$inc: {balance: amount}}, {new: true})
 
-        toAccountInfo.balance = toAccountInfo.balance + amount
-        fromAccountInfo.balance = fromAccountInfo.balance - amount
-        this._signAccountInfo(fromAccountInfo, toAccountInfo)
-
-        const task1 = this.accountProvider.updateOne(fromAccountUpdateCondition, {
-            balance: fromAccountInfo.balance,
-            signature: fromAccountInfo.signature
-        })
-        const task2 = this.accountProvider.updateOne(toAccountUpdateCondition, {
-            balance: toAccountInfo.balance,
-            signature: toAccountInfo.signature
-        })
-
-        return Promise.all([task1, task2]).then(([fromResult, toResult]) => {
-            const result = fromResult.nModified > 0 && toResult.nModified > 0
-            if (!result) {
-                app.logger.error("account-transfer-exception", fromAccountInfo, toAccountInfo, {fromResult, toResult})
-            }
-            return {result, fromAccountInfo, toAccountInfo}
+        return Promise.all([task1, task2]).catch(error => {
+            app.logger.error("account-transfer-exception", error, fromAccountInfo, toAccountInfo)
+            throw error
+        }).then(([fromAccountInfo, toAccountInfo]) => {
+            this._signAccountInfo(fromAccountInfo, toAccountInfo)
+            const task3 = toAccountInfo.updateOne({signature: toAccountInfo.signature})
+            const task4 = fromAccountInfo.updateOne({signature: fromAccountInfo.signature})
+            Promise.all([task3, task4]).catch(error => {
+                app.logger.error("account-transfer-signature-exception", error, fromAccountInfo, toAccountInfo)
+            })
+            return {result: true, fromAccountInfo, toAccountInfo}
         })
     }
 

@@ -1,4 +1,4 @@
-'use strict'
+﻿'use strict'
 
 module.exports = async app => {
 
@@ -20,7 +20,7 @@ module.exports = async app => {
          * 设置货币合约地址
          */
         setBaseCoinAddressTask() {
-            return OfficialOpsContract.methods.setCoinAddress(ethereum.Coin.address).send({from: ethereum.account.admin}).then(receipt => {
+            return OfficialOpsContract.methods.setCoinAddress(ethereum.Coin.address).send(ethClient.adminInfo).then(receipt => {
                 console.log("设置货币合约地址")
             })
         },
@@ -29,7 +29,7 @@ module.exports = async app => {
          * 增发货币(barb)
          */
         mintTokenTask() {
-            return OfficialOpsContract.methods.mintToken(2000000000).send({from: ethereum.account.admin}).then(data => {
+            return OfficialOpsContract.methods.mintToken(2000000000).send(ethClient.adminInfo).then(data => {
                 console.log("增发货币")
             })
         },
@@ -38,7 +38,7 @@ module.exports = async app => {
          * 获取总发行额度
          */
         getTotalSupplyTask() {
-            return CoinContract.methods.totalSupply().call({from: ethereum.account.admin}).then(data => {
+            return CoinContract.methods.totalSupply().call(ethClient.adminInfo).then(data => {
                 console.log(`CoinContract-totalSupply:${data}`)
             })
         }
@@ -52,5 +52,3 @@ module.exports = async app => {
         })
     }, Promise.resolve())
 }
-
-

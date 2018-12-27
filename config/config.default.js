@@ -30,7 +30,7 @@ module.exports = {
         enable: true
     },
 
-    middleware: ['errorHandler', 'identiyAuthentication'],
+    middleware: ['errorHandler', 'identityAuthentication'],
 
     /**
      * mongoDB配置

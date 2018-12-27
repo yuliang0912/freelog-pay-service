@@ -9,7 +9,7 @@ module.exports = {
 
     web3: {rpcUri: 'http://172.18.215.231:8546'},
 
-    gatewayUrl: "http://172.18.215.224:8895/test",
+    gatewayUrl: "http://172.18.215.229:6895/test",
 
     mongoose: {
         url: "mongodb://172.18.215.231:27018/pay"

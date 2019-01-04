@@ -11,7 +11,7 @@ module.exports = class ContractServiceAuthorization {
 
         const {app} = globalInfo
 
-        const authResult = await app.curlIntranetApi(`${app.webApi.contractInfo}/contractAccount/authorization`, {
+        return app.curlIntranetApi(`${app.webApi.contractInfo}/contractAccount/authorization`, {
             type: 'post',
             contentType: 'json',
             data: {
@@ -21,7 +21,5 @@ module.exports = class ContractServiceAuthorization {
                 accountId: accountInfo.accountId
             }
         }, {userInfo: {userId}})
-
-        return authResult
     }
 }

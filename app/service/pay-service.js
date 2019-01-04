@@ -143,7 +143,7 @@ module.exports = class PayService extends Service {
             fromAccountInfo, toAccountInfo, password, amount, tradeType: tradeType.Transfer
         })
         transferRecordInfo.tradeStatus = result ? tradeStatus.Successful : tradeStatus.Failed
-        transferRecordInfo.updateOne({tradeStatus: transferRecordInfo.tradeStatus}).exec()
+        transferRecordInfo.updateOne({tradeStatus: transferRecordInfo.tradeStatus})
         if (result) {
             this.app.emit(accountEvent.accountTransferEvent, {transferRecordInfo, fromAccountInfo, toAccountInfo})
         }

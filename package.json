@@ -7,15 +7,15 @@
     "framework": "egg-freelog-base"
   },
   "dependencies": {
-    "ali-oss": "^6.0.2",
+    "ali-oss": "^6.1.0",
     "amqp": "^0.2.7",
     "bluebird": "^3.5.3",
     "egg": "^2.14.2",
     "egg-freelog-base": "^1.1.88",
-    "egg-freelog-database": "^1.0.14",
+    "egg-freelog-database": "^1.0.15",
     "egg-scripts": "^2.11.0",
     "lodash": "^4.17.11",
-    "mongoose": "^5.4.2",
+    "mongoose": "^5.4.4",
     "node-uuid": "^1.4.8",
     "patrun": "^1.0.0",
     "uuid": "^3.3.2",

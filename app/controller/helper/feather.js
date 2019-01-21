@@ -95,4 +95,21 @@ module.exports = class FeatherController extends Controller {
 
         ctx.success(transaction)
     }
+
+    /**
+     * 余额
+     * @param ctx
+     * @returns {Promise<void>}
+     */
+    async balance(ctx) {
+        const address = ctx.checkQuery('address').len(42, 42).value
+        ctx.validate()
+
+        const {ethClient} = ctx.app
+        const {CoinContract, adminInfo} = ethClient
+
+        return CoinContract.methods.balanceOf(address).call(adminInfo).then(balance => new Object({
+            address, balance
+        }))
+    }
 }

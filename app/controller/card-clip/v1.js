@@ -47,7 +47,7 @@ module.exports = class CardClipController extends Controller {
         await this.outsideBankAccountProvider.findOneAndUpdate({
             userId, currencyType, cardNo
         }, {cardAlias, status: 1}, {new: true}).then(model => {
-            return model || super.create({
+            return model || this.outsideBankAccountProvider.create({
                 cardNo, currencyType, cardAlias, bankName, cardType: 1,
                 userId: ctx.request.userId,
             })

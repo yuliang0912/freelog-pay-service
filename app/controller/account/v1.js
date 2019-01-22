@@ -179,4 +179,30 @@ module.exports = class AccountController extends Controller {
             page, pageSize, totalItem, dataList
         }))
     }
+
+    /**
+     * 账户充值记录
+     * @param ctx
+     * @returns {Promise<void>}
+     */
+    async rechargeRecords(ctx) {
+
+        const page = ctx.checkQuery("page").optional().toInt().gt(0).default(1).value
+        const pageSize = ctx.checkQuery("pageSize").optional().toInt().gt(0).lt(101).default(10).value
+        const accountId = ctx.checkQuery('accountId').exist().isTransferAccountId().value
+        const status = ctx.checkQuery('status').optional().toInt().in([1, 2, 3, 4, 5]).value
+        ctx.validate()
+
+        const condition = {accountId, tradeType: 1}
+        if (status) {
+            condition.status = status
+        }
+
+        const task1 = ctx.dal.accountPendTradeProvider.count(condition)
+        const task2 = ctx.dal.accountPendTradeProvider.findPageList(condition, page, pageSize, null, {createDate: -1})
+
+        await Promise.all([task1, task2]).then(([totalItem, dataList]) => ctx.success({
+            page, pageSize, totalItem, dataList
+        }))
+    }
 }

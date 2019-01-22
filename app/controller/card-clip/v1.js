@@ -36,6 +36,7 @@ module.exports = class CardClipController extends Controller {
     async create(ctx) {
 
         const cardNo = ctx.checkBody('cardNo').exist().notEmpty().value
+        const cardAlias = ctx.checkBody('cardAlias').exist().notEmpty().len(2, 50).value
         const currencyType = ctx.checkBody('currencyType').exist().toInt().in(CurrencyTypes).value
 
         ctx.validate()
@@ -47,7 +48,7 @@ module.exports = class CardClipController extends Controller {
         }
 
         await ctx.dal.outsideBankAccountProvider.create({
-            cardNo, currencyType,
+            cardNo, currencyType, cardAlias,
             cardType: 1,
             userId: ctx.request.userId,
             bankName: 'default',

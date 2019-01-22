@@ -42,17 +42,16 @@ module.exports = class CardClipController extends Controller {
         ctx.validate()
         const userId = ctx.request.userId
 
-        const cardInfo = await ctx.dal.outsideBankAccountProvider.findOne({userId, currencyType, cardNo})
-        if (cardInfo) {
-            return ctx.success(cardInfo)
-        }
+        var bankName = ctx.app.ethClient.web3.utils.isAddress(cardNo) ? '以太坊' : '银行'
 
-        await ctx.dal.outsideBankAccountProvider.create({
-            cardNo, currencyType, cardAlias,
-            cardType: 1,
-            userId: ctx.request.userId,
-            bankName: 'default',
-        }).then(ctx.success).catch(ctx.error)
+        await this.outsideBankAccountProvider.findOneAndUpdate({
+            userId, currencyType, cardNo
+        }, {cardAlias, status: 1}, {new: true}).then(model => {
+            return model || super.create({
+                cardNo, currencyType, cardAlias, bankName, cardType: 1,
+                userId: ctx.request.userId,
+            })
+        }).then(ctx.success)
     }
 
     /**

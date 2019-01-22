@@ -94,7 +94,7 @@ module.exports = class AccountController extends Controller {
         const accountName = ctx.checkBody('accountName').optional().trim().len(2, 10).value
         const currencyType = ctx.checkBody('currencyType').exist().toInt().in([1, 2, 3, 4]).value
 
-        ctx.validate(false)
+        ctx.validate()
 
         await ctx.service.accountService.createContractAccount({accountName, contractId, currencyType})
             .then(ctx.success).catch(ctx.error)

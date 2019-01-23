@@ -20,7 +20,7 @@ module.exports = class GenerateAccountId {
         const currencyTypePrefix = CurrencyTypePrefix[currencyType]
         const accountNum = cryptoHelper.sha512(uuid.v4()).substr(0, 8) //使用sha算法保证字符在各个段位分配平均
         const numberSections = this._getNumberSection(accountType)
-        const numberSection = numberSections[parseInt(Math.random() * 10000) % numberSections.length]
+        const numberSection = numberSections[lodash.random(0, numberSections.length - 1)]
         const accountId = `f${currencyTypePrefix}${numberSection}${accountNum}`.toLowerCase()
 
         if (!commRegex.transferAccountId.test(accountId)) {

@@ -7,4 +7,3 @@ require('egg').startCluster({
     port: process.env.PORT || 7055,
     workers: 1
 });
-

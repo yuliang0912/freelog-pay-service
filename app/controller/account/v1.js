@@ -190,12 +190,12 @@ module.exports = class AccountController extends Controller {
         const page = ctx.checkQuery("page").optional().toInt().gt(0).default(1).value
         const pageSize = ctx.checkQuery("pageSize").optional().toInt().gt(0).lt(101).default(10).value
         const accountId = ctx.checkQuery('accountId').exist().isTransferAccountId().value
-        const status = ctx.checkQuery('status').optional().toInt().in([1, 2, 3, 4, 5]).value
+        const tradeStatus = ctx.checkQuery('tradeStatus').optional().toInt().in([1, 2, 3, 4, 5]).value
         ctx.validate()
 
         const condition = {accountId, tradeType: 1}
-        if (status) {
-            condition.status = status
+        if (tradeStatus) {
+            condition.tradeStatus = tradeStatus
         }
 
         const task1 = ctx.dal.accountPendTradeProvider.count(condition)

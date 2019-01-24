@@ -53,6 +53,11 @@ module.exports = class EthereumPayment extends IPayment {
         const {ethClient} = this.app
         const {OfficialOpsContract, adminInfo} = ethClient
 
+        const isTap = await OfficialOpsContract.methods.tapRecord(address).call(adminInfo)
+        if (isTap) {
+            throw new ApplicationError('已经赠送过,不能重复领取')
+        }
+
         const sendToEthTask = OfficialOpsContract.methods.tap(address, 100000).send(adminInfo)
 
         return new Promise((resolve, reject) => sendToEthTask.on('transactionHash', resolve).catch(reject))

@@ -194,14 +194,14 @@ module.exports = class PayService extends Service {
      */
     async tap({currencyType, cardNo}) {
 
-        const {ctx} = this
+        const {app} = this
         if (currencyType !== CurrencyTypeEnum.ETH) {
             throw new ApplicationError('目前只支持ETH货币')
         }
         /**
          * TODO:后续需要在业务中自动判断是否tap过.
          */
-        const paymentService = new PaymentService(currencyType)
+        const paymentService = new PaymentService(app, currencyType)
 
         return paymentService.tap(cardNo)
     }

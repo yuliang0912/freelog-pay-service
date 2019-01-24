@@ -23,6 +23,7 @@ module.exports = app => {
     router.get('/v1/pay/helper/feather/ethTransactionReceipt', helper.feather.ethTransactionReceipt)
     router.post('/v1/pay/helper/feather/createEthAccount', helper.feather.createEthAddress)
     router.get('/v1/pay/helper/feather/balance', helper.feather.balance)
+    router.get('/v1/pay/helper/feather/tapRecord', helper.feather.tapRecord)
 
 
     //账户接口

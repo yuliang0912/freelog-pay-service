@@ -5,13 +5,13 @@
 'use strict'
 
 const IPayment = require('./payment-interface')
-const paymentFactory = require('./payment-impl/index')
+const PaymentFactory = require('./payment-impl/index')
 
 module.exports = class PaymentService extends IPayment {
 
-    constructor(currencyType) {
+    constructor(app, currencyType) {
         super(currencyType)
-        this.provider = paymentFactory.getProvider(currencyType)
+        this.provider = new PaymentFactory(app).getProvider(currencyType)
     }
 
     /**

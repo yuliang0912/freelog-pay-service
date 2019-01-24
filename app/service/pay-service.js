@@ -105,9 +105,9 @@ module.exports = class PayService extends Service {
      */
     async recharge({accountInfo, cardNo, amount, password}) {
 
-        const {userId} = this
+        const {app, userId} = this
         const {accountId, currencyType} = accountInfo
-        const paymentService = new PaymentService(currencyType)
+        const paymentService = new PaymentService(app, currencyType)
 
         //后续需要做安全性检查,限额检查,以及用户认证检查等
         const outsideTradeInfo = await paymentService.recharge({fromCardNo: cardNo, amount, password})

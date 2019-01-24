@@ -113,4 +113,23 @@ module.exports = class FeatherController extends Controller {
             address, balance
         })).then(ctx.success)
     }
+
+
+    /**
+     * feather赠送记录
+     * @param ctx
+     * @returns {Promise<void>}
+     */
+    async tapRecord(ctx) {
+
+        const address = ctx.checkQuery('address').len(42, 42).value
+        ctx.validate()
+
+        const {ethClient} = ctx.app
+        const {OfficialOpsContract, adminInfo} = ethClient
+
+        await OfficialOpsContract.methods.tapRecord(address).call(adminInfo).then(isTap => new Object({
+            address, isTap
+        })).then(ctx.success)
+    }
 }

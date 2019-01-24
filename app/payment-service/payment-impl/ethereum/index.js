@@ -2,13 +2,14 @@
 
 const IPayment = require('../../payment-interface')
 const tradeStatus = require('../../../enum/trade-status')
-const globalInfo = require('egg-freelog-base/globalInfo')
 const currencyType = require('../../../enum/currency-type')
+const {ApplicationError} = require('egg-freelog-base/error')
 
 module.exports = class EthereumPayment extends IPayment {
 
-    constructor() {
+    constructor(app) {
         super(currencyType.ETH)
+        this.app = app
     }
 
     /**
@@ -22,18 +23,18 @@ module.exports = class EthereumPayment extends IPayment {
      */
     async payment({fromCardNo, toCardNo, amount, password, remark}) {
 
-        const {ethClient} = globalInfo.app
+        const {ethClient} = this.app
 
         if (!ethClient.web3.utils.isAddress(fromCardNo)) {
-            throw new Error(`交易卡号错误:${fromCardNo}`)
+            throw new ApplicationError(`交易卡号错误`, {fromCardNo})
         }
         if (!ethClient.web3.utils.isAddress(toCardNo)) {
-            throw new Error(`交易卡号错误:${toCardNo}`)
+            throw new ApplicationError(`交易卡号错误`, {toCardNo})
         }
 
         const {balance} = await this._getBalance(fromCardNo)
         if (balance < amount) {
-            throw new Error('余额不足本次支付,交易失败')
+            throw new ApplicationError('余额不足本次支付,交易失败')
         }
         if (remark == null || remark === undefined) {
             remark = 'payment'
@@ -49,7 +50,7 @@ module.exports = class EthereumPayment extends IPayment {
      */
     async tap(address) {
 
-        const {ethClient} = globalInfo.app
+        const {ethClient} = this.app
         const {OfficialOpsContract, adminInfo} = ethClient
 
         const sendToEthTask = OfficialOpsContract.methods.tap(address, 100000).send(adminInfo)
@@ -66,16 +67,16 @@ module.exports = class EthereumPayment extends IPayment {
      */
     async recharge({fromCardNo, amount, password}) {
 
-        const {ethClient} = globalInfo.app
+        const {ethClient} = this.app
 
         if (!ethClient.web3.utils.isAddress(fromCardNo)) {
-            throw new Error(`交易卡号错误:${fromCardNo}`)
+            throw new ApplicationError(`交易卡号错误`, {fromCardNo})
         }
 
         const {balance} = await this._getBalance(fromCardNo)
 
         if (balance < amount) {
-            throw new Error('余额不足本次支付,交易失败')
+            throw new ApplicationError('余额不足本次支付,交易失败')
         }
 
         return this._officialTransfer({
@@ -93,7 +94,7 @@ module.exports = class EthereumPayment extends IPayment {
      */
     _getBalance(address) {
 
-        const {ethClient} = globalInfo.app
+        const {ethClient} = this.app
         const {CoinContract, adminInfo} = ethClient
 
         return CoinContract.methods.balanceOf(address).call(adminInfo).then(balance => new Object({
@@ -106,7 +107,7 @@ module.exports = class EthereumPayment extends IPayment {
      */
     _officialTransfer({fromAddress, toAddress, value, data}) {
 
-        const {ethClient} = globalInfo.app
+        const {ethClient} = this.app
         const {OfficialOpsContract, adminInfo} = ethClient
 
         if (data) {

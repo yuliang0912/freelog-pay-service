@@ -5,10 +5,12 @@ const IPayment = require('../payment-interface')
 const EthereumPayment = require('./ethereum/index')
 const currencyType = require('../../enum/currency-type')
 
-class PaymentFactory {
+module.exports = class PaymentFactory {
 
-    constructor() {
-        this.patrun = this.__initialPaymentImpl__()
+    constructor(app) {
+        this.app = app
+        this.patrun = Patrun()
+        this.__initialPaymentImpl__()
     }
 
     /**
@@ -17,11 +19,9 @@ class PaymentFactory {
      */
     __initialPaymentImpl__() {
 
-        const patrun = Patrun()
+        const {app, patrun} = this
 
-        patrun.add({currencyType: currencyType.ETH}, new EthereumPayment())
-
-        return patrun
+        patrun.add({currencyType: currencyType.ETH}, new EthereumPayment(app))
     }
 
     /**
@@ -40,4 +40,3 @@ class PaymentFactory {
     }
 }
 
-module.exports = new PaymentFactory()

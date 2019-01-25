@@ -42,7 +42,10 @@ module.exports = class CardClipController extends Controller {
         ctx.validate()
         const userId = ctx.request.userId
 
-        var bankName = ctx.app.ethClient.web3.utils.isAddress(cardNo) ? '以太坊' : '银行'
+        var bankName = currencyType === 1 ? '银行' : '以太坊'
+        if (currencyType === 1 && !ctx.app.ethClient.web3.utils.isAddress(cardNo)) {
+            ctx.error({msg: 'cardNo不是一个有效的以太坊地址', data: {cardNo}})
+        }
 
         await this.outsideBankAccountProvider.findOneAndUpdate({
             userId, currencyType, cardNo

@@ -110,7 +110,7 @@ module.exports = {
 
     transactionAccountCountLimit: 5,
 
-    customLoader: ['app/event-handler', 'app/mq-service/index.js'],
+    customFileLoader: ['app/event-handler', 'app/mq-service/index.js'],
 
     RasSha256Key: {
         contractServiceAuth: {

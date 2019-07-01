@@ -24,7 +24,7 @@ module.exports = {
      */
     ethereum: {
 
-        web3RpcUri: 'http://119.23.45.143:8547',
+        web3RpcUri: 'http://172.18.215.231:8547',
 
         Coin: {
             address: '0x30ce01a932580fed20fde3970dfa483e0c4463af',

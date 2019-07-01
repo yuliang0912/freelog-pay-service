@@ -27,12 +27,12 @@ module.exports = {
         web3RpcUri: 'http://172.18.215.231:8547',
 
         Coin: {
-            address: '0x30ce01a932580fed20fde3970dfa483e0c4463af',
+            address: '0xebc71e6dcf35659ae03a299bcfcb81d11aad7a44',
             abi: JSON.parse(fs.readFileSync(path.join(__dirname, '../app/extend/web3/eth-contract-abi/Coin.abi'), 'utf-8'))
         },
 
         OfficialOps: {
-            address: '0xe80081371b9c7cf929e1a4459208e0744bfdfb58',
+            address: '0xcc7d469ec71db9f44fed4bddb14dd14a0063cb74',
             abi: JSON.parse(fs.readFileSync(path.join(__dirname, '../app/extend/web3/eth-contract-abi/OfficialOps.abi'), 'utf-8'))
         },
 

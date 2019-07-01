@@ -22,7 +22,7 @@ module.exports = async app => {
         setBaseCoinAddressTask() {
             return OfficialOpsContract.methods.setCoinAddress(ethereum.Coin.address).send(ethClient.adminInfo).then(receipt => {
                 console.log("设置货币合约地址")
-            })
+            }).catch(console.error)
         },
 
         /**
@@ -44,7 +44,8 @@ module.exports = async app => {
         }
     }
 
-    const initTaskChain = [taskEnums.getSymbolTask, taskEnums.setBaseCoinAddressTask, taskEnums.mintTokenTask, taskEnums.getTotalSupplyTask]
+
+     const initTaskChain = [taskEnums.getSymbolTask, taskEnums.setBaseCoinAddressTask, taskEnums.mintTokenTask, taskEnums.getTotalSupplyTask]
 
     await initTaskChain.reduce((promiseChain, currentPromise) => {
         return promiseChain.then((chainedResult) => {

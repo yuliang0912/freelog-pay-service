@@ -24,28 +24,25 @@ module.exports = {
         tokenType: "jwt"
     },
 
-    /**
-     * 以太坊相关配置
-     */
     ethereum: {
 
-        web3RpcUri: 'http://119.23.45.143:8546',
+        web3RpcUri: 'http://119.23.45.143:8546:8547',
 
         Coin: {
-            address: '0xc93679bd9f038396d2845a6fbd488939874f40aa',
+            address: '0xebc71e6dcf35659ae03a299bcfcb81d11aad7a44',
             abi: JSON.parse(fs.readFileSync(path.join(__dirname, '../app/extend/web3/eth-contract-abi/Coin.abi'), 'utf-8'))
         },
 
         OfficialOps: {
-            address: '0x8bc3cb917473d2549fb454754fe4599be2be3d37',
+            address: '0xcc7d469ec71db9f44fed4bddb14dd14a0063cb74',
             abi: JSON.parse(fs.readFileSync(path.join(__dirname, '../app/extend/web3/eth-contract-abi/OfficialOps.abi'), 'utf-8'))
         },
 
         account: {
-            admin: '0x6b8d489197cfc97683e93b8cadf7c093ef26d628',
-            freelog: '0x916dacff457a76654d92b529b4a9c9fbd0c40f72'
+            admin: '0x345971f7e3fed34b2d73cd03ec15fbe8a705ecd2',
+            freelog: '0x66bb0d2fe20be3ab5be67eedbe239804e788b9b0'
         }
-    }
+    },
 }
 
 

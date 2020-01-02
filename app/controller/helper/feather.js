@@ -108,12 +108,10 @@ module.exports = class FeatherController extends Controller {
 
         const {ethClient} = ctx.app
         const {CoinContract, adminInfo} = ethClient
-
         await CoinContract.methods.balanceOf(address).call(adminInfo).then(balance => new Object({
-            address, balance: parseInt(balance._hex, 16)
+            address, balance: parseInt(balance)
         })).then(ctx.success)
     }
-
 
     /**
      * feather赠送记录

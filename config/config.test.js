@@ -41,18 +41,18 @@ module.exports = {
         web3RpcUri: 'http://172.18.215.231:8546',
 
         Coin: {
-            address: '0xc93679bd9f038396d2845a6fbd488939874f40aa',
+            address: '0x64d4ed053026b92cfeb278840adcf93e7c57ca0e',
             abi: JSON.parse(fs.readFileSync(path.join(__dirname, '../app/extend/web3/eth-contract-abi/Coin.abi'), 'utf-8'))
         },
 
         OfficialOps: {
-            address: '0x8bc3cb917473d2549fb454754fe4599be2be3d37',
+            address: '0x6587b53be10421cd192a523b8bfb751ec8fff0ad',
             abi: JSON.parse(fs.readFileSync(path.join(__dirname, '../app/extend/web3/eth-contract-abi/OfficialOps.abi'), 'utf-8'))
         },
 
         account: {
-            admin: '0x6b8d489197cfc97683e93b8cadf7c093ef26d628',
-            freelog: '0x916dacff457a76654d92b529b4a9c9fbd0c40f72'
+            admin: '0xf4b1be25c839d0af1d12ab2ff53b4c1b3765a1ed',
+            freelog: '0xa7646f209b5c19d1917f48f8fb201ea8d72fd70a'
         }
     }
 }

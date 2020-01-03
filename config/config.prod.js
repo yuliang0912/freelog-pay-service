@@ -6,7 +6,7 @@ const path = require('path')
 module.exports = {
 
     mongoose: {
-        url: "mongodb://172.18.215.231:27017/pay"
+        url: "mongodb://mongo-prod.common:27017/pay"
     },
 
     rabbitMq: {

@@ -8,7 +8,7 @@ module.exports = {
     cluster: {listen: {port: 5055}},
 
     mongoose: {
-        url: "mongodb://172.18.215.231:27018/pay"
+        url: "mongodb://mongo-test.common:27017/pay"
     },
 
     rabbitMq: {

@@ -27,21 +27,21 @@ module.exports = {
 
     ethereum: {
 
-        web3RpcUri: 'http://119.23.45.143:8546',
+        web3RpcUri: 'http://119.23.45.143:8547',
 
         Coin: {
-            address: '0x64d4ed053026b92cfeb278840adcf93e7c57ca0e',
+            address: '0x6cd19679ff96166f6447d71adafaf6b69ed03a92',
             abi: JSON.parse(fs.readFileSync(path.join(__dirname, '../app/extend/web3/eth-contract-abi/Coin.abi'), 'utf-8'))
         },
 
         OfficialOps: {
-            address: '0x6587b53be10421cd192a523b8bfb751ec8fff0ad',
+            address: '0xa4b8056d81b53db53f8f80c73acfa0b42d7671c7',
             abi: JSON.parse(fs.readFileSync(path.join(__dirname, '../app/extend/web3/eth-contract-abi/OfficialOps.abi'), 'utf-8'))
         },
 
         account: {
-            admin: '0xf4b1be25c839d0af1d12ab2ff53b4c1b3765a1ed',
-            freelog: '0xa7646f209b5c19d1917f48f8fb201ea8d72fd70a'
+            admin: '0xfdabcee81946d2a577387d306cb9f621458ff3a7',
+            freelog: '0x22815a2b5f83aa4303aaaa74199c1fc7c8abb270'
         }
     }
 }

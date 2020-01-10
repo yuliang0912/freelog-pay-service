@@ -53,7 +53,7 @@ module.exports = class Web3Client {
      * @returns {{from: string}}
      */
     get adminInfo() {
-        return {from: this.accountInfo.admin}
+        return {from: this.accountInfo.admin, gas: 1000000}
     }
 
     /**

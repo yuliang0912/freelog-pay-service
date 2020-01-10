@@ -44,8 +44,6 @@ module.exports = async app => {
         }
     }
 
-
-
     const initTaskChain = [taskEnums.getSymbolTask, taskEnums.setBaseCoinAddressTask, taskEnums.mintTokenTask, taskEnums.getTotalSupplyTask]
 
     await initTaskChain.reduce((promiseChain, currentPromise) => {
@@ -53,4 +51,5 @@ module.exports = async app => {
             return currentPromise(chainedResult).then((res) => res)
         })
     }, Promise.resolve())
+
 }

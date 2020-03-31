@@ -2,6 +2,7 @@
 
 const Controller = require('egg').Controller
 const {accountType} = require('../../enum/index')
+const {ApplicationError, ArgumentError, AuthorizationError} = require('egg-freelog-base/error')
 
 module.exports = class AccountController extends Controller {
 
@@ -26,7 +27,7 @@ module.exports = class AccountController extends Controller {
             condition.currencyType = currencyType
         }
 
-        await this.accountProvider.find(condition).then(ctx.success).catch(ctx.error)
+        await this.accountProvider.find(condition).then(ctx.success)
     }
 
     /**
@@ -40,7 +41,7 @@ module.exports = class AccountController extends Controller {
 
         ctx.validate()
 
-        await this.accountProvider.findOne({accountId, ownerId: ctx.request.userId}).then(ctx.success).catch(ctx.error)
+        await this.accountProvider.findOne({accountId, ownerId: ctx.request.userId}).then(ctx.success)
     }
 
     /**
@@ -57,7 +58,7 @@ module.exports = class AccountController extends Controller {
         ctx.allowContentType({type: 'json'}).validate()
 
         await ctx.service.accountService.createIndividualAccount({accountName, currencyType, password})
-            .then(ctx.success).catch(ctx.error)
+            .then(ctx.success)
     }
 
     /**
@@ -75,12 +76,14 @@ module.exports = class AccountController extends Controller {
         ctx.allowContentType({type: 'json'}).validate()
 
         const nodeInfo = await ctx.curlIntranetApi(`${ctx.webApi.nodeInfo}/${nodeId}`)
-        if (!nodeInfo || nodeInfo.ownerUserId !== ctx.request.userId) {
-            ctx.error({msg: '未找到节点信息或者没有节点操作权限', data: {nodeInfo}})
-        }
+
+        ctx.entityNullValueAndUserAuthorizationCheck(nodeInfo, {
+            msg: ctx.gettext('params-validate-failed', 'nodeId'),
+            property: 'ownerUserId'
+        })
 
         await ctx.service.accountService.createNodeAccount({accountName, currencyType, password, nodeId})
-            .then(ctx.success).catch(ctx.error)
+            .then(ctx.success)
     }
 
     /**
@@ -114,7 +117,7 @@ module.exports = class AccountController extends Controller {
         ctx.allowContentType({type: 'json'}).validate()
 
         if (accountName === undefined && newPassword === undefined && originalPassword === undefined) {
-            ctx.error({msg: '没有有效参数'})
+            throw new ArgumentError(ctx.gettext('params-comb-validate-failed', 'accountName,newPassword,originalPassword'))
         }
 
         await ctx.service.accountService.updateAccountInfo({
@@ -134,15 +137,18 @@ module.exports = class AccountController extends Controller {
         const accountId = ctx.checkParams('id').isTransferAccountId().value
         ctx.validate()
 
-        const accountInfo = await this.accountProvider.findOne({accountId, ownerId: ctx.request.userId})
+        const accountInfo = await this.accountProvider.findOne({accountId})
         if (!accountInfo) {
-            ctx.error({msg: '未找到有效账户信息'})
+            throw new ArgumentError(ctx.gettext('account-info-not-found'))
+        }
+        if (accountInfo.accountType !== accountType.IndividualAccount || accountInfo.ownerId !== ctx.request.userId) {
+            throw new AuthorizationError(ctx.gettext('user-authorization-failed'))
         }
         if (accountInfo.status === 3) {
             return ctx.success(accountInfo)
         }
         if (accountInfo.status !== 1) {
-            ctx.error({msg: '账户状态不正确,无法执行删除操作'})
+            throw new ApplicationError(ctx.gettext('transaction-account-status-exception-error'))
         }
 
         await ctx.service.accountService.updateAccountInfo({accountId, status: 3}).then(data => {
@@ -164,12 +170,9 @@ module.exports = class AccountController extends Controller {
         ctx.validate()
 
         const ownerId = ctx.request.userId.toString()
-        const accountInfo = this.accountProvider.findOne({accountId})
-        if (!accountInfo) {
-            ctx.error({msg: '未找到账户信息'})
-        }
+        const accountInfo = this.accountProvider.findOne({accountId}).tap(model => ctx.entityNullObjectCheck(model, ctx.gettext('account-info-not-found')))
         if (accountInfo.accountType === accountType.IndividualAccount && accountInfo.ownerId !== ownerId) {
-            ctx.error({msg: '没有查看权限'})
+            throw new AuthorizationError(ctx.gettext('user-authorization-failed'))
         }
 
         const task1 = this.accountTradeRecordProvider.count({accountId})

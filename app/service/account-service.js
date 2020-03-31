@@ -26,7 +26,7 @@ module.exports = class AccountService extends Service {
 
         await this.accountProvider.count({currencyType, ownerId}).then(count => {
             if (count >= config.transactionAccountCountLimit) {
-                throw ApplicationError('当前用户的此类型账户数量已经达到上限,无法创建', {limit: config.transactionAccountCountLimit})
+                throw ApplicationError(ctx.gettext('transaction-account-create-count-limit-error'), {limit: config.transactionAccountCountLimit})
             }
         })
         const accountId = accountIdGenerator.generateAccountId({
@@ -79,14 +79,16 @@ module.exports = class AccountService extends Service {
      */
     async createNodeAccount({accountName, currencyType, password, nodeId}) {
 
-        const {ctx, config} = this
+        const {ctx} = this
         const userId = ctx.request.userId
 
-        await this.accountProvider.count({currencyType, ownerId: nodeId}).then(count => {
-            if (count >= config.transactionAccountCountLimit) {
-                throw ApplicationError('当前用户的此类型账户数量已经达到上限,无法创建', {limit: config.transactionAccountCountLimit})
-            }
-        })
+        //节点的账户可能比较多.此处取消创建账户上限
+        // await this.accountProvider.count({currencyType, ownerId: nodeId}).then(count => {
+        //     if (count >= config.transactionAccountCountLimit) {
+        //         throw ApplicationError('当前用户的此类型账户数量已经达到上限,无法创建', {limit: config.transactionAccountCountLimit})
+        //     }
+        // })
+
         const accountId = accountIdGenerator.generateAccountId({
             currencyType, accountType: accountType.NodeAccount
         })
@@ -122,12 +124,17 @@ module.exports = class AccountService extends Service {
         const {ctx} = this
         const ownerId = ctx.request.userId
 
-        const accountInfo = await this.accountProvider.findOne({accountId, ownerId})
-        if (!accountInfo || accountInfo.status !== 1) {
-            throw ApplicationError('账户信息或者状态不正确', {status: accountInfo ? -100 : accountInfo.status})
+        const accountInfo = await this.accountProvider.findOne({
+            accountId, ownerId
+        }).tap(model => ctx.entityNullObjectCheck(model, ctx.gettext('params-validate-failed', 'accountId')), {
+            accountId, ownerId
+        })
+
+        if (accountInfo.status !== 1) {
+            throw ApplicationError(ctx.gettext('transaction-account-status-exception-error'), {status: accountInfo ? -100 : accountInfo.status})
         }
         if (!accountInfoSecurity.accountSignVerify(accountInfo)) {
-            throw ApplicationError('账号数据异常,请联系客服')
+            throw ApplicationError(ctx.gettext('transaction-account-data-exception-error'))
         }
         if (accountName) {
             accountInfo.accountName = accountName
@@ -174,7 +181,9 @@ module.exports = class AccountService extends Service {
             return
         }
         if (!originalPassword || !newPassword) {
-            throw new ApplicationError('参数originalPassword和newPassword不全', {originalPassword, newPassword})
+            throw new ApplicationError(this.ctx.gettext('params-comb-validate-failed', 'originalPassword,newPassword'), {
+                originalPassword, newPassword
+            })
         }
 
         const {accountId, ownerId, password, pwSalt} = accountInfo
@@ -201,7 +210,7 @@ module.exports = class AccountService extends Service {
      */
     _verifyTransferPassword({accountId, ownerId, originalPassword, pwSalt, encryptedPassword}) {
         if (!accountPasswordGenerator.verifyTransferPassword(...arguments)) {
-            throw new ApplicationError('原始交易密码不正确')
+            throw new ApplicationError(this.ctx.gettext('transaction-account-password-validate-failed'))
         }
         return true
     }

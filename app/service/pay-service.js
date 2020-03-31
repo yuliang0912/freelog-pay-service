@@ -39,7 +39,7 @@ module.exports = class PayService extends Service {
         })
 
         if (!result) {
-            throw new ApplicationError('交易失败')
+            throw new ApplicationError(this.ctx.gettext('transfer-exception-error'))
         }
 
         const paymentOrderId = uuid.v4().replace(/-/g, '')
@@ -196,7 +196,7 @@ module.exports = class PayService extends Service {
 
         const {app} = this
         if (currencyType !== CurrencyTypeEnum.ETH) {
-            throw new ApplicationError('目前只支持ETH货币')
+            throw new ApplicationError(ctx.gettext('official-tap-limit-tips'))
         }
         /**
          * TODO:后续需要在业务中自动判断是否tap过.
@@ -246,16 +246,16 @@ module.exports = class PayService extends Service {
         const availableAmount = fromAccountInfo.balance - fromAccountInfo.freezeBalance
 
         if (amount <= 0) {
-            throw new ApplicationError('交易金额必须大于0', {amount})
+            throw new ApplicationError(ctx.gettext('params-validate-failed', 'amount'), {amount})
         }
         if (amount > fromAccountInfo.balance) {
-            throw new ApplicationError('余额不足,不能完成本次转账', {
+            throw new ApplicationError(ctx.gettext('transaction-account-balance-insufficient-error'), {
                 balance: fromAccountInfo.balance,
                 freezeBalance: fromAccountInfo.freezeBalance
             })
         }
         if (amount > availableAmount) {
-            throw new ApplicationError('余额不足,不能完成本次转账', {
+            throw new ApplicationError(ctx.gettext('transaction-account-balance-insufficient-error'), {
                 balance: fromAccountInfo.balance,
                 freezeBalance: fromAccountInfo.freezeBalance
             })

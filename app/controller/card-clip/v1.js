@@ -2,6 +2,7 @@
 
 const Controller = require('egg').Controller
 const CurrencyTypes = Object.values(require('../../enum/currency-type'))
+const {ArgumentError, ApplicationError} = require('egg-freelog-base/error')
 
 module.exports = class CardClipController extends Controller {
 
@@ -42,9 +43,9 @@ module.exports = class CardClipController extends Controller {
         ctx.validate()
         const userId = ctx.request.userId
 
-        var bankName = currencyType === 1 ? '银行' : '以太坊'
+        var bankName = currencyType === 1 ? ctx.gettext('bank-name') : ctx.gettext('eth-bank-name')
         if (currencyType === 1 && !ctx.app.ethClient.web3.utils.isAddress(cardNo)) {
-            ctx.error({msg: 'cardNo不是一个有效的以太坊地址', data: {cardNo}})
+            throw new ArgumentError(ctx.gettext('params-format-validate-failed', 'cardNo'))
         }
 
         await this.outsideBankAccountProvider.findOneAndUpdate({
@@ -67,12 +68,11 @@ module.exports = class CardClipController extends Controller {
         const cardNo = ctx.checkParams('id').exist().notEmpty().value
         ctx.validate()
 
-        const cardInfo = await this.outsideBankAccountProvider.findOne({cardNo})
-        if (!cardInfo || cardInfo.userId !== ctx.request.userId) {
-            ctx.error({msg: '卡号错误,没有找到有效卡片信息'})
-        }
+        await this.outsideBankAccountProvider.findOne({cardNo}).then(model => ctx.entityNullValueAndUserAuthorizationCheck(model, {
+            msg: ctx.gettext('params-validate-failed', 'cardNo')
+        }))
 
         await this.outsideBankAccountProvider.updateOne({cardNo}, {status: 2})
-            .then(data => ctx.success(true)).catch(ctx.error)
+            .then(data => ctx.success(true))
     }
 }

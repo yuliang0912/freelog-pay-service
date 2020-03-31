@@ -2,6 +2,8 @@
 
 const Controller = require('egg').Controller
 const {accountType, tradeStatus} = require('../../enum/index')
+const {LoginUser} = require('egg-freelog-base/app/enum/identity-type')
+const {ApplicationError, ArgumentError, AuthorizationError} = require('egg-freelog-base/error')
 
 module.exports = class PayController extends Controller {
 
@@ -22,13 +24,10 @@ module.exports = class PayController extends Controller {
         const accountId = ctx.checkBody('accountId').exist().isTransferAccountId().value
         const cardNo = ctx.checkBody('cardNo').exist().notEmpty().value
         const amount = ctx.checkBody('amount').exist().isInt().toInt().gt(0).value
-
-        ctx.validate()
+        ctx.validateParams().validateVisitorIdentity(LoginUser)
 
         const accountInfo = await this.accountProvider.findOne({accountId})
-        if (!accountInfo) {
-            ctx.error({msg: `未找到有效账号信息,请确认账户ID是否正确`, data: {accountInfo}})
-        }
+            .tap(model => ctx.entityNullObjectCheck(model, ctx.gettext('params-validate-failed', 'accountId')))
 
         await ctx.service.payService.recharge({accountInfo, cardNo, amount}).then(ctx.success).catch(ctx.error)
     }
@@ -45,7 +44,7 @@ module.exports = class PayController extends Controller {
         const toAccountId = ctx.checkBody('toAccountId').exist().isTransferAccountId().value
         const fromAccountId = ctx.checkBody('fromAccountId').exist().isTransferAccountId().value
         const remark = ctx.checkBody('remark').optional().type('string').len(1, 200).value
-        ctx.validate()
+        ctx.validateParams().validateVisitorIdentity(LoginUser)
 
         const accountInfo = {}
         await this.accountProvider.find({accountId: {$in: [toAccountId, fromAccountId]}}).then(list => {
@@ -55,11 +54,15 @@ module.exports = class PayController extends Controller {
         const toAccountInfo = accountInfo[toAccountId]
 
         if (!fromAccountInfo) {
-            ctx.error({msg: `未找到付款方账号${fromAccountId}`})
+            throw new ArgumentError(ctx.gettext('transaction-account-not-found-error', ctx.gettext('from-account')))
         }
         if (!toAccountInfo) {
-            ctx.error({msg: `未找到收款方用户账号${toAccountId}`})
+            throw new ArgumentError(ctx.gettext('transaction-account-not-found-error', ctx.gettext('to-account')))
         }
+
+        // if (toAccountInfo.ownerId !== ctx.request.userId.toString()) {
+        //     throw new AuthorizationError(this.gettext('user-authorization-failed'))
+        // }
 
         const transferRecordInfo = await ctx.service.payService.transfer({
             fromAccountInfo, toAccountInfo, password, amount, remark
@@ -86,8 +89,7 @@ module.exports = class PayController extends Controller {
         const outsideTradeDesc = ctx.checkBody('outsideTradeDesc').exist().len(1, 100).value
         const remark = ctx.checkBody('remark').optional().type('string').len(1, 200).value
         const paymentType = ctx.checkBody('paymentType').optional().toInt().default(1).value
-
-        ctx.allowContentType({type: 'json'}).validate()
+        ctx.validateParams().validateVisitorIdentity(LoginUser)
 
         const {fromAccountInfo, toAccountInfo} = await this.accountProvider.find({accountId: {$in: [fromAccountId, toAccountId]}}).then(list => {
             const accountInfo = {}
@@ -95,15 +97,15 @@ module.exports = class PayController extends Controller {
             return {fromAccountInfo: accountInfo[fromAccountId], toAccountInfo: accountInfo[toAccountId]}
         })
         if (!fromAccountInfo) {
-            ctx.error({msg: `未找到发起方账号${fromAccountId}`})
+            throw new ArgumentError(ctx.gettext('transaction-account-not-found-error', ctx.gettext('from-account')))
         }
         if (!toAccountInfo) {
-            ctx.error({msg: `未找到收款方用户账号${toAccountId}`})
+            throw new ArgumentError(ctx.gettext('transaction-account-not-found-error', ctx.gettext('to-account')))
         }
 
         const oldOrder = await ctx.dal.paymentOrderProvider.findOne({outsideTradeNo})
         if (oldOrder && oldOrder.tradeStatus !== tradeStatus.Failed) {
-            ctx.error({msg: `当前订单号已经支付过,不能重复支付`, data: {outsideTradeNo}})
+            throw new ApplicationError(ctx.gettext('transaction-order-has-paid-tip'))
         }
 
         await ctx.service.payService.payment({
@@ -129,7 +131,7 @@ module.exports = class PayController extends Controller {
         const remark = ctx.checkBody('remark').optional().type('string').len(1, 200).value
         const paymentType = ctx.checkBody('paymentType').optional().toInt().default(1).value
 
-        ctx.validate()
+        ctx.validateParams().validateVisitorIdentity(LoginUser)
 
         const {fromAccountInfo, toAccountInfo} = await this.accountProvider.find({accountId: {$in: [fromAccountId, toAccountId]}}).then(list => {
             const accountInfo = {}
@@ -137,15 +139,15 @@ module.exports = class PayController extends Controller {
             return {fromAccountInfo: accountInfo[fromAccountId], toAccountInfo: accountInfo[toAccountId]}
         })
         if (!fromAccountInfo) {
-            ctx.error({msg: `未找到发起方账号${fromAccountId}`})
+            throw new ArgumentError(ctx.gettext('transaction-account-not-found-error', ctx.gettext('from-account')))
         }
         if (!toAccountInfo) {
-            ctx.error({msg: `未找到收款方用户账号${toAccountId}`})
+            throw new ArgumentError(ctx.gettext('transaction-account-not-found-error', ctx.gettext('to-account')))
         }
 
         const oldOrder = await ctx.dal.paymentOrderProvider.findOne({outsideTradeNo})
         if (oldOrder) {
-            ctx.error({msg: `当前订单号已经支付过,不能重复支付`, data: {outsideTradeNo}})
+            throw new ApplicationError(ctx.gettext('transaction-order-has-paid-tip'))
         }
 
         await ctx.service.payService.inquirePayment({
@@ -171,9 +173,9 @@ module.exports = class PayController extends Controller {
         const refParam = ctx.checkBody('refParam').optional().type('string').len(1, 200).value
 
         if (transferType === 1 && !amount) {
-            ctx.errors.push({amount: '缺少参数amount'})
+            throw new ArgumentError(ctx.gettext('params-comb-validate-failed', 'transferType,amount'))
         }
-        ctx.validate()
+        ctx.validateParams().validateVisitorIdentity(LoginUser)
 
         const accountInfo = {}
         await this.accountProvider.find({accountId: {$in: [toAccountId, fromAccountId]}}).then(list => {
@@ -183,10 +185,10 @@ module.exports = class PayController extends Controller {
         const toAccountInfo = accountInfo[toAccountId]
 
         if (!fromAccountInfo) {
-            ctx.error({msg: `未找到付款方账号${fromAccountId}`})
+            throw new ArgumentError(ctx.gettext('transaction-account-not-found-error', ctx.gettext('from-account')))
         }
         if (!toAccountInfo) {
-            ctx.error({msg: `未找到收款方用户账号${toAccountId}`})
+            throw new ArgumentError(ctx.gettext('transaction-account-not-found-error', ctx.gettext('to-account')))
         }
 
         await ctx.service.payService.inquireTransfer({
@@ -224,11 +226,13 @@ module.exports = class PayController extends Controller {
 
         const ownerId = ctx.request.userId.toString()
         const accountInfo = this.accountProvider.findOne({accountId})
+            .tap(model => ctx.entityNullObjectCheck(model, ctx.gettext('params-validate-failed', 'accountId')))
+
         if (!accountInfo) {
-            ctx.error({msg: '未找到账户信息'})
+            throw new ArgumentError(ctx.gettext('transaction-account-not-found-error'))
         }
         if (accountInfo.accountType === accountType.IndividualAccount && accountInfo.ownerId !== ownerId) {
-            ctx.error({msg: '没有查看权限'})
+            throw new ArgumentError(ctx.gettext('user-authorization-failed'))
         }
         const condition = {accountId, status: 1}
         const task1 = this.paymentOrderProvider.count(condition)
@@ -251,7 +255,7 @@ module.exports = class PayController extends Controller {
         ctx.validate()
 
         if (paymentOrderId === undefined && outsideTradeNo === undefined) {
-            ctx.error({msg: '参数缺失'})
+            throw new ArgumentError(ctx.gettext('params-required-validate-failed'))
         }
         const condition = {}
         if (paymentOrderId) {

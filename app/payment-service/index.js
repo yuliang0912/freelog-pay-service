@@ -6,11 +6,16 @@
 
 const IPayment = require('./payment-interface')
 const PaymentFactory = require('./payment-impl/index')
+const {ApplicationError} = require('egg-freelog-base/error')
 
 module.exports = class PaymentService extends IPayment {
 
     constructor(app, currencyType) {
         super(currencyType)
+        const ctx = app.ctx
+        if (!ctx) {
+            throw new ApplicationError('ctx缺失')
+        }
         this.provider = new PaymentFactory(app).getProvider(currencyType)
     }
 

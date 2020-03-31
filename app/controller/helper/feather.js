@@ -2,6 +2,7 @@
 
 const Controller = require('egg').Controller
 const {ethereumGenerator} = require('../../account-service/generate-account-info/index')
+const {ApplicationError, ArgumentError, AuthorizationError} = require('egg-freelog-base/error')
 
 module.exports = class FeatherController extends Controller {
 
@@ -38,17 +39,17 @@ module.exports = class FeatherController extends Controller {
         const address = ctx.checkQuery('address').len(42, 42).value
         ctx.validate()
 
-        const ethAddressInfo = await this.ethKeyStoreProvider.findOne({address: address})
-        if (!ethAddressInfo || ethAddressInfo.userId != ctx.request.userId) {
-            ctx.error({msg: '无效的以太坊地址', data: {address}})
-        }
+        const ethAddressInfo = await this.ethKeyStoreProvider.findOne({address}).tap(model => ctx.entityNullValueAndUserAuthorizationCheck(model, {
+            msg: ctx.gettext('params-validate-failed', 'address')
+        }))
+
         if (ethAddressInfo.status == 2) {
-            ctx.error({msg: '当前地址的keystore已经清理,无法下载'})
+            throw new ApplicationError(ctx.gettext('eth-keystore-cleared-tips'))
         }
 
         await ctx.curl(ethAddressInfo.keyStoreUrl, {streaming: true,}).then(result => {
             if (!/^2[\d]{2}$/.test(result.status)) {
-                ctx.error({msg: '文件获取失败,未能获取到资源源文件信息', data: {['http-status']: result.status}})
+                throw new ApplicationError('oss-fetch-file-failed', {['http-status']: result.status})
             }
             ctx.attachment(address)
             ctx.body = result.res
@@ -65,10 +66,10 @@ module.exports = class FeatherController extends Controller {
         const address = ctx.checkQuery('address').len(42, 42).value
         ctx.validate()
 
-        const ethAddressInfo = await this.ethKeyStoreProvider.findOne({address})
-        if (!ethAddressInfo || ethAddressInfo.userId !== ctx.request.userId) {
-            ctx.error({msg: '无效的以太坊地址', data: {address}})
-        }
+        const ethAddressInfo = await this.ethKeyStoreProvider.findOne({address}).tap(model => ctx.entityNullValueAndUserAuthorizationCheck(model, {
+            msg: ctx.gettext('params-validate-failed', 'address')
+        }))
+
         if (ethAddressInfo.status === 2) {
             return ctx.success(true)
         }

@@ -45,8 +45,9 @@ module.exports = {
     uploadConfig: {
         aliOss: {
             enable: true,
-            accessKeyId: "LTAIy8TOsSnNFfPb",
-            accessKeySecret: "Bt5yMbW89O7wMTVQsNUfvYfou5GPsL",
+            isCryptographic: true,
+            accessKeyId: "TFRBSXk4VE9zU25ORmZQYg==",
+            accessKeySecret: "QnQ1eU1iVzg5Tzd3TVRWUXNOVWZ2WWZvdTVHUHNM",
             bucket: "freelog-shenzhen",
             internal: false,
             region: "oss-cn-shenzhen",
@@ -54,6 +55,7 @@ module.exports = {
         },
         amzS3: {}
     },
+
 
     multipart: {
         autoFields: true,

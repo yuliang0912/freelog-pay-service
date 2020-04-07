@@ -47,13 +47,7 @@ module.exports = {
      */
     uploadConfig: {
         aliOss: {
-            enable: true,
-            accessKeyId: "LTAIy8TOsSnNFfPb",
-            accessKeySecret: "Bt5yMbW89O7wMTVQsNUfvYfou5GPsL",
-            bucket: "freelog-shenzhen",
-            internal: true,
-            region: "oss-cn-shenzhen",
-            timeout: 180000
+            internal: true
         },
         amzS3: {}
     },

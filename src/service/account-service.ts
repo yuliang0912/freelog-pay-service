@@ -42,7 +42,9 @@ export class AccountService extends BaseService<AccountInfo> {
             accountName: userInfo.username,
             ownerUserId: userInfo.userId, ownerName: userInfo.username,
             ownerId: userInfo.userId.toString(),
-            status: 1
+            status: 1,
+            balance: '0',
+            freezeBalance: '0',
         } as AccountInfo;
         accountInfo.saltValue = (v4() + v4()).replace(/-/g, '');
         accountInfo.password = this.accountHelper.generateAccountPassword(accountInfo.accountId, accountInfo.saltValue, accountInfo.ownerId, password);

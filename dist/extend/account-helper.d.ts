@@ -1,5 +1,5 @@
 import { AccountInfo } from '..';
-import { AccountTypeEnum } from "../enum";
+import { AccountTypeEnum } from '../enum';
 export declare class AccountHelper {
     /**
      * 生成加密盐值

@@ -1,5 +1,5 @@
 import {AccountInfo} from '..';
-import {AccountTypeEnum} from "../enum";
+import {AccountTypeEnum} from '../enum';
 import {LogicError} from 'egg-freelog-base';
 import {Provide, Scope, ScopeEnum} from '@midwayjs/decorator';
 import {pick, random} from 'lodash';
@@ -37,14 +37,14 @@ export class AccountHelper {
     accountInfoSignature(accountInfo: AccountInfo): string {
 
         const signFields = ['accountId', 'accountType', 'ownerId', 'balance', 'freezeBalance', 'status'];
-        const signModel = pick(accountInfo, signFields)
-        const signModelKeys = Object.keys(signModel).sort()
+        const signModel = pick(accountInfo, signFields);
+        const signModelKeys = Object.keys(signModel).sort();
 
         if (signModelKeys.length !== signFields.length) {
-            throw new Error('账户信息不全,缺少加密用的必要字段')
+            throw new Error('账户信息不全,缺少加密用的必要字段');
         }
 
-        const signString = signModelKeys.reduce((acc, field) => `${acc}_${field}:${signModel[field]}`, 'account_sign_string')
+        const signString = signModelKeys.reduce((acc, field) => `${acc}_${field}:${signModel[field]}`, 'account_sign_string');
 
         return accountInfo.signature = hmacSha1(md5(signString), accountInfo.saltValue);
     }
@@ -67,7 +67,7 @@ export class AccountHelper {
      */
     generateAccountPassword(accountId: number, accountSaltValue: string, ownerId: string, password: number): string {
         if (!/^\d{6}$/.test(password?.toString())) {
-            throw new Error('交易密码必须是6位数字')
+            throw new Error('交易密码必须是6位数字');
         }
         return hmacSha1(`transaction-password@${accountId}-${ownerId}-${password}`, accountSaltValue);
     }

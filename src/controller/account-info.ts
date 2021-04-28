@@ -6,7 +6,7 @@ import {AccountHelper} from '../extend/account-helper';
 import {AccountService} from '../service/account-service';
 
 @Provide()
-@Controller('/v1/accounts')
+@Controller('/v2/accounts')
 export class AccountInfoController {
 
     @Inject()

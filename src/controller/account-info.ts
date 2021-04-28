@@ -1,5 +1,5 @@
 import {Controller, Get, Inject, Provide, Post} from '@midwayjs/decorator';
-import {ArgumentError, FreelogContext} from 'egg-freelog-base';
+import {ArgumentError, FreelogContext, IdentityTypeEnum, visitorIdentityValidator} from 'egg-freelog-base';
 import * as NodeRSA from 'node-rsa';
 import {AccountTypeEnum} from '../enum';
 import {AccountHelper} from '../extend/account-helper';
@@ -17,10 +17,23 @@ export class AccountInfoController {
     accountHelper: AccountHelper;
 
     // 个人账号
-    @Get('/individualAccount')
+    @Get('/individualAccounts')
     async individualAccount() {
         return this.accountService.getAccountInfo({
             where: {ownerUserId: this.ctx.userId, accountType: AccountTypeEnum.IndividualAccount}
+        });
+    }
+
+    // 个人账号
+    @Get('/individualAccounts/:userId')
+    @visitorIdentityValidator(IdentityTypeEnum.InternalClient | IdentityTypeEnum.LoginUser)
+    async individualAccountInfo() {
+        const {ctx} = this;
+        const ownerUserId = ctx.checkParams('userId').exist().isUserId().value;
+        ctx.validateParams();
+
+        return this.accountService.getAccountInfo({
+            where: {ownerUserId, accountType: AccountTypeEnum.IndividualAccount}
         });
     }
 

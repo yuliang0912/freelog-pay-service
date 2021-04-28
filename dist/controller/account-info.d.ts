@@ -6,6 +6,7 @@ export declare class AccountInfoController {
     accountService: AccountService;
     accountHelper: AccountHelper;
     individualAccount(): Promise<import("..").AccountInfo>;
+    individualAccountInfo(): Promise<import("..").AccountInfo>;
     create(): Promise<import("..").AccountInfo>;
     createContractAccount(): Promise<import("..").AccountInfo>;
 }

@@ -76,7 +76,7 @@ export class AccountService extends BaseService<AccountInfo> {
      * 获取账户信息
      * @param condition
      */
-    async getAccountInfo(condition: FindOneOptions<AccountInfo>) {
+    getAccountInfo(condition: FindOneOptions<AccountInfo>) {
         return this.findOne(condition);
     }
 }

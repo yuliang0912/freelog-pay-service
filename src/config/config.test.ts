@@ -16,8 +16,8 @@ export default () => {
         username: 'root',
         password: 'f233109!',
         database: 'freelog-accounts',
-        synchronize: true,
-        logging: true,
+        synchronize: false,
+        logging: false,
         timezone: '+08:00',
     };
 

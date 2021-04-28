@@ -43,7 +43,7 @@
     "node": ">=10.16.0"
   },
   "scripts": {
-    "start": "egg-scripts start --title=freelog-pay-service --framework=midway",
+    "start": "egg-scripts start --title=freelog-pay-service --workers=1 --framework=midway",
     "test": "egg-scripts start --title=freelog-pay-service --NODE_ENV=test --workers=1 --framework=midway",
     "stop": "egg-scripts stop --title=freelog-pay-service",
     "start_build": "npm run build && cross-env NODE_ENV=development midway-bin dev",

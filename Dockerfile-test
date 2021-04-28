@@ -9,7 +9,7 @@ WORKDIR /data/freelog-pay-service
 
 COPY . /data/freelog-pay-service
 
-RUN npm install
+RUN npm install --production
 
 ENV NODE_ENV test
 ENV EGG_SERVER_ENV test

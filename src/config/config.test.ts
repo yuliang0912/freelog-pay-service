@@ -5,13 +5,13 @@ export default () => {
 
     config.cluster = {
         listen: {
-            port: 5010
+            port: 5056
         }
     };
 
     config.orm = {
         type: 'mysql',
-        host: 'mysql-test.common:3306',
+        host: 'mysql-test.common',
         port: 3306,
         username: 'root',
         password: 'f233109!',

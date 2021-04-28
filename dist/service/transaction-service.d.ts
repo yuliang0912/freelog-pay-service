@@ -37,7 +37,7 @@ export declare class TransactionService extends BaseService<TransactionRecordInf
      */
     contractPaymentConfirmedSuccessful(transactionRecord: TransactionRecordInfo, stateId: string): Promise<TransactionDetailInfo>;
     /**
-     * 合约支付确认成功
+     * 合约支付确认取消
      * @param transactionRecord
      */
     contractPaymentConfirmedCancel(transactionRecord: TransactionRecordInfo): Promise<unknown>;

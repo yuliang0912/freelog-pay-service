@@ -1,4 +1,3 @@
-/// <reference types="lodash" />
 import { AccountTypeEnum, TransactionStatusEnum, TransactionTypeEnum } from '../enum';
 /**
  * 交易操作记录信息,一次交易对应一条记录,一条记录一般对应两条流水
@@ -87,5 +86,5 @@ export declare class TransactionRecordInfo {
     /**
      * 自定义序列化
      */
-    toJSON(this: TransactionRecordInfo): import("lodash").Omit<TransactionRecordInfo, "saltValue" | "signature">;
+    toJSON(this: TransactionRecordInfo): Pick<TransactionRecordInfo, "createDate" | "updateDate" | "accountId" | "accountName" | "accountType" | "status" | "toJSON" | "recordId" | "reciprocalAccountId" | "reciprocalAccountType" | "reciprocalAccountName" | "transactionAmount" | "transactionType" | "attachInfo" | "remark" | "operatorId" | "operatorName" | "authorizationType" | "confirmTimeoutDate">;
 }

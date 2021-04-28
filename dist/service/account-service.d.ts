@@ -1,8 +1,8 @@
-import { BaseService } from "./abstract-base-service";
+import { BaseService } from './abstract-base-service';
 import { AccountInfo, Repository } from '..';
 import { FindOneOptions } from 'typeorm';
-import { AccountHelper } from "../extend/account-helper";
-import { FreelogContext } from "egg-freelog-base";
+import { AccountHelper } from '../extend/account-helper';
+import { FreelogContext } from 'egg-freelog-base';
 export declare class AccountService extends BaseService<AccountInfo> {
     ctx: FreelogContext;
     accountHelper: AccountHelper;

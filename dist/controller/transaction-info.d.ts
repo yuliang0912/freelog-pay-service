@@ -6,6 +6,14 @@ export declare class TransactionInfoController {
     accountService: AccountService;
     transactionService: TransactionService;
     /**
+     * 交易流水记录
+     */
+    myTransactionDetails(): Promise<void>;
+    /**
+     * 交易流水记录
+     */
+    transactionDetails(): Promise<void>;
+    /**
      * 转账
      */
     transfer(): Promise<import("..").TransactionDetailInfo>;
@@ -14,7 +22,11 @@ export declare class TransactionInfoController {
      */
     contractPayment(): Promise<import("..").TransactionDetailInfo>;
     /**
-     * 合约支付结果确认
+     * 合约支付结果确认(测试使用的接口.可以删除)
      */
     contractPaymentConfirmed(): Promise<unknown>;
+    /**
+     * 查询交易记录详情
+     */
+    transactionRecordDetail(): Promise<import("..").TransactionRecordInfo>;
 }

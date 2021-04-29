@@ -59,7 +59,7 @@ export class AccountInfo {
     freezeBalance: string;
 
     /**
-     * 密码(6位数字密码加密之后的文本)
+     * 普通账号存储6位数字密码加密之后的文本,合约账户存储公钥信息.
      */
     @Column({type: 'varchar', length: 1024, comment: '密码'})
     password: string;
@@ -79,7 +79,7 @@ export class AccountInfo {
     /**
      * 状态 1:正常 2:冻结
      */
-    @Column({type: 'int', default: 1, comment: '状态 1:正常 2:冻结'})
+    @Column({type: 'int', default: 1, comment: '状态 0:未激活 1:正常 2:冻结'})
     status: number;
 
     /**

@@ -1,10 +1,10 @@
+import {v4} from 'uuid';
 import {AccountInfo} from '..';
+import {pick, random} from 'lodash';
 import {AccountTypeEnum} from '../enum';
 import {LogicError} from 'egg-freelog-base';
 import {Provide, Scope, ScopeEnum} from '@midwayjs/decorator';
-import {pick, random} from 'lodash';
 import {base64Decode, base64Encode, hmacSha1, md5} from 'egg-freelog-base/lib/crypto-helper';
-import {v4} from 'uuid';
 
 @Provide()
 @Scope(ScopeEnum.Singleton)
@@ -76,7 +76,7 @@ export class AccountHelper {
      * 加密key(公钥,所以只用简单的做base64转换即可)
      * @param publicKey
      */
-    encryptPublicKey(publicKey: string) {
+    encryptPublicKey(publicKey: string): string {
         return base64Encode(publicKey);
     }
 
@@ -84,7 +84,7 @@ export class AccountHelper {
      * 解密publicKey
      * @param encryptedPublicKey
      */
-    decryptPublicKey(encryptedPublicKey: string) {
+    decryptPublicKey(encryptedPublicKey: string): string {
         return base64Decode(encryptedPublicKey);
     }
 

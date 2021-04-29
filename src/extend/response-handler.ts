@@ -7,9 +7,9 @@ import {TransactionInfoController} from '../controller/transaction-info';
 @Provide()
 @Aspect(ResponseHandler.scopeControllers)
 export class ResponseHandler implements IMethodAspect {
-    async before(point: JoinPoint) {
-
-    }
+    // async before(point: JoinPoint) {
+    //
+    // }
 
     afterReturn(joinPoint: JoinPoint, result: any) {
         if (isPromise(result)) {

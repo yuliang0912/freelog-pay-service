@@ -36,7 +36,7 @@ export declare class AccountInfo {
      */
     freezeBalance: string;
     /**
-     * 密码(6位数字密码加密之后的文本)
+     * 普通账号存储6位数字密码加密之后的文本,合约账户存储公钥信息.
      */
     password: string;
     /**

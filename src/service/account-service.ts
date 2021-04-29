@@ -5,6 +5,7 @@ import {FindOneOptions} from 'typeorm';
 import {AccountHelper} from '../extend/account-helper';
 import {FreelogContext, LogicError} from 'egg-freelog-base';
 import {v4} from 'uuid';
+import {Decimal} from 'decimal.js-light';
 
 @Provide()
 export class AccountService extends BaseService<AccountInfo> {
@@ -43,8 +44,8 @@ export class AccountService extends BaseService<AccountInfo> {
             ownerUserId: userInfo.userId, ownerName: userInfo.username,
             ownerId: userInfo.userId.toString(),
             status: 1,
-            balance: '0',
-            freezeBalance: '0',
+            balance: new Decimal(0).toFixed(2),
+            freezeBalance: new Decimal(0).toFixed(2)
         } as AccountInfo;
         accountInfo.saltValue = (v4() + v4()).replace(/-/g, '');
         accountInfo.password = this.accountHelper.generateAccountPassword(accountInfo.accountId, accountInfo.saltValue, accountInfo.ownerId, password);
@@ -64,7 +65,9 @@ export class AccountService extends BaseService<AccountInfo> {
             accountType: AccountTypeEnum.ContractAccount,
             accountName: contractName,
             ownerId: contractId,
-            status: 1
+            status: 1,
+            balance: new Decimal(0).toFixed(2),
+            freezeBalance: new Decimal(0).toFixed(2)
         } as AccountInfo;
         accountInfo.password = this.accountHelper.encryptPublicKey(publicKey);
         accountInfo.saltValue = this.accountHelper.generateSaltValue();

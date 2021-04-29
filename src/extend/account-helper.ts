@@ -45,7 +45,7 @@ export class AccountHelper {
         }
 
         const signString = signModelKeys.reduce((acc, field) => `${acc}_${field}:${signModel[field]}`, 'account_sign_string');
-
+        console.log(signString);
         return accountInfo.signature = hmacSha1(md5(signString), accountInfo.saltValue);
     }
 

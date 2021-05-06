@@ -1,6 +1,6 @@
 import * as NodeRSA from 'node-rsa';
-import {ApplicationError} from "egg-freelog-base";
-import {Provide} from "@midwayjs/decorator";
+import {ApplicationError} from 'egg-freelog-base';
+import {Provide} from '@midwayjs/decorator';
 
 @Provide()
 export class RsaHelper {
@@ -140,7 +140,7 @@ export class RsaHelper {
                             LxE28YMCgYAEQWnPAre6XuWSNEXhIVdVfuU7foQi60szo/qPfvL8hx+B7xjqeb9z
                             akMbdN0vU/WRchUKN+yAE+bDkNfhACKAFL9byw5xs7dFPenLC87/PzPBnHCNqJVF
                             XoqyriVhCSM71Dvmt1NBTdUjq72FVgVptKK9c9A8PSqUfoiMWGw1FA==
-                            -----END RSA PRIVATE KEY-----`
+                            -----END RSA PRIVATE KEY-----`;
         return this.build(publicKey, privateKey);
     }
 }

@@ -65,7 +65,7 @@ export class AccountHelper {
      * @param ownerId
      * @param password
      */
-    generateAccountPassword(accountId: number, accountSaltValue: string, ownerId: string, password: number): string {
+    generateAccountPassword(accountId: number, accountSaltValue: string, ownerId: string, password: string): string {
         if (!/^\d{6}$/.test(password?.toString())) {
             throw new Error('交易密码必须是6位数字');
         }
@@ -93,7 +93,7 @@ export class AccountHelper {
      * @param accountInfo
      * @param originalPassword
      */
-    verifyAccountPassword(accountInfo: AccountInfo, originalPassword: number): boolean {
+    verifyAccountPassword(accountInfo: AccountInfo, originalPassword: string): boolean {
         return accountInfo.password === this.generateAccountPassword(accountInfo.accountId, accountInfo.saltValue, accountInfo.ownerId, originalPassword);
     }
 

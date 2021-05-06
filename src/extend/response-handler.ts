@@ -1,4 +1,4 @@
-import {Aspect, IMethodAspect, isPromise, JoinPoint, Provide} from '@midwayjs/decorator';
+import {Aspect, IMethodAspect, JoinPoint, isPromise, Provide} from '@midwayjs/decorator';
 import {RetCodeEnum, ErrCodeEnum} from 'egg-freelog-base';
 import {buildApiFormatData} from 'egg-freelog-base/lib/freelog-common-func';
 import {AccountInfoController} from '../controller/account-info';

@@ -5,7 +5,7 @@ export declare class TransactionCoreService {
     accountRepository: Repository<AccountInfo>;
     private transactionStages;
     /**
-     * 个人账户之间转账
+     * 个人账户转账
      * @param userInfo
      * @param fromAccount
      * @param toAccount
@@ -13,7 +13,16 @@ export declare class TransactionCoreService {
      * @param transactionAmount
      * @param remark
      */
-    individualAccountTransfer(userInfo: UserInfo, fromAccount: AccountInfo, toAccount: AccountInfo, password: number, transactionAmount: number, remark?: string): Promise<TransactionDetailInfo>;
+    individualAccountTransfer(userInfo: UserInfo, fromAccount: AccountInfo, toAccount: AccountInfo, password: string, transactionAmount: number, remark?: string): Promise<TransactionDetailInfo>;
+    /**
+     * 组织账号转账
+     * @param fromAccount
+     * @param toAccount
+     * @param transactionAmount
+     * @param signature
+     * @param remark
+     */
+    organizationAccountTransfer(fromAccount: AccountInfo, toAccount: AccountInfo, transactionAmount: number, signature: string, remark?: string): Promise<TransactionDetailInfo>;
     /**
      * 待确认的合约支付
      * @param userInfo

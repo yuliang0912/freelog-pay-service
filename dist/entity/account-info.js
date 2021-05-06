@@ -51,11 +51,11 @@ __decorate([
     __metadata("design:type", Number)
 ], AccountInfo.prototype, "ownerUserId", void 0);
 __decorate([
-    typeorm_1.Column({ type: 'decimal', default: 0, precision: 10, scale: 2, comment: '账户余额(最小货币单位)' }),
+    typeorm_1.Column({ type: 'decimal', default: 0, precision: 14, scale: 2, comment: '账户余额(最小货币单位)' }),
     __metadata("design:type", String)
 ], AccountInfo.prototype, "balance", void 0);
 __decorate([
-    typeorm_1.Column({ type: 'decimal', default: 0, precision: 10, scale: 2, comment: '冻结金额' }),
+    typeorm_1.Column({ type: 'decimal', default: 0, precision: 14, scale: 2, comment: '冻结金额' }),
     __metadata("design:type", String)
 ], AccountInfo.prototype, "freezeBalance", void 0);
 __decorate([

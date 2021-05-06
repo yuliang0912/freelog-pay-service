@@ -7,6 +7,11 @@ export declare class AccountInfoController {
     accountHelper: AccountHelper;
     individualAccount(): Promise<import("..").AccountInfo>;
     individualAccountInfo(): Promise<import("..").AccountInfo>;
-    create(): Promise<import("..").AccountInfo>;
+    activateAccount(): Promise<boolean>;
     createContractAccount(): Promise<import("..").AccountInfo>;
+    createOrganizationAccount(): Promise<import("..").AccountInfo>;
+    generateRsaKey(): Promise<{
+        publicKey: any;
+        privateKey: any;
+    }>;
 }

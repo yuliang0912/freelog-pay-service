@@ -1,0 +1,45 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.testFreelogOrganizationInfo = void 0;
+exports.testFreelogOrganizationInfo = {
+    organizationId: 1,
+    organizationName: 'test-freelog',
+    ownerUserId: 0,
+    ownerName: 'test-freelog',
+    publicKey: `-----BEGIN RSA PUBLIC KEY-----
+MIIBCgKCAQEA0X+nU+vjJGpoz0lHRUT0ENUm7PmFfgFA5MDiYbOLzPzlCKDF3QTk
+PgZ/yvjO2WzsMWF6A/rGttwLdCayv59X/RvgvgIYNiPoiOq5tSY7yhGFis7jQPbS
+8uTP0y7CQqiEX59zowb1AgBxdwe9UbEbCtuvq/BUavJ/sAGHcHerW/udXoYTWeUJ
+l1if97Bt+edy+knAxNM33yxOpr5hAXUiBTDs//JRAbiJ3Izq09kJWikdVdoulzHb
+3yw4ulgFgfiIwOLhB9eKGqq4A8iEoRfBIQx0onT5gpeoBXxNjv0AkXSny9S2RgRH
+Q7cTknYUkPaOZ6ruAMX4xXxCgVNu+1QmnwIDAQAB
+-----END RSA PUBLIC KEY-----`,
+    privateKey: `-----BEGIN RSA PRIVATE KEY-----
+MIIEpAIBAAKCAQEA0X+nU+vjJGpoz0lHRUT0ENUm7PmFfgFA5MDiYbOLzPzlCKDF
+3QTkPgZ/yvjO2WzsMWF6A/rGttwLdCayv59X/RvgvgIYNiPoiOq5tSY7yhGFis7j
+QPbS8uTP0y7CQqiEX59zowb1AgBxdwe9UbEbCtuvq/BUavJ/sAGHcHerW/udXoYT
+WeUJl1if97Bt+edy+knAxNM33yxOpr5hAXUiBTDs//JRAbiJ3Izq09kJWikdVdou
+lzHb3yw4ulgFgfiIwOLhB9eKGqq4A8iEoRfBIQx0onT5gpeoBXxNjv0AkXSny9S2
+RgRHQ7cTknYUkPaOZ6ruAMX4xXxCgVNu+1QmnwIDAQABAoIBADYehflV/I2Rt5Wk
+1nZ8g5g9mBqrsuKELGFruo+GtFy2D+yUq8iW1Od5AlZKxBTC4Jk5Fy4kAGWInqTY
+wmBiJ3bJVtt+6wZBbHbCPEshn1xp/leHbol/uarplQ53C9PweJHDPTomN/DWcHlR
+VITf/Z5mdhEyunwOPRIYswZIw8m01D+VV3aZAewkDlZAhMcwj5sp/Vr+jwiS4xZj
+8g4g/6ZwhhOl+M8Q59etb8kKtVymc7qfmjwXLLRUsDu2/JIsCzNANTInjGM1JzoK
+HWPJ6gzSMs0bjKLJmNSpGDx6r9PLXTJ/Vd06/meN0c/B0D2OFkSouAX8zKql+kEV
+8gFOFaECgYEA+uCThIInzLGInl8xXo+QZQDOZTIIn75x+hsOxsywGlbWIPSwK7CD
+8GdbA0qjh2/xlv3m0rBGUy9TZ3td20QmR8LUoeFZj0V4+dh0+TzAconVWoVwan88
+82jy9SRvMyPJniRP6jlsZeto4n7seavd+RPYqGDM1ieQSmM+5qpKnxcCgYEA1cbG
+31krKQqeGXO9OPj43lEo+F072cv10l0wJ7VIb4LNpiXe6g6d1BarNsNjMoI3hOAr
+5h0IQIGdp7enwDHlhxL9//gPIlFQrIzeCDPvEI2Is3teOwaGtrG8xhSus4ioB1up
+ztpolkaMxbkWvs1KXVZ/fSOLYGE3Se/OgV9HqbkCgYAGcFEY64Y9+Kh6+BJ6TND1
+5qlla31RLEAcnSkp7QLwCh6AxgbneCZKuzxYv0enKDZZG7ca3S9Q3zwSwdXM1Nju
+qo9ugCweQzgxoV6PLwH5bpQtOJOECDP2Q1FI/WBlPZvlFSV/621eyEXu2jcTgFe4
+FsxOtf1L2cQYRKfOn7w+jQKBgQCE6QM4Vc4ZxDorhOP+ifzg7ADW+dB+RurdEYch
+CPqyKdcGF8GSL+g8tqNYdv4zpvYxrNZeSWqaAHwujGbFfcBAzLQS8v0lzvyjaymY
+XAGkfvqg7HDXreUPrU26sZ00jiA6Aul+bBheZhqby8mycxxrD55QBUtgbtDbLTdt
+A/ogMQKBgQCVll2elbRLrvnfHsf5WLv3VW+larfI4Bd7PV/TAc+WjVTXf43aI7oB
+30HuGOZwEqcFAPnJyGnX9ztHuZP3UF2GCEw7feRXyQ8Xj2jXApFKPtKiIQVQ6AkG
+ho3gFG+DerL8eQ1iAIXQzpDsHVfk9BxCTx8JR5JLAOBXoUDZIiKuyQ==
+-----END RSA PRIVATE KEY-----`
+};
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoidGVzdC1mcmVlbG9nLW9yZ2FuaXphdGlvbi1pbmZvLmpzIiwic291cmNlUm9vdCI6IkQ6L+W3peS9nC9mcmVlbG9nLXBheS1zZXJ2aWNlL3NyYy8iLCJzb3VyY2VzIjpbIm1vY2stZGF0YS90ZXN0LWZyZWVsb2ctb3JnYW5pemF0aW9uLWluZm8udHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7O0FBQWEsUUFBQSwyQkFBMkIsR0FBRztJQUN2QyxjQUFjLEVBQUUsQ0FBQztJQUNqQixnQkFBZ0IsRUFBRSxjQUFjO0lBQ2hDLFdBQVcsRUFBRSxDQUFDO0lBQ2QsU0FBUyxFQUFFLGNBQWM7SUFDekIsU0FBUyxFQUFFOzs7Ozs7OzZCQU9jO0lBQ3pCLFVBQVUsRUFBRTs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7OEJBMEJjO0NBQzdCLENBQUMifQ==

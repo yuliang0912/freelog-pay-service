@@ -25,14 +25,17 @@ let TransactionAuthorizationHandler = class TransactionAuthorizationHandler {
      */
     invoke(ctx) {
         let transactionAuthorizationResult = { isAuth: false };
-        const { userInfo, contractInfo, fromAccount, password } = ctx.args;
+        const { userInfo, fromAccount, password, signText, signature } = ctx.args;
         try {
             switch (fromAccount?.accountType) {
                 case __1.AccountTypeEnum.IndividualAccount:
                     transactionAuthorizationResult = this.individualAccountAuthorizationCheck(userInfo, fromAccount, password);
                     break;
                 case __1.AccountTypeEnum.ContractAccount:
-                    transactionAuthorizationResult = this.contractAccountAuthorizationCheck(contractInfo, fromAccount);
+                    transactionAuthorizationResult = this.contractAccountAuthorizationCheck(fromAccount, signText, signature);
+                    break;
+                case __1.AccountTypeEnum.OrganizationAccount:
+                    transactionAuthorizationResult = this.organizationAccountAuthorizationCheck(fromAccount, signText, signature);
                     break;
                 default:
                     transactionAuthorizationResult.message = '不支持的交易类型';
@@ -57,9 +60,15 @@ let TransactionAuthorizationHandler = class TransactionAuthorizationHandler {
         if (fromAccount.ownerUserId !== userInfo?.userId) {
             throw new egg_freelog_base_1.AuthorizationError('登录用户没有执行操作的权限');
         }
+        if (fromAccount.status === 0) {
+            throw new egg_freelog_base_1.ApplicationError('交易账号尚未激活,无法发起交易');
+        }
         const isVerifySuccessful = this.accountHelper.verifyAccountPassword(fromAccount, password);
         if (!isVerifySuccessful) {
             throw new egg_freelog_base_1.AuthorizationError('交易密码校验失败');
+        }
+        if (fromAccount.status === 2) {
+            throw new egg_freelog_base_1.ApplicationError('交易账号已被冻结,无法发起交易');
         }
         return {
             isAuth: true,
@@ -70,41 +79,62 @@ let TransactionAuthorizationHandler = class TransactionAuthorizationHandler {
     }
     /**
      * 合同授权检查(合同的交易发出方需要对请求的数据进行签名,然后合约服务会使用公钥对签名进行校验)
-     * @param contractInfo
-     * @param fromAccount
+     * @param contractAccount
+     * @param signText
+     * @param signature
      */
-    contractAccountAuthorizationCheck(contractInfo, fromAccount) {
-        if (fromAccount.accountType !== __1.AccountTypeEnum.ContractAccount) {
+    contractAccountAuthorizationCheck(contractAccount, signText, signature) {
+        if (contractAccount.accountType !== __1.AccountTypeEnum.ContractAccount) {
             throw new egg_freelog_base_1.AuthorizationError('账户类型校验不通过,未能获得授权');
         }
-        if (fromAccount.ownerId === contractInfo.contractId) {
-            throw new egg_freelog_base_1.AuthorizationError('没有执行操作的权限');
-        }
-        const pubicKey = this.accountHelper.decryptPublicKey(fromAccount.password);
+        const pubicKey = this.accountHelper.decryptPublicKey(contractAccount.password);
         const nodeRsaHelper = this.rsaHelper.build(pubicKey);
-        if (!nodeRsaHelper.verifySign(contractInfo.signText, contractInfo.signature)) {
+        if (!nodeRsaHelper.verifySign(signText, signature)) {
             throw new egg_freelog_base_1.AuthorizationError('签名数据校验失败');
         }
-        // 合约服务的password为公钥,然后用公钥进行数据校验.合约账户与合约服务各持有一把秘钥.每次数据交换都需要相互校验
+        // password为公钥,然后用公钥进行数据校验.合约账户与合约服务各持有一把秘钥.每次数据交换都需要相互校验
         return {
             isAuth: true,
             authorizationType: 'privateKey',
-            operatorId: contractInfo.contractId,
-            operatorName: contractInfo.contractName
+            operatorId: contractAccount.ownerId,
+            operatorName: contractAccount.ownerName
+        };
+    }
+    /**
+     * 合同授权检查(合同的交易发出方需要对请求的数据进行签名,然后合约服务会使用公钥对签名进行校验)
+     * @param organizationAccount
+     * @param signText
+     * @param signature
+     */
+    organizationAccountAuthorizationCheck(organizationAccount, signText, signature) {
+        if (organizationAccount.accountType !== __1.AccountTypeEnum.OrganizationAccount) {
+            throw new egg_freelog_base_1.AuthorizationError('账户类型校验不通过,未能获得授权');
+        }
+        const pubicKey = this.accountHelper.decryptPublicKey(organizationAccount.password);
+        const nodeRsaHelper = this.rsaHelper.build(pubicKey);
+        if (!nodeRsaHelper.verifySign(signText, signature)) {
+            throw new egg_freelog_base_1.AuthorizationError('签名数据校验失败');
+        }
+        // password为公钥,然后用公钥进行数据校验.合约账户与合约服务各持有一把秘钥.每次数据交换都需要相互校验
+        return {
+            isAuth: true,
+            authorizationType: 'privateKey',
+            operatorId: organizationAccount.ownerId,
+            operatorName: organizationAccount.ownerName
         };
     }
 };
 __decorate([
     decorator_1.Inject(),
-    __metadata("design:type", account_helper_1.AccountHelper)
-], TransactionAuthorizationHandler.prototype, "accountHelper", void 0);
-__decorate([
-    decorator_1.Inject(),
     __metadata("design:type", rsa_helper_1.RsaHelper)
 ], TransactionAuthorizationHandler.prototype, "rsaHelper", void 0);
+__decorate([
+    decorator_1.Inject(),
+    __metadata("design:type", account_helper_1.AccountHelper)
+], TransactionAuthorizationHandler.prototype, "accountHelper", void 0);
 TransactionAuthorizationHandler = __decorate([
     decorator_1.Provide(),
     decorator_1.Scope(decorator_1.ScopeEnum.Singleton)
 ], TransactionAuthorizationHandler);
 exports.TransactionAuthorizationHandler = TransactionAuthorizationHandler;
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoidHJhbnNhY3Rpb24tYXV0aG9yaXphdGlvbi1oYW5kbGVyLmpzIiwic291cmNlUm9vdCI6IkQ6L+W3peS9nC9mcmVlbG9nLXBheS1zZXJ2aWNlL3NyYy8iLCJzb3VyY2VzIjpbInRyYW5zYWN0aW9uLWNvcmUtc2VydmljZS90cmFuc2FjdGlvbi1hdXRob3JpemF0aW9uLWhhbmRsZXIudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7Ozs7Ozs7Ozs7O0FBQ0EsbURBQXNFO0FBQ3RFLDBCQUFtSDtBQUNuSCx1REFBb0Q7QUFDcEQsNkRBQXVEO0FBQ3ZELHFEQUErQztBQUkvQyxJQUFhLCtCQUErQixHQUE1QyxNQUFhLCtCQUErQjtJQUE1QztRQU9JLFVBQUssR0FBRyxpQ0FBaUMsQ0FBQztJQW1GOUMsQ0FBQztJQWpGRzs7O09BR0c7SUFDSCxNQUFNLENBQUMsR0FBcUI7UUFFeEIsSUFBSSw4QkFBOEIsR0FBbUMsRUFBQyxNQUFNLEVBQUUsS0FBSyxFQUFDLENBQUM7UUFDckYsTUFBTSxFQUFDLFFBQVEsRUFBRSxZQUFZLEVBQUUsV0FBVyxFQUFFLFFBQVEsRUFBQyxHQUFHLEdBQUcsQ0FBQyxJQUFJLENBQUM7UUFFakUsSUFBSTtZQUNBLFFBQVEsV0FBVyxFQUFFLFdBQVcsRUFBRTtnQkFDOUIsS0FBSyxtQkFBZSxDQUFDLGlCQUFpQjtvQkFDbEMsOEJBQThCLEdBQUcsSUFBSSxDQUFDLG1DQUFtQyxDQUFDLFFBQVEsRUFBRSxXQUFXLEVBQUUsUUFBUSxDQUFDLENBQUM7b0JBQzNHLE1BQU07Z0JBQ1YsS0FBSyxtQkFBZSxDQUFDLGVBQWU7b0JBQ2hDLDhCQUE4QixHQUFHLElBQUksQ0FBQyxpQ0FBaUMsQ0FBQyxZQUFZLEVBQUUsV0FBVyxDQUFDLENBQUM7b0JBQ25HLE1BQU07Z0JBQ1Y7b0JBQ0ksOEJBQThCLENBQUMsT0FBTyxHQUFHLFVBQVUsQ0FBQztvQkFDcEQsTUFBTTthQUNiO1NBQ0o7UUFBQyxPQUFPLENBQUMsRUFBRTtZQUNSLE9BQU8sT0FBTyxD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
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoidHJhbnNhY3Rpb24tYXV0aG9yaXphdGlvbi1oYW5kbGVyLmpzIiwic291cmNlUm9vdCI6IkQ6L+W3peS9nC9mcmVlbG9nLXBheS1zZXJ2aWNlL3NyYy8iLCJzb3VyY2VzIjpbInRyYW5zYWN0aW9uLWNvcmUtc2VydmljZS90cmFuc2FjdGlvbi1hdXRob3JpemF0aW9uLWhhbmRsZXIudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7Ozs7Ozs7Ozs7O0FBQ0EsbURBQXNFO0FBQ3RFLDBCQUEwRjtBQUMxRix1REFBc0U7QUFDdEUsNkRBQXVEO0FBQ3ZELHFEQUErQztBQUkvQyxJQUFhLCtCQUErQixHQUE1QyxNQUFhLCtCQUErQjtJQUE1QztRQU9JLFVBQUssR0FBRyxpQ0FBaUMsQ0FBQztJQW1IOUMsQ0FBQztJQWpIRzs7O09BR0c7SUFDSCxNQUFNLENBQUMsR0FBcUI7UUFFeEIsSUFBSSw4QkFBOEIsR0FBbUMsRUFBQyxNQUFNLEVBQUUsS0FBSyxFQUFDLENBQUM7UUFDckYsTUFBTSxFQUFDLFFBQVEsRUFBRSxXQUFXLEVBQUUsUUFBUSxFQUFFLFFBQVEsRUFBRSxTQUFTLEVBQUMsR0FBRyxHQUFHLENBQUMsSUFBSSxDQUFDO1FBRXhFLElBQUk7WUFDQSxRQUFRLFdBQVcsRUFBRSxXQUFXLEVBQUU7Z0JBQzlCLEtBQUssbUJBQWUsQ0FBQyxpQkFBaUI7b0JBQ2xDLDhCQUE4QixHQUFHLElBQUksQ0FBQyxtQ0FBbUMsQ0FBQyxRQUFRLEVBQUUsV0FBVyxFQUFFLFFBQVEsQ0FBQyxDQUFDO29CQUMzRyxNQUFNO2dCQUNWLEtBQUssbUJBQWUsQ0FBQyxlQUFlO29CQUNoQyw4QkFBOEIsR0FBRyxJQUFJLENBQUMsaUNBQWlDLENBQUMsV0FBVyxFQUFFLFFBQVEsRUFBRSxTQUFTLENBQUMsQ0FBQztvQkFDMUcsTUFBTTtnQkFDVixLQUFLLG1CQUFlLENBQUMsbUJBQW1CO29CQUNwQyw4QkFBOEIsR0FBRyxJQUFJLENBQUMscUNBQXFDLENBQUMsV0FBVyxFQUFFLFFBQVEsRUFBRSxTQUFTLENBQUMsQ0FBQztvQkFDOUcsTUFBTTtnQkFDVjtvQkFDSSw4QkFBOEIsQ0FBQyxPQUFPLEdBQUcsVUFBVSxDQUFDO29CQUNwRCxNQUFNO2FBQ2I7U0FDSjtRQUFDLE9BQU8sQ0FBQyxFQUFFO1lBQ1IsT0FBTyxPQUFPLENBQUMsTUFBTSxDQUFDLDhCQUE4QixDQUFDLE9BQU8sQ0FBQyxDQUFDO1NBQ2pFO1FBRUQsT0FBTyxPQUFPLENBQUMsT0FBTyxDQUFDLDhCQUE4QixDQUFDLENBQUM7SUFDM0QsQ0FBQztJQUVEOzs7OztPQUtHO0lBQ0gsbUNBQW1DLENBQUMsUUFBa0IsRUFBRSxXQUF3QixFQUFFLFFBQWdCO1FBQzlGLElBQUksV0FBVyxDQUFDLFdBQVcsS0FBSyxtQkFBZSxDQUFDLGlCQUFpQixFQUFFO1lBQy9ELE1BQU0sSUFBSSxxQ0FBa0IsQ0FBQyxrQkFBa0IsQ0FBQyxDQUFDO1NBQ3BEO1FBQ0QsSUFBSSxXQUFXLENBQUMsV0FBVyxLQUFLLFFBQVEsRUFBRSxNQUFNLEVBQUU7WUFDOUMsTUFBTSxJQUFJLHFDQUFrQixDQUFDLGVBQWUsQ0FBQyxDQUFDO1NBQ2pEO1FBQ0QsSUFBSSxXQUFXLENBQUMsTUFBTSxLQUFLLENBQUMsRUFBRTtZQUMxQixNQUFNLElBQUksbUNBQWdCLENBQUMsaUJBQWlCLENBQUMsQ0FBQztTQUNqRDtRQUNELE1BQU0sa0JBQWtCLEdBQUcsSUFBSSxDQUFDLGFBQWEsQ0FBQyxxQkFBcUIsQ0FBQyxXQUFXLEVBQUUsUUFBUSxDQUFDLENBQUM7UUFDM0YsSUFBSSxDQUFDLGtCQUFrQixFQUFFO1lBQ3JCLE1BQU0sSUFBSSxxQ0FBa0IsQ0FBQyxVQUFVLENBQUMsQ0FBQztTQUM1QztRQUNELElBQUksV0FBVyxDQUFDLE1BQU0sS0FBSyxDQUFDLEVBQUU7WUFDMUIsTUFBTSxJQUFJLG1DQUFnQixDQUFDLGlCQUFpQixDQUFDLENBQUM7U0FDakQ7UUFDRCxPQUFPO1lBQ0gsTUFBTSxFQUFFLElBQUk7WUFDWixpQkFBaUIsRUFBRSxVQUFVO1lBQzdCLFVBQVUsRUFBRSxRQUFRLENBQUMsTUFBTSxDQUFDLFFBQVEsRUFBRTtZQUN0QyxZQUFZLEVBQUUsUUFBUSxDQUFDLFFBQVE7U0FDbEMsQ0FBQztJQUNOLENBQUM7SUFFRDs7Ozs7T0FLRztJQUNILGlDQUFpQyxDQUFDLGVBQTRCLEVBQUUsUUFBZ0IsRUFBRSxTQUFpQjtRQUUvRixJQUFJLGVBQWUsQ0FBQyxXQUFXLEtBQUssbUJBQWUsQ0FBQyxlQUFlLEVBQUU7WUFDakUsTUFBTSxJQUFJLHFDQUFrQixDQUFDLGtCQUFrQixDQUFDLENBQUM7U0FDcEQ7UUFDRCxNQUFNLFFBQVEsR0FBRyxJQUFJLENBQUMsYUFBYSxDQUFDLGdCQUFnQixDQUFDLGVBQWUsQ0FBQyxRQUFRLENBQUMsQ0FBQztRQUMvRSxNQUFNLGFBQWEsR0FBRyxJQUFJLENBQUMsU0FBUyxDQUFDLEtBQUssQ0FBQyxRQUFRLENBQUMsQ0FBQztRQUNyRCxJQUFJLENBQUMsYUFBYSxDQUFDLFVBQVUsQ0FBQyxRQUFRLEVBQUUsU0FBUyxDQUFDLEVBQUU7WUFDaEQsTUFBTSxJQUFJLHFDQUFrQixDQUFDLFVBQVUsQ0FBQyxDQUFDO1NBQzVDO1FBRUQseURBQXlEO1FBQ3pELE9BQU87WUFDSCxNQUFNLEVBQUUsSUFBSTtZQUNaLGlCQUFpQixFQUFFLFlBQVk7WUFDL0IsVUFBVSxFQUFFLGVBQWUsQ0FBQyxPQUFPO1lBQ25DLFlBQVksRUFBRSxlQUFlLENBQUMsU0FBUztTQUMxQyxDQUFDO0lBQ04sQ0FBQztJQUVEOzs7OztPQUtHO0lBQ0gscUNBQXFDLENBQUMsbUJBQWdDLEVBQUUsUUFBZ0IsRUFBRSxTQUFpQjtRQUV2RyxJQUFJLG1CQUFtQixDQUFDLFdBQVcsS0FBSyxtQkFBZSxDQUFDLG1CQUFtQixFQUFFO1lBQ3pFLE1BQU0sSUFBSSxxQ0FBa0IsQ0FBQyxrQkFBa0IsQ0FBQyxDQUFDO1NBQ3BEO1FBQ0QsTUFBTSxRQUFRLEdBQUcsSUFBSSxDQUFDLGFBQWEsQ0FBQyxnQkFBZ0IsQ0FBQyxtQkFBbUIsQ0FBQyxRQUFRLENBQUMsQ0FBQztRQUNuRixNQUFNLGFBQWEsR0FBRyxJQUFJLENBQUMsU0FBUyxDQUFDLEtBQUssQ0FBQyxRQUFRLENBQUMsQ0FBQztRQUNyRCxJQUFJLENBQUMsYUFBYSxDQUFDLFVBQVUsQ0FBQyxRQUFRLEVBQUUsU0FBUyxDQUFDLEVBQUU7WUFDaEQsTUFBTSxJQUFJLHFDQUFrQixDQUFDLFVBQVUsQ0FBQyxDQUFDO1NBQzVDO1FBRUQseURBQXlEO1FBQ3pELE9BQU87WUFDSCxNQUFNLEVBQUUsSUFBSTtZQUNaLGlCQUFpQixFQUFFLFlBQVk7WUFDL0IsVUFBVSxFQUFFLG1CQUFtQixDQUFDLE9BQU87WUFDdkMsWUFBWSxFQUFFLG1CQUFtQixDQUFDLFNBQVM7U0FDOUMsQ0FBQztJQUNOLENBQUM7Q0FDSixDQUFBO0FBdkhHO0lBREMsa0JBQU0sRUFBRTs4QkFDRSxzQkFBUztrRUFBQztBQUVyQjtJQURDLGtCQUFNLEVBQUU7OEJBQ00sOEJBQWE7c0VBQUM7QUFMcEIsK0JBQStCO0lBRjNDLG1CQUFPLEVBQUU7SUFDVCxpQkFBSyxDQUFDLHFCQUFTLENBQUMsU0FBUyxDQUFDO0dBQ2QsK0JBQStCLENBMEgzQztBQTFIWSwwRUFBK0IifQ==

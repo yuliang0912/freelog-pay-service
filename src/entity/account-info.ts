@@ -22,7 +22,7 @@ export class AccountInfo {
     accountName: string;
 
     /**
-     * 账户所属人类型(1:用户账户 2:节点账户 3:合约账户)
+     * 账户所属人类型(1:用户账户 2:节点账户 3:合约账户 4:机构组织账户)
      */
     @Column({type: 'int', comment: '账户类型'})
     accountType: AccountTypeEnum;
@@ -47,15 +47,15 @@ export class AccountInfo {
     ownerUserId: number;
 
     /**
-     * 账户余额(最小货币单位)
+     * 账户余额(最小货币单位),最大千亿级别
      */
-    @Column({type: 'decimal', default: 0, precision: 10, scale: 2, comment: '账户余额(最小货币单位)'})
+    @Column({type: 'decimal', default: 0, precision: 14, scale: 2, comment: '账户余额(最小货币单位)'})
     balance: string;
 
     /**
-     * 冻结金额(冻结的金额)
+     * 冻结金额(冻结的金额),最大千亿级别
      */
-    @Column({type: 'decimal', default: 0, precision: 10, scale: 2, comment: '冻结金额'})
+    @Column({type: 'decimal', default: 0, precision: 14, scale: 2, comment: '冻结金额'})
     freezeBalance: string;
 
     /**

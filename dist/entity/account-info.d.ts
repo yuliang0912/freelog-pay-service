@@ -12,7 +12,7 @@ export declare class AccountInfo {
      */
     accountName: string;
     /**
-     * 账户所属人类型(1:用户账户 2:节点账户 3:合约账户)
+     * 账户所属人类型(1:用户账户 2:节点账户 3:合约账户 4:机构组织账户)
      */
     accountType: AccountTypeEnum;
     /**
@@ -28,11 +28,11 @@ export declare class AccountInfo {
      */
     ownerUserId: number;
     /**
-     * 账户余额(最小货币单位)
+     * 账户余额(最小货币单位),最大千亿级别
      */
     balance: string;
     /**
-     * 冻结金额(冻结的金额)
+     * 冻结金额(冻结的金额),最大千亿级别
      */
     freezeBalance: string;
     /**

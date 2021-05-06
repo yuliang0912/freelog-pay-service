@@ -14,7 +14,7 @@ export declare class TransactionInfoController {
      */
     transactionDetails(): Promise<void>;
     /**
-     * 转账
+     * 个人账户转账
      */
     transfer(): Promise<import("..").TransactionDetailInfo>;
     /**
@@ -29,4 +29,8 @@ export declare class TransactionInfoController {
      * 查询交易记录详情
      */
     transactionRecordDetail(): Promise<import("..").TransactionRecordInfo>;
+    /**
+     * 组织账户转账
+     */
+    organizationTransfer(): Promise<import("..").TransactionDetailInfo>;
 }

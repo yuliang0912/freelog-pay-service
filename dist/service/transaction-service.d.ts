@@ -2,10 +2,13 @@ import { BaseService } from './abstract-base-service';
 import { AccountInfo, Repository, TransactionDetailInfo, TransactionRecordInfo } from '..';
 import { FreelogContext } from 'egg-freelog-base';
 import { TransactionCoreService } from '../transaction-core-service';
+import { AccountService } from './account-service';
+import { RsaHelper } from '../extend/rsa-helper';
 export declare class TransactionService extends BaseService<TransactionRecordInfo> {
     ctx: FreelogContext;
+    rsaHelper: RsaHelper;
     transactionCoreService: TransactionCoreService;
-    accountRepository: Repository<AccountInfo>;
+    accountService: AccountService;
     transactionRecordRepository: Repository<TransactionRecordInfo>;
     transactionDetailRepository: Repository<TransactionDetailInfo>;
     constructorBaseService(): void;
@@ -17,7 +20,16 @@ export declare class TransactionService extends BaseService<TransactionRecordInf
      * @param transactionAmount
      * @param remark
      */
-    individualAccountTransfer(fromAccount: AccountInfo, toAccount: AccountInfo, password: number, transactionAmount: number, remark?: string): Promise<TransactionDetailInfo>;
+    individualAccountTransfer(fromAccount: AccountInfo, toAccount: AccountInfo, password: string, transactionAmount: number, remark?: string): Promise<TransactionDetailInfo>;
+    /**
+     * 组织账号转账
+     * @param fromAccount
+     * @param toAccount
+     * @param transactionAmount
+     * @param signature
+     * @param remark
+     */
+    organizationAccountTransfer(fromAccount: AccountInfo, toAccount: AccountInfo, transactionAmount: number, signature: string, remark?: string): Promise<TransactionDetailInfo>;
     /**
      * 待确认的合约支付
      * @param fromAccount
@@ -41,4 +53,9 @@ export declare class TransactionService extends BaseService<TransactionRecordInf
      * @param transactionRecord
      */
     contractPaymentConfirmedCancel(transactionRecord: TransactionRecordInfo): Promise<unknown>;
+    /**
+     * 测试代币转账(领取)
+     * @param toAccountInfo
+     */
+    testTokenTransfer(toAccountInfo: AccountInfo): Promise<TransactionDetailInfo>;
 }

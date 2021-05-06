@@ -26,7 +26,7 @@ export class TransactionCoreService {
     private transactionStages: IPipelineHandler;
 
     /**
-     * 个人账户之间转账
+     * 个人账户转账
      * @param userInfo
      * @param fromAccount
      * @param toAccount
@@ -34,11 +34,33 @@ export class TransactionCoreService {
      * @param transactionAmount
      * @param remark
      */
-    async individualAccountTransfer(userInfo: UserInfo, fromAccount: AccountInfo, toAccount: AccountInfo, password: number, transactionAmount: number, remark?: string): Promise<TransactionDetailInfo> {
+    async individualAccountTransfer(userInfo: UserInfo, fromAccount: AccountInfo, toAccount: AccountInfo, password: string, transactionAmount: number, remark?: string): Promise<TransactionDetailInfo> {
         const args: any = {
             userInfo, fromAccount, toAccount, password, transactionAmount, remark,
             transactionHandleType: TransactionHandleTypeEnum.ForthwithTransfer
         };
+        args.transactionAuthorizationResult = await this.transactionAuthorizationAndAccountCheck(args);
+        const transactionResult = await this.execTransaction(args);
+        if (!transactionResult.success) {
+            throw new ApplicationError(`交易失败,${transactionResult.error?.error}`);
+        }
+        return first(transactionResult.result);
+    }
+
+    /**
+     * 组织账号转账
+     * @param fromAccount
+     * @param toAccount
+     * @param transactionAmount
+     * @param signature
+     * @param remark
+     */
+    async organizationAccountTransfer(fromAccount: AccountInfo, toAccount: AccountInfo, transactionAmount: number, signature: string, remark?: string): Promise<TransactionDetailInfo> {
+        const args: any = {
+            fromAccount, toAccount, transactionAmount, remark, signature,
+            transactionHandleType: TransactionHandleTypeEnum.ForthwithTransfer
+        };
+        args.signText = `fromAccountId_${fromAccount.accountId}_toAccountId_${toAccount.accountId}_transactionAmount_${transactionAmount}`;
         args.transactionAuthorizationResult = await this.transactionAuthorizationAndAccountCheck(args);
         const transactionResult = await this.execTransaction(args);
         if (!transactionResult.success) {

@@ -1,11 +1,20 @@
 import {Init, Inject, Provide} from '@midwayjs/decorator';
 import {BaseService} from './abstract-base-service';
 import {
-    AccountInfo, ContractTransactionInfo, InjectEntityModel,
-    Repository, TransactionDetailInfo, TransactionRecordInfo, TransactionStatusEnum
+    AccountInfo,
+    AccountTypeEnum,
+    ContractTransactionInfo,
+    InjectEntityModel,
+    Repository,
+    TransactionDetailInfo,
+    TransactionRecordInfo,
+    TransactionStatusEnum
 } from '..';
-import {FreelogContext, LogicError} from 'egg-freelog-base';
+import {ArgumentError, FreelogContext, LogicError} from 'egg-freelog-base';
 import {TransactionCoreService} from '../transaction-core-service';
+import {AccountService} from './account-service';
+import {testFreelogOrganizationInfo} from '../mock-data/test-freelog-organization-info';
+import {RsaHelper} from '../extend/rsa-helper';
 
 @Provide()
 export class TransactionService extends BaseService<TransactionRecordInfo> {
@@ -13,9 +22,11 @@ export class TransactionService extends BaseService<TransactionRecordInfo> {
     @Inject()
     ctx: FreelogContext;
     @Inject()
+    rsaHelper: RsaHelper;
+    @Inject()
     transactionCoreService: TransactionCoreService;
-    @InjectEntityModel(AccountInfo)
-    accountRepository: Repository<AccountInfo>;
+    @Inject()
+    accountService: AccountService;
     @InjectEntityModel(TransactionRecordInfo)
     transactionRecordRepository: Repository<TransactionRecordInfo>;
     @InjectEntityModel(TransactionDetailInfo)
@@ -35,8 +46,32 @@ export class TransactionService extends BaseService<TransactionRecordInfo> {
      * @param transactionAmount
      * @param remark
      */
-    async individualAccountTransfer(fromAccount: AccountInfo, toAccount: AccountInfo, password: number, transactionAmount: number, remark?: string) {
+    async individualAccountTransfer(fromAccount: AccountInfo, toAccount: AccountInfo, password: string, transactionAmount: number, remark?: string) {
+        if (!fromAccount || !toAccount || !password) {
+            throw new ArgumentError('参数校验失败');
+        }
+        if (fromAccount.accountType !== AccountTypeEnum.IndividualAccount) {
+            throw new LogicError('账号类型校验失败');
+        }
         return this.transactionCoreService.individualAccountTransfer(this.ctx.identityInfo.userInfo, fromAccount, toAccount, password, transactionAmount, remark);
+    }
+
+    /**
+     * 组织账号转账
+     * @param fromAccount
+     * @param toAccount
+     * @param transactionAmount
+     * @param signature
+     * @param remark
+     */
+    async organizationAccountTransfer(fromAccount: AccountInfo, toAccount: AccountInfo, transactionAmount: number, signature: string, remark?: string) {
+        if (!fromAccount || !toAccount || !signature) {
+            throw new ArgumentError('参数校验失败');
+        }
+        if (fromAccount.accountType !== AccountTypeEnum.OrganizationAccount) {
+            throw new LogicError('账号类型校验失败');
+        }
+        return this.transactionCoreService.organizationAccountTransfer(fromAccount, toAccount, transactionAmount, signature, remark);
     }
 
     /**
@@ -81,5 +116,21 @@ export class TransactionService extends BaseService<TransactionRecordInfo> {
             throw new LogicError('只有处理中的交易才允许做确认操作');
         }
         return this.transactionCoreService.contractPaymentConfirmCanceledHandle(transactionRecord);
+    }
+
+    /**
+     * 测试代币转账(领取)
+     * @param toAccountInfo
+     */
+    async testTokenTransfer(toAccountInfo: AccountInfo) {
+        const fromAccount = await this.accountService.findOne({
+            ownerId: testFreelogOrganizationInfo.organizationId.toString(),
+            accountType: AccountTypeEnum.OrganizationAccount
+        });
+        const transactionAmount = 1000; // 代币领取额度为1000
+        const signText = `fromAccountId_${fromAccount.accountId}_toAccountId_${toAccountInfo.accountId}_transactionAmount_${transactionAmount}`;
+        const nodeRsaHelper = this.rsaHelper.build(null, testFreelogOrganizationInfo.privateKey);
+        const signature = nodeRsaHelper.sign(signText);
+        return this.organizationAccountTransfer(fromAccount, toAccountInfo, transactionAmount, signature);
     }
 }

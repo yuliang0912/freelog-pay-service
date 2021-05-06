@@ -32,16 +32,17 @@ export class TransactionInfoController {
     }
 
     /**
-     * 转账
+     * 个人账户转账
      */
     @Post('/transfer')
     @visitorIdentityValidator(IdentityTypeEnum.LoginUser)
     async transfer() {
-        const fromAccountId = this.ctx.checkBody('fromAccountId').exist().value;
-        const toAccountId = this.ctx.checkBody('toAccountId').exist().value;
-        const transactionAmount = this.ctx.checkBody('transactionAmount').toFloat().gt(0).value;
-        const password = this.ctx.checkBody('password').isNumeric().len(6, 6).value;
-        this.ctx.validateParams();
+        const {ctx} = this;
+        const fromAccountId = ctx.checkBody('fromAccountId').exist().value;
+        const toAccountId = ctx.checkBody('toAccountId').exist().value;
+        const transactionAmount = ctx.checkBody('transactionAmount').toFloat().gt(0).value;
+        const password = ctx.checkBody('password').isNumeric().len(6, 6).value;
+        ctx.validateParams();
 
         const accounts = await this.accountService.findByIds([fromAccountId, toAccountId]);
         const toAccount = accounts.find(x => x.accountId === toAccountId);
@@ -57,7 +58,7 @@ export class TransactionInfoController {
      * 合约支付(需要合约服务确认之后才会真实扣款)
      */
     @Post('/contracts/payment')
-    // @visitorIdentityValidator(IdentityTypeEnum.InternalClient)
+    @visitorIdentityValidator(IdentityTypeEnum.InternalClient)
     async contractPayment() {
         const {ctx} = this;
         const fromAccountId = ctx.checkBody('fromAccountId').exist().isNumeric().value;
@@ -112,11 +113,53 @@ export class TransactionInfoController {
      * 查询交易记录详情
      */
     @Get('/records/:recordId')
-    // @visitorIdentityValidator(IdentityTypeEnum.InternalClient)
+    @visitorIdentityValidator(IdentityTypeEnum.InternalClient)
     async transactionRecordDetail() {
         const {ctx} = this;
         const recordId = ctx.checkParams('recordId').exist().isNumeric().value;
         ctx.validateParams();
         return this.transactionService.transactionRecordRepository.findOne(recordId);
     }
+
+    /**
+     * 组织账户转账
+     */
+    @Post('/organizationTransfer')
+    @visitorIdentityValidator(IdentityTypeEnum.LoginUser)
+    async organizationTransfer() {
+        const {ctx} = this;
+        const fromAccountId = ctx.checkBody('fromAccountId').exist().value;
+        const toAccountId = ctx.checkBody('toAccountId').exist().value;
+        const transactionAmount = ctx.checkBody('transactionAmount').toFloat().gt(0).value;
+        const signature = ctx.checkBody('signature').exist().value;
+        const remark = ctx.checkBody('remark').optional().type('string').len(0, 200).value;
+        ctx.validateParams();
+
+        // 签约文本构成格式 (私钥进行签名)
+        // signText = `fromAccountId_${fromAccount.accountId}_toAccountId_${toAccount.accountId}_transactionAmount_${transactionAmount}`;
+        const accounts = await this.accountService.findByIds([fromAccountId, toAccountId]);
+        const toAccount = accounts.find(x => x.accountId === toAccountId);
+        const fromAccount = accounts.find(x => x.accountId === fromAccountId);
+        if (!toAccount || !fromAccount) {
+            throw new ArgumentError('参数校验失败');
+        }
+
+        return this.transactionService.organizationAccountTransfer(fromAccount, toAccount, transactionAmount, signature, remark);
+    }
+
+    // /**
+    //  * 测试代币领取
+    //  */
+    // @Post('/transferTestToken')
+    // @visitorIdentityValidator(IdentityTypeEnum.LoginUser)
+    // async testTokenTransfer() {
+    //     let userAccountInfo = await this.accountService.findOne({
+    //         ownerUserId: this.ctx.userId, accountType: AccountTypeEnum.IndividualAccount
+    //     });
+    //     if (!userAccountInfo) {
+    //         const {userId, username} = this.ctx.identityInfo.userInfo;
+    //         userAccountInfo = await this.accountService.createIndividualAccount(userId, username);
+    //     }
+    //     return this.transactionService.testTokenTransfer(userAccountInfo);
+    // }
 }

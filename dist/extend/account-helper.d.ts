@@ -28,7 +28,7 @@ export declare class AccountHelper {
      * @param ownerId
      * @param password
      */
-    generateAccountPassword(accountId: number, accountSaltValue: string, ownerId: string, password: number): string;
+    generateAccountPassword(accountId: number, accountSaltValue: string, ownerId: string, password: string): string;
     /**
      * 加密key(公钥,所以只用简单的做base64转换即可)
      * @param publicKey
@@ -44,7 +44,7 @@ export declare class AccountHelper {
      * @param accountInfo
      * @param originalPassword
      */
-    verifyAccountPassword(accountInfo: AccountInfo, originalPassword: number): boolean;
+    verifyAccountPassword(accountInfo: AccountInfo, originalPassword: string): boolean;
     /**
      * 根据账户类型获取号段范围
      * @param accountType

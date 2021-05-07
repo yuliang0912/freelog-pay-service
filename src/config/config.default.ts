@@ -40,5 +40,11 @@ export default (appInfo: EggAppInfo) => {
         brokers: ['192.168.164.165:9090']
     };
 
+    config.clientCredentialInfo = {
+        clientId: 1006,
+        publicKey: 'b278214cef0ee2a9e1abde166d29d141',
+        privateKey: '4c2eab93e896a53ff3f2d3770ae97d77'
+    };
+
     return config;
 };

@@ -2,7 +2,9 @@ import {Controller, Get, Inject, Post, Provide} from '@midwayjs/decorator';
 import {ArgumentError, FreelogContext, IdentityTypeEnum, visitorIdentityValidator} from 'egg-freelog-base';
 import {AccountService} from '../service/account-service';
 import {TransactionService} from '../service/transaction-service';
-import {TransactionStatusEnum} from '../enum';
+import {AccountTypeEnum, TransactionStatusEnum} from '../enum';
+import {RsaHelper} from '../extend/rsa-helper';
+import {AccountHelper} from '../extend/account-helper';
 
 @Provide()
 @Controller('/v2/transactions')
@@ -10,6 +12,10 @@ export class TransactionInfoController {
 
     @Inject()
     ctx: FreelogContext;
+    @Inject()
+    rsaHelper: RsaHelper;
+    @Inject()
+    accountHelper: AccountHelper;
     @Inject()
     accountService: AccountService;
     @Inject()
@@ -20,7 +26,13 @@ export class TransactionInfoController {
      */
     @Get('/details/my')
     async myTransactionDetails() {
+        const {ctx} = this;
+        const skip = ctx.checkQuery('skip').optional().toInt().default(0).ge(0).value;
+        const limit = ctx.checkQuery('limit').optional().toInt().default(10).gt(0).lt(101).value;
+        ctx.validateParams();
 
+        const accountInfo = await this.accountService.getAccountInfo(ctx.userId.toString(), AccountTypeEnum.IndividualAccount);
+        return this.transactionService.findPageList({where: {accountId: accountInfo.accountId}, skip, take: limit});
     }
 
     /**
@@ -28,7 +40,13 @@ export class TransactionInfoController {
      */
     @Get('/details/:accountId')
     async transactionDetails() {
+        const {ctx} = this;
+        const accountId = ctx.checkParams('accountId').exist().value;
+        const skip = ctx.checkQuery('skip').optional().toInt().default(0).ge(0).value;
+        const limit = ctx.checkQuery('limit').optional().toInt().default(10).gt(0).lt(101).value;
+        ctx.validateParams();
 
+        return this.transactionService.findPageList({where: {accountId}, skip, take: limit});
     }
 
     /**
@@ -147,19 +165,22 @@ export class TransactionInfoController {
         return this.transactionService.organizationAccountTransfer(fromAccount, toAccount, transactionAmount, signature, remark);
     }
 
-    // /**
-    //  * 测试代币领取
-    //  */
-    // @Post('/transferTestToken')
-    // @visitorIdentityValidator(IdentityTypeEnum.LoginUser)
-    // async testTokenTransfer() {
-    //     let userAccountInfo = await this.accountService.findOne({
-    //         ownerUserId: this.ctx.userId, accountType: AccountTypeEnum.IndividualAccount
-    //     });
-    //     if (!userAccountInfo) {
-    //         const {userId, username} = this.ctx.identityInfo.userInfo;
-    //         userAccountInfo = await this.accountService.createIndividualAccount(userId, username);
-    //     }
-    //     return this.transactionService.testTokenTransfer(userAccountInfo);
-    // }
+    /**
+     * 测试代币领取
+     */
+    @Post('/testTokenTransferSignature')
+    @visitorIdentityValidator(IdentityTypeEnum.LoginUser)
+    async testTokenTransfer() {
+        const {ctx} = this;
+        const userId = ctx.checkBody('userId').exist().isUserId().toInt().value;
+        const transactionAmount = ctx.checkBody('transactionAmount').toFloat().gt(0).value;
+        ctx.validateParams();
+
+        const toAccount = await this.accountService.getAccountInfo(userId.toString(), AccountTypeEnum.IndividualAccount);
+        if (!toAccount) {
+            throw new ArgumentError('参数校验失败');
+        }
+        const signature = this.transactionService.testTokenTransferSignature(toAccount, transactionAmount);
+        return {signature};
+    }
 }

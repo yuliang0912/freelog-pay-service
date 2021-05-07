@@ -121,16 +121,18 @@ export class TransactionService extends BaseService<TransactionRecordInfo> {
     /**
      * 测试代币转账(领取)
      * @param toAccountInfo
+     * @param transactionAmount
      */
-    async testTokenTransfer(toAccountInfo: AccountInfo) {
-        const fromAccount = await this.accountService.findOne({
+    async testTokenTransferSignature(toAccountInfo: AccountInfo, transactionAmount: number): Promise<string> {
+        let fromAccount = await this.accountService.findOne({
             ownerId: testFreelogOrganizationInfo.organizationId.toString(),
             accountType: AccountTypeEnum.OrganizationAccount
         });
-        const transactionAmount = 1000; // 代币领取额度为1000
+        if (!fromAccount) {
+            fromAccount = await this.accountService.createOrganizationAccount();
+        }
         const signText = `fromAccountId_${fromAccount.accountId}_toAccountId_${toAccountInfo.accountId}_transactionAmount_${transactionAmount}`;
         const nodeRsaHelper = this.rsaHelper.build(null, testFreelogOrganizationInfo.privateKey);
-        const signature = nodeRsaHelper.sign(signText);
-        return this.organizationAccountTransfer(fromAccount, toAccountInfo, transactionAmount, signature);
+        return nodeRsaHelper.sign(signText);
     }
 }

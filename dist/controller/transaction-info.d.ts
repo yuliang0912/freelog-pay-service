@@ -1,18 +1,22 @@
 import { FreelogContext } from 'egg-freelog-base';
 import { AccountService } from '../service/account-service';
 import { TransactionService } from '../service/transaction-service';
+import { RsaHelper } from '../extend/rsa-helper';
+import { AccountHelper } from '../extend/account-helper';
 export declare class TransactionInfoController {
     ctx: FreelogContext;
+    rsaHelper: RsaHelper;
+    accountHelper: AccountHelper;
     accountService: AccountService;
     transactionService: TransactionService;
     /**
      * 交易流水记录
      */
-    myTransactionDetails(): Promise<void>;
+    myTransactionDetails(): Promise<import("egg-freelog-base").PageResult<import("..").TransactionRecordInfo>>;
     /**
      * 交易流水记录
      */
-    transactionDetails(): Promise<void>;
+    transactionDetails(): Promise<import("egg-freelog-base").PageResult<import("..").TransactionRecordInfo>>;
     /**
      * 个人账户转账
      */
@@ -33,4 +37,10 @@ export declare class TransactionInfoController {
      * 组织账户转账
      */
     organizationTransfer(): Promise<import("..").TransactionDetailInfo>;
+    /**
+     * 测试代币领取
+     */
+    testTokenTransfer(): Promise<{
+        signature: Promise<string>;
+    }>;
 }

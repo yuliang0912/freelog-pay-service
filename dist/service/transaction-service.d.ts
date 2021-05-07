@@ -56,6 +56,7 @@ export declare class TransactionService extends BaseService<TransactionRecordInf
     /**
      * 测试代币转账(领取)
      * @param toAccountInfo
+     * @param transactionAmount
      */
-    testTokenTransfer(toAccountInfo: AccountInfo): Promise<TransactionDetailInfo>;
+    testTokenTransferSignature(toAccountInfo: AccountInfo, transactionAmount: number): Promise<string>;
 }

@@ -41,9 +41,13 @@ export class TransactionAuthorizationHandler implements IValveHandler {
                     break;
             }
         } catch (e) {
-            return Promise.reject(transactionAuthorizationResult.message);
+            transactionAuthorizationResult.isAuth = false;
+            transactionAuthorizationResult.message = e.message.toString();
         }
 
+        if (!transactionAuthorizationResult.isAuth) {
+            return Promise.reject(transactionAuthorizationResult.message);
+        }
         return Promise.resolve(transactionAuthorizationResult);
     }
 

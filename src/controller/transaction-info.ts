@@ -180,7 +180,7 @@ export class TransactionInfoController {
         if (!toAccount) {
             throw new ArgumentError('参数校验失败');
         }
-        const signature = this.transactionService.testTokenTransferSignature(toAccount, transactionAmount);
+        const signature = await this.transactionService.testTokenTransferSignature(toAccount, transactionAmount);
         return {signature};
     }
 }

@@ -41,6 +41,6 @@ export declare class TransactionInfoController {
      * 测试代币领取
      */
     testTokenTransfer(): Promise<{
-        signature: Promise<string>;
+        signature: string;
     }>;
 }

@@ -3,8 +3,6 @@ import {ArgumentError, FreelogContext, IdentityTypeEnum, visitorIdentityValidato
 import {AccountService} from '../service/account-service';
 import {TransactionService} from '../service/transaction-service';
 import {AccountTypeEnum, TransactionStatusEnum} from '../enum';
-import {RsaHelper} from '../extend/rsa-helper';
-import {AccountHelper} from '../extend/account-helper';
 
 @Provide()
 @Controller('/v2/transactions')
@@ -13,17 +11,11 @@ export class TransactionInfoController {
     @Inject()
     ctx: FreelogContext;
     @Inject()
-    rsaHelper: RsaHelper;
-    @Inject()
-    accountHelper: AccountHelper;
-    @Inject()
     accountService: AccountService;
     @Inject()
     transactionService: TransactionService;
 
-    /**
-     * 交易流水记录
-     */
+    // 交易流水记录
     @Get('/details/my')
     async myTransactionDetails() {
         const {ctx} = this;
@@ -35,9 +27,7 @@ export class TransactionInfoController {
         return this.transactionService.findPageList({where: {accountId: accountInfo.accountId}, skip, take: limit});
     }
 
-    /**
-     * 交易流水记录
-     */
+    // 交易流水记录
     @Get('/details/:accountId')
     async transactionDetails() {
         const {ctx} = this;
@@ -49,9 +39,7 @@ export class TransactionInfoController {
         return this.transactionService.findPageList({where: {accountId}, skip, take: limit});
     }
 
-    /**
-     * 个人账户转账
-     */
+    // 个人账户转账
     @Post('/transfer')
     @visitorIdentityValidator(IdentityTypeEnum.LoginUser)
     async transfer() {
@@ -72,9 +60,7 @@ export class TransactionInfoController {
         return this.transactionService.individualAccountTransfer(fromAccount, toAccount, password, transactionAmount);
     }
 
-    /**
-     * 合约支付(需要合约服务确认之后才会真实扣款)
-     */
+    // 合约交易事件-合约支付(需要合约服务确认之后才会真实扣款)
     @Post('/contracts/payment')
     @visitorIdentityValidator(IdentityTypeEnum.InternalClient)
     async contractPayment() {
@@ -92,15 +78,13 @@ export class TransactionInfoController {
         const toAccount = accounts.find(x => x.accountId === toAccountId);
         const fromAccount = accounts.find(x => x.accountId === fromAccountId);
         if (!toAccount || !fromAccount) {
-            throw new ArgumentError('参数校验失败');
+            throw new ArgumentError('参数校验失败,未找到账号信息');
         }
 
         return this.transactionService.toBeConfirmedContractPayment(fromAccount, toAccount, password, transactionAmount, contractId, contractName, eventId, '');
     }
 
-    /**
-     * 合约支付结果确认(测试使用的接口.可以删除)
-     */
+    // 合约支付结果确认(测试使用的接口.可以删除)
     @Post('/contracts/paymentConfirmed')
     async contractPaymentConfirmed() {
         const {ctx} = this;
@@ -127,9 +111,7 @@ export class TransactionInfoController {
         }
     }
 
-    /**
-     * 查询交易记录详情
-     */
+    // 查询交易记录详情
     @Get('/records/:recordId')
     @visitorIdentityValidator(IdentityTypeEnum.InternalClient)
     async transactionRecordDetail() {
@@ -139,9 +121,7 @@ export class TransactionInfoController {
         return this.transactionService.transactionRecordRepository.findOne(recordId);
     }
 
-    /**
-     * 组织账户转账
-     */
+    // 组织账户转账
     @Post('/organizationTransfer')
     @visitorIdentityValidator(IdentityTypeEnum.LoginUser)
     async organizationTransfer() {
@@ -165,9 +145,7 @@ export class TransactionInfoController {
         return this.transactionService.organizationAccountTransfer(fromAccount, toAccount, transactionAmount, signature, remark);
     }
 
-    /**
-     * 测试代币领取
-     */
+    // 测试代币交易签名
     @Post('/testTokenTransferSignature')
     @visitorIdentityValidator(IdentityTypeEnum.LoginUser)
     async testTokenTransfer() {

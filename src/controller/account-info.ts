@@ -18,6 +18,7 @@ export class AccountInfoController {
 
     // 个人账号
     @Get('/individualAccounts')
+    @visitorIdentityValidator(IdentityTypeEnum.LoginUser)
     async individualAccount() {
         return this.accountService.getAccountInfo(this.ctx.userId.toString(), AccountTypeEnum.IndividualAccount);
     }
@@ -81,6 +82,7 @@ export class AccountInfoController {
         return this.accountService.createOrganizationAccount();
     }
 
+    // 生成rsa秘钥对
     @Get('/rasKey')
     async generateRsaKey() {
         const bit = this.ctx.checkQuery('bit').optional().toInt().default(256).value;

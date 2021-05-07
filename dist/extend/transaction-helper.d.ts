@@ -1,5 +1,5 @@
 import * as Snowflake from '@axihe/snowflake';
-import { TransactionDetailInfo, TransactionRecordInfo } from "..";
+import { TransactionDetailInfo, TransactionRecordInfo } from '..';
 export declare class TransactionHelper {
     /**
      * https://github.com/axihe/snowflake#readme

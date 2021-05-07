@@ -6,6 +6,8 @@ export declare class TransactionAuthorizationHandler implements IValveHandler {
     rsaHelper: RsaHelper;
     accountHelper: AccountHelper;
     alias: string;
+    private accountAuthorizationHandler;
+    constructor();
     /**
      * 此处只对交易的授权做检查即可.
      * @param ctx
@@ -13,23 +15,29 @@ export declare class TransactionAuthorizationHandler implements IValveHandler {
     invoke(ctx: IPipelineContext): Promise<TransactionAuthorizationResult>;
     /**
      * 个人账号授权检查
-     * @param userInfo
-     * @param fromAccount
-     * @param password
+     * @param args
      */
-    individualAccountAuthorizationCheck(userInfo: UserInfo, fromAccount: AccountInfo, password: string): TransactionAuthorizationResult;
+    individualAccountAuthorizationCheck(args: {
+        userInfo: UserInfo;
+        fromAccount: AccountInfo;
+        password: string;
+    }): TransactionAuthorizationResult;
     /**
      * 合同授权检查(合同的交易发出方需要对请求的数据进行签名,然后合约服务会使用公钥对签名进行校验)
-     * @param contractAccount
-     * @param signText
-     * @param signature
+     * @param args
      */
-    contractAccountAuthorizationCheck(contractAccount: AccountInfo, signText: string, signature: string): TransactionAuthorizationResult;
+    contractAccountAuthorizationCheck(args: {
+        fromAccount: AccountInfo;
+        signText: string;
+        signature: string;
+    }): TransactionAuthorizationResult;
     /**
      * 合同授权检查(合同的交易发出方需要对请求的数据进行签名,然后合约服务会使用公钥对签名进行校验)
-     * @param organizationAccount
-     * @param signText
-     * @param signature
+     * @param args
      */
-    organizationAccountAuthorizationCheck(organizationAccount: AccountInfo, signText: string, signature: string): TransactionAuthorizationResult;
+    organizationAccountAuthorizationCheck(args: {
+        fromAccount: AccountInfo;
+        signText: string;
+        signature: string;
+    }): TransactionAuthorizationResult;
 }

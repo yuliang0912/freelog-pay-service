@@ -1,5 +1,5 @@
-import {IPipelineContext, IValveHandler} from '@midwayjs/core'
-import {Inject, Provide, Scope, ScopeEnum} from "@midwayjs/decorator";
+import {IPipelineContext, IValveHandler} from '@midwayjs/core';
+import {Inject, Provide, Scope, ScopeEnum} from '@midwayjs/decorator';
 import {EntityManager} from 'typeorm';
 import {
     AccountInfo, TransactionDetailInfo,
@@ -30,12 +30,12 @@ export class TransactionDetailHandler implements IValveHandler {
             case TransactionHandleTypeEnum.ForthwithTransfer:
                 return this.createBidirectionalTransactionDetail(manager, fromAccount, toAccount, transactionRecord);
             case TransactionHandleTypeEnum.ToBeConfirmedContractPayment:
-                return this.createToBeConfirmationTransactionDetail(manager, fromAccount, transactionRecord)
+                return this.createToBeConfirmationTransactionDetail(manager, fromAccount, transactionRecord);
             case TransactionHandleTypeEnum.ContractPaymentConfirmedSuccessful:
                 return this.contractPaymentConfirmedSuccessfulHandle(manager, toAccount, transactionRecord);
             case TransactionHandleTypeEnum.ContractPaymentTimeOutCancel:
             case TransactionHandleTypeEnum.ContractPaymentConfirmedCancel:
-                return this.contractPaymentConfirmedCancelHandle(manager, transactionRecord)
+                return this.contractPaymentConfirmedCancelHandle(manager, transactionRecord);
             default:
                 return Promise.reject('不支持的交易处理类型');
         }

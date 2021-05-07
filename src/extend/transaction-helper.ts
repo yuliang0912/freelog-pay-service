@@ -1,10 +1,10 @@
-import {Provide, Scope, ScopeEnum} from "@midwayjs/decorator";
+import {Provide, Scope, ScopeEnum} from '@midwayjs/decorator';
 import * as Snowflake from '@axihe/snowflake';
 import {pick, random} from 'lodash';
-import {TransactionDetailInfo, TransactionRecordInfo} from "..";
-import {hmacSha1, md5} from "egg-freelog-base/lib/crypto-helper";
+import {TransactionDetailInfo, TransactionRecordInfo} from '..';
+import {hmacSha1, md5} from 'egg-freelog-base/lib/crypto-helper';
 import {v4} from 'uuid';
-import {ApplicationError} from "egg-freelog-base";
+import {ApplicationError} from 'egg-freelog-base';
 
 @Provide()
 @Scope(ScopeEnum.Singleton)
@@ -44,11 +44,10 @@ export class TransactionHelper {
         const signModelKeys = Object.keys(signModel).sort();
 
         if (signModelKeys.length !== signFields.length) {
-            console.log(signModelKeys, signFields)
-            throw new ApplicationError('交易记录信息不全,缺少加密用的必要字段')
+            throw new ApplicationError('交易记录信息不全,缺少加密用的必要字段');
         }
 
-        const signString = signModelKeys.reduce((acc, field) => `${acc}_${field}:${signModel[field]}`, 'record_sign_string')
+        const signString = signModelKeys.reduce((acc, field) => `${acc}_${field}:${signModel[field]}`, 'record_sign_string');
 
         return transactionRecordInfo.signature = hmacSha1(md5(signString), transactionRecordInfo.saltValue);
     }
@@ -73,10 +72,10 @@ export class TransactionHelper {
         const signModelKeys = Object.keys(signModel).sort();
 
         if (signModelKeys.length !== signFields.length) {
-            throw new Error('交易明细信息不全,缺少加密用的必要字段')
+            throw new Error('交易明细信息不全,缺少加密用的必要字段');
         }
 
-        const signString = signModelKeys.reduce((acc, field) => `${acc}_${field}:${signModel[field]}`, 'transaction_detail_sign_string')
+        const signString = signModelKeys.reduce((acc, field) => `${acc}_${field}:${signModel[field]}`, 'transaction_detail_sign_string');
 
         return transactionDetailInfo.signature = hmacSha1(md5(signString), transactionDetailInfo.saltValue);
     }

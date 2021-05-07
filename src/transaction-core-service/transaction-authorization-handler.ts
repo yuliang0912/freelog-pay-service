@@ -15,6 +15,13 @@ export class TransactionAuthorizationHandler implements IValveHandler {
     accountHelper: AccountHelper;
 
     alias = 'transactionAuthorizationHandler';
+    private accountAuthorizationHandler = new Map<AccountTypeEnum, (...args) => TransactionAuthorizationResult>();
+
+    constructor() {
+        this.accountAuthorizationHandler.set(AccountTypeEnum.IndividualAccount, this.individualAccountAuthorizationCheck);
+        this.accountAuthorizationHandler.set(AccountTypeEnum.ContractAccount, this.contractAccountAuthorizationCheck);
+        this.accountAuthorizationHandler.set(AccountTypeEnum.OrganizationAccount, this.organizationAccountAuthorizationCheck);
+    }
 
     /**
      * 此处只对交易的授权做检查即可.
@@ -23,22 +30,13 @@ export class TransactionAuthorizationHandler implements IValveHandler {
     invoke(ctx: IPipelineContext): Promise<TransactionAuthorizationResult> {
 
         let transactionAuthorizationResult: TransactionAuthorizationResult = {isAuth: false};
-        const {userInfo, fromAccount, password, signText, signature} = ctx.args;
+        const {fromAccount} = ctx.args;
 
         try {
-            switch (fromAccount?.accountType) {
-                case AccountTypeEnum.IndividualAccount:
-                    transactionAuthorizationResult = this.individualAccountAuthorizationCheck(userInfo, fromAccount, password);
-                    break;
-                case AccountTypeEnum.ContractAccount:
-                    transactionAuthorizationResult = this.contractAccountAuthorizationCheck(fromAccount, signText, signature);
-                    break;
-                case AccountTypeEnum.OrganizationAccount:
-                    transactionAuthorizationResult = this.organizationAccountAuthorizationCheck(fromAccount, signText, signature);
-                    break;
-                default:
-                    transactionAuthorizationResult.message = '不支持的交易类型';
-                    break;
+            if (this.accountAuthorizationHandler.has(fromAccount?.accountType)) {
+                transactionAuthorizationResult = this.accountAuthorizationHandler.get(fromAccount.accountType).call(this, ctx.args);
+            } else {
+                transactionAuthorizationResult.message = '不支持的交易类型';
             }
         } catch (e) {
             transactionAuthorizationResult.isAuth = false;
@@ -53,11 +51,10 @@ export class TransactionAuthorizationHandler implements IValveHandler {
 
     /**
      * 个人账号授权检查
-     * @param userInfo
-     * @param fromAccount
-     * @param password
+     * @param args
      */
-    individualAccountAuthorizationCheck(userInfo: UserInfo, fromAccount: AccountInfo, password: string): TransactionAuthorizationResult {
+    individualAccountAuthorizationCheck(args: { userInfo: UserInfo, fromAccount: AccountInfo, password: string }): TransactionAuthorizationResult {
+        const {fromAccount, userInfo, password} = args;
         if (fromAccount.accountType !== AccountTypeEnum.IndividualAccount) {
             throw new AuthorizationError('账户类型校验不通过,未能获得授权');
         }
@@ -84,16 +81,14 @@ export class TransactionAuthorizationHandler implements IValveHandler {
 
     /**
      * 合同授权检查(合同的交易发出方需要对请求的数据进行签名,然后合约服务会使用公钥对签名进行校验)
-     * @param contractAccount
-     * @param signText
-     * @param signature
+     * @param args
      */
-    contractAccountAuthorizationCheck(contractAccount: AccountInfo, signText: string, signature: string): TransactionAuthorizationResult {
-
-        if (contractAccount.accountType !== AccountTypeEnum.ContractAccount) {
+    contractAccountAuthorizationCheck(args: { fromAccount: AccountInfo, signText: string, signature: string }): TransactionAuthorizationResult {
+        const {fromAccount, signText, signature} = args;
+        if (fromAccount.accountType !== AccountTypeEnum.ContractAccount) {
             throw new AuthorizationError('账户类型校验不通过,未能获得授权');
         }
-        const pubicKey = this.accountHelper.decryptPublicKey(contractAccount.password);
+        const pubicKey = this.accountHelper.decryptPublicKey(fromAccount.password);
         const nodeRsaHelper = this.rsaHelper.build(pubicKey);
         if (!nodeRsaHelper.verifySign(signText, signature)) {
             throw new AuthorizationError('签名数据校验失败');
@@ -103,23 +98,21 @@ export class TransactionAuthorizationHandler implements IValveHandler {
         return {
             isAuth: true,
             authorizationType: 'privateKey',
-            operatorId: contractAccount.ownerId,
-            operatorName: contractAccount.ownerName
+            operatorId: fromAccount.ownerId,
+            operatorName: fromAccount.ownerName
         };
     }
 
     /**
      * 合同授权检查(合同的交易发出方需要对请求的数据进行签名,然后合约服务会使用公钥对签名进行校验)
-     * @param organizationAccount
-     * @param signText
-     * @param signature
+     * @param args
      */
-    organizationAccountAuthorizationCheck(organizationAccount: AccountInfo, signText: string, signature: string): TransactionAuthorizationResult {
-
-        if (organizationAccount.accountType !== AccountTypeEnum.OrganizationAccount) {
+    organizationAccountAuthorizationCheck(args: { fromAccount: AccountInfo, signText: string, signature: string }): TransactionAuthorizationResult {
+        const {fromAccount, signText, signature} = args;
+        if (fromAccount.accountType !== AccountTypeEnum.OrganizationAccount) {
             throw new AuthorizationError('账户类型校验不通过,未能获得授权');
         }
-        const pubicKey = this.accountHelper.decryptPublicKey(organizationAccount.password);
+        const pubicKey = this.accountHelper.decryptPublicKey(fromAccount.password);
         const nodeRsaHelper = this.rsaHelper.build(pubicKey);
         if (!nodeRsaHelper.verifySign(signText, signature)) {
             throw new AuthorizationError('签名数据校验失败');
@@ -129,8 +122,8 @@ export class TransactionAuthorizationHandler implements IValveHandler {
         return {
             isAuth: true,
             authorizationType: 'privateKey',
-            operatorId: organizationAccount.ownerId,
-            operatorName: organizationAccount.ownerName
+            operatorId: fromAccount.ownerId,
+            operatorName: fromAccount.ownerName
         };
     }
 }

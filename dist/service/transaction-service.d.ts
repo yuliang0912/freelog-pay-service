@@ -4,7 +4,7 @@ import { FreelogContext } from 'egg-freelog-base';
 import { TransactionCoreService } from '../transaction-core-service';
 import { AccountService } from './account-service';
 import { RsaHelper } from '../extend/rsa-helper';
-export declare class TransactionService extends BaseService<TransactionRecordInfo> {
+export declare class TransactionService extends BaseService<TransactionDetailInfo> {
     ctx: FreelogContext;
     rsaHelper: RsaHelper;
     transactionCoreService: TransactionCoreService;

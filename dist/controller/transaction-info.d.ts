@@ -5,8 +5,7 @@ export declare class TransactionInfoController {
     ctx: FreelogContext;
     accountService: AccountService;
     transactionService: TransactionService;
-    myTransactionDetails(): Promise<import("egg-freelog-base").PageResult<import("..").TransactionRecordInfo>>;
-    transactionDetails(): Promise<import("egg-freelog-base").PageResult<import("..").TransactionRecordInfo>>;
+    transactionDetails(): Promise<import("egg-freelog-base").PageResult<import("..").TransactionDetailInfo>>;
     transfer(): Promise<import("..").TransactionDetailInfo>;
     contractPayment(): Promise<import("..").TransactionDetailInfo>;
     contractPaymentConfirmed(): Promise<unknown>;

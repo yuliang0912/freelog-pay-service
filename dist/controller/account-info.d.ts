@@ -5,7 +5,6 @@ export declare class AccountInfoController {
     ctx: FreelogContext;
     accountService: AccountService;
     accountHelper: AccountHelper;
-    individualAccount(): Promise<import("..").AccountInfo>;
     individualAccountInfo(): Promise<import("..").AccountInfo>;
     activateAccount(): Promise<boolean>;
     createContractAccount(): Promise<import("..").AccountInfo>;

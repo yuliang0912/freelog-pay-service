@@ -17,7 +17,7 @@ import {testFreelogOrganizationInfo} from '../mock-data/test-freelog-organizatio
 import {RsaHelper} from '../extend/rsa-helper';
 
 @Provide()
-export class TransactionService extends BaseService<TransactionRecordInfo> {
+export class TransactionService extends BaseService<TransactionDetailInfo> {
 
     @Inject()
     ctx: FreelogContext;
@@ -34,8 +34,8 @@ export class TransactionService extends BaseService<TransactionRecordInfo> {
 
     @Init()
     constructorBaseService() {
-        super.tableAlias = 'record';
-        super.repository = this.transactionRecordRepository;
+        super.tableAlias = 'details';
+        super.repository = this.transactionDetailRepository;
     }
 
     /**

@@ -1,5 +1,11 @@
 import {Controller, Get, Inject, Post, Provide, Put} from '@midwayjs/decorator';
-import {ArgumentError, FreelogContext, IdentityTypeEnum, visitorIdentityValidator} from 'egg-freelog-base';
+import {
+    ArgumentError,
+    AuthorizationError,
+    FreelogContext,
+    IdentityTypeEnum,
+    visitorIdentityValidator
+} from 'egg-freelog-base';
 import * as NodeRSA from 'node-rsa';
 import {AccountTypeEnum} from '../enum';
 import {AccountHelper} from '../extend/account-helper';
@@ -17,25 +23,23 @@ export class AccountInfoController {
     accountHelper: AccountHelper;
 
     // 个人账号
-    @Get('/individualAccounts')
-    @visitorIdentityValidator(IdentityTypeEnum.LoginUser)
-    async individualAccount() {
-        return this.accountService.getAccountInfo(this.ctx.userId.toString(), AccountTypeEnum.IndividualAccount);
-    }
-
-    // 个人账号
     @Get('/individualAccounts/:userId')
-    @visitorIdentityValidator(IdentityTypeEnum.InternalClient | IdentityTypeEnum.LoginUser)
+    @visitorIdentityValidator(IdentityTypeEnum.LoginUser)
     async individualAccountInfo() {
         const {ctx} = this;
-        const ownerUserId = ctx.checkParams('userId').exist().isUserId().value;
+        const ownerUserId = ctx.checkParams('userId').exist().isUserId().toInt().value;
         ctx.validateParams();
+
+        if (ctx.userId !== ownerUserId) {
+            throw new AuthorizationError(ctx.gettext('user-authorization-failed'));
+        }
 
         return this.accountService.getAccountInfo(ownerUserId, AccountTypeEnum.IndividualAccount);
     }
 
     // 激活账号
     @Put('/individualAccounts/activate')
+    @visitorIdentityValidator(IdentityTypeEnum.LoginUser)
     async activateAccount() {
         const ctx = this.ctx;
         const password = ctx.checkBody('password').isNumeric().len(6, 6).value;
@@ -47,6 +51,7 @@ export class AccountInfoController {
 
     // 创建合约账户(此处需要做幂等,一个合约只能创建一个账户,权限需要设置为内部调用权限)
     @Post('/contractAccounts/:contractId')
+    @visitorIdentityValidator(IdentityTypeEnum.InternalClient)
     async createContractAccount() {
         const ctx = this.ctx;
         const contractId = ctx.checkParams('contractId').exist().isMongoObjectId().value;
@@ -69,6 +74,7 @@ export class AccountInfoController {
 
     // 创建组织账户
     @Post('/organizationAccounts/:organizationId')
+    @visitorIdentityValidator(IdentityTypeEnum.InternalClient)
     async createOrganizationAccount() {
         // const ctx = this.ctx;
         // const organizationId = ctx.checkParams('organizationId').exist().toInt().value;

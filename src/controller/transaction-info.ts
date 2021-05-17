@@ -1,5 +1,11 @@
 import {Controller, Get, Inject, Post, Provide} from '@midwayjs/decorator';
-import {ArgumentError, FreelogContext, IdentityTypeEnum, visitorIdentityValidator} from 'egg-freelog-base';
+import {
+    ArgumentError,
+    AuthorizationError,
+    FreelogContext,
+    IdentityTypeEnum,
+    visitorIdentityValidator
+} from 'egg-freelog-base';
 import {AccountService} from '../service/account-service';
 import {TransactionService} from '../service/transaction-service';
 import {AccountTypeEnum, TransactionStatusEnum} from '../enum';
@@ -16,25 +22,19 @@ export class TransactionInfoController {
     transactionService: TransactionService;
 
     // 交易流水记录
-    @Get('/details/my')
-    async myTransactionDetails() {
-        const {ctx} = this;
-        const skip = ctx.checkQuery('skip').optional().toInt().default(0).ge(0).value;
-        const limit = ctx.checkQuery('limit').optional().toInt().default(10).gt(0).lt(101).value;
-        ctx.validateParams();
-
-        const accountInfo = await this.accountService.getAccountInfo(ctx.userId.toString(), AccountTypeEnum.IndividualAccount);
-        return this.transactionService.findPageList({where: {accountId: accountInfo.accountId}, skip, take: limit});
-    }
-
-    // 交易流水记录
     @Get('/details/:accountId')
+    @visitorIdentityValidator(IdentityTypeEnum.LoginUser)
     async transactionDetails() {
         const {ctx} = this;
         const accountId = ctx.checkParams('accountId').exist().value;
         const skip = ctx.checkQuery('skip').optional().toInt().default(0).ge(0).value;
         const limit = ctx.checkQuery('limit').optional().toInt().default(10).gt(0).lt(101).value;
         ctx.validateParams();
+
+        const accountInfo = await this.accountService.getAccountInfo(ctx.userId.toString(), AccountTypeEnum.IndividualAccount);
+        if (accountInfo.ownerUserId !== ctx.userId) {
+            throw new AuthorizationError(ctx.gettext('user-authorization-failed'));
+        }
 
         return this.transactionService.findPageList({where: {accountId}, skip, take: limit});
     }

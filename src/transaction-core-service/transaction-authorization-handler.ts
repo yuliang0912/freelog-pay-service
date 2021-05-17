@@ -1,7 +1,7 @@
 import {IPipelineContext, IValveHandler} from '@midwayjs/core';
 import {Inject, Provide, Scope, ScopeEnum} from '@midwayjs/decorator';
 import {AccountInfo, AccountTypeEnum, TransactionAuthorizationResult, UserInfo} from '..';
-import {ApplicationError, AuthorizationError} from 'egg-freelog-base';
+import {ApplicationError, AuthenticationError, AuthorizationError} from 'egg-freelog-base';
 import {AccountHelper} from '../extend/account-helper';
 import {RsaHelper} from '../extend/rsa-helper';
 
@@ -58,7 +58,10 @@ export class TransactionAuthorizationHandler implements IValveHandler {
         if (fromAccount.accountType !== AccountTypeEnum.IndividualAccount) {
             throw new AuthorizationError('账户类型校验不通过,未能获得授权');
         }
-        if (fromAccount.ownerUserId !== userInfo?.userId) {
+        if (!userInfo?.userId) {
+            throw new AuthenticationError('认证错误,请登录后再试');
+        }
+        if (fromAccount.ownerUserId !== userInfo.userId) {
             throw new AuthorizationError('登录用户没有执行操作的权限');
         }
         if (fromAccount.status === 0) {
@@ -66,7 +69,7 @@ export class TransactionAuthorizationHandler implements IValveHandler {
         }
         const isVerifySuccessful = this.accountHelper.verifyAccountPassword(fromAccount, password);
         if (!isVerifySuccessful) {
-            throw new AuthorizationError('交易密码校验失败');
+            throw new AuthorizationError('交易密码错误');
         }
         if (fromAccount.status === 2) {
             throw new ApplicationError('交易账号已被冻结,无法发起交易');

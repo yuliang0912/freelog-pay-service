@@ -19,6 +19,7 @@ export declare class TransactionRecordHandler implements IValveHandler {
      * @param transactionAuthorizationResult
      * @param transactionStatus
      * @param remark
+     * @param digest
      * @param attachInfo
      * @private
      */

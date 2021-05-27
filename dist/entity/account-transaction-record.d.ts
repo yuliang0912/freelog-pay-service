@@ -40,6 +40,10 @@ export declare class TransactionRecordInfo {
      */
     transactionType: TransactionTypeEnum;
     /**
+     * 摘要
+     */
+    digest: string;
+    /**
      * 摘要JSON
      */
     attachInfo: object;
@@ -86,5 +90,5 @@ export declare class TransactionRecordInfo {
     /**
      * 自定义序列化
      */
-    toJSON(this: TransactionRecordInfo): Pick<TransactionRecordInfo, "createDate" | "updateDate" | "accountId" | "accountName" | "accountType" | "status" | "toJSON" | "recordId" | "reciprocalAccountId" | "reciprocalAccountType" | "reciprocalAccountName" | "transactionAmount" | "transactionType" | "attachInfo" | "remark" | "operatorId" | "operatorName" | "authorizationType" | "confirmTimeoutDate">;
+    toJSON(this: TransactionRecordInfo): Pick<TransactionRecordInfo, "createDate" | "updateDate" | "accountId" | "accountName" | "accountType" | "status" | "toJSON" | "recordId" | "reciprocalAccountId" | "reciprocalAccountType" | "reciprocalAccountName" | "transactionAmount" | "transactionType" | "digest" | "attachInfo" | "remark" | "operatorId" | "operatorName" | "authorizationType" | "confirmTimeoutDate">;
 }

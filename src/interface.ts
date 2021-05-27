@@ -26,6 +26,7 @@ export interface UserInfo {
 export interface ContractTransactionInfo {
     contractId: string;
     eventId: string;
+    subjectType: number;
     contractName: string;
     signText?: string;
     signature?: string;

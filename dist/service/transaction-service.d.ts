@@ -37,11 +37,12 @@ export declare class TransactionService extends BaseService<TransactionDetailInf
      * @param password
      * @param transactionAmount
      * @param contractId
+     * @param subjectType
      * @param contractName
      * @param eventId
      * @param signature
      */
-    toBeConfirmedContractPayment(fromAccount: AccountInfo, toAccount: AccountInfo, password: string, transactionAmount: number, contractId: string, contractName: string, eventId: string, signature: string): Promise<TransactionDetailInfo>;
+    toBeConfirmedContractPayment(fromAccount: AccountInfo, toAccount: AccountInfo, password: string, transactionAmount: number, contractId: string, subjectType: number, contractName: string, eventId: string, signature: string): Promise<TransactionDetailInfo>;
     /**
      * 合约支付确认成功
      * @param transactionRecord

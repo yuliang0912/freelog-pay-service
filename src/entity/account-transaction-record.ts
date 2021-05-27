@@ -66,9 +66,15 @@ export class TransactionRecordInfo {
     transactionType: TransactionTypeEnum;
 
     /**
+     * 摘要
+     */
+    @Column({type: 'varchar', default: '', length: 256, comment: '摘要'})
+    digest: string;
+
+    /**
      * 摘要JSON
      */
-    @Column({type: 'json', comment: '摘要'})
+    @Column({type: 'json', comment: '附加信息'})
     attachInfo: object;
 
     /**

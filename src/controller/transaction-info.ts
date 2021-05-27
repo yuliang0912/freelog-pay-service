@@ -3,7 +3,7 @@ import {
     ArgumentError,
     AuthorizationError,
     FreelogContext,
-    IdentityTypeEnum,
+    IdentityTypeEnum, SubjectTypeEnum,
     visitorIdentityValidator
 } from 'egg-freelog-base';
 import {AccountService} from '../service/account-service';
@@ -69,6 +69,7 @@ export class TransactionInfoController {
         const toAccountId = ctx.checkBody('toAccountId').exist().isNumeric().value;
         const transactionAmount = ctx.checkBody('transactionAmount').exist().toFloat().gt(0).value;
         const contractId = ctx.checkBody('contractId').exist().isMongoObjectId().value;
+        const subjectType = ctx.checkBody('subjectType').exist().toInt().in([SubjectTypeEnum.Resource, SubjectTypeEnum.Presentable, SubjectTypeEnum.UserGroup]).value;
         const contractName = ctx.checkBody('contractName').exist().type('string').value;
         const eventId = ctx.checkBody('eventId').exist().isMd5().value;
         const password = ctx.checkBody('password').exist().isNumeric().len(6, 6).value;
@@ -81,7 +82,7 @@ export class TransactionInfoController {
             throw new ArgumentError('参数校验失败,未找到账号信息');
         }
 
-        return this.transactionService.toBeConfirmedContractPayment(fromAccount, toAccount, password, transactionAmount, contractId, contractName, eventId, '');
+        return this.transactionService.toBeConfirmedContractPayment(fromAccount, toAccount, password, transactionAmount, contractId, subjectType, contractName, eventId, '');
     }
 
     // 合约支付结果确认(测试使用的接口.可以删除)

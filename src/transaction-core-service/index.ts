@@ -86,6 +86,7 @@ export class TransactionCoreService {
             transactionHandleType: TransactionHandleTypeEnum.ToBeConfirmedContractPayment,
             attachInfo: {
                 contractId: contractTransactionInfo.contractId,
+                subjectType: contractTransactionInfo.subjectType,
                 contractName: contractTransactionInfo.contractName,
                 eventId: contractTransactionInfo.eventId
             }

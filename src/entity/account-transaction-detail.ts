@@ -85,6 +85,12 @@ export class TransactionDetailInfo {
     transactionType: TransactionTypeEnum;
 
     /**
+     * 摘要
+     */
+    @Column({type: 'varchar', default: '', length: 256, comment: '摘要'})
+    digest: string;
+
+    /**
      * 备注
      */
     @Column({type: 'varchar', default: '', length: 256, comment: '备注'})

@@ -28,9 +28,11 @@ export class TransactionRecordHandler implements IValveHandler {
         const {manager, transactionRecord, toAccount, fromAccount, transactionAmount, transactionAuthorizationResult, transactionHandleType, remark, attachInfo} = ctx.args;
         switch (transactionHandleType as TransactionHandleTypeEnum) {
             case TransactionHandleTypeEnum.ForthwithTransfer:
-                return this.createTransactionRecord(manager, fromAccount, toAccount, transactionAmount, TransactionTypeEnum.Transfer, transactionAuthorizationResult, TransactionStatusEnum.Completed, remark, attachInfo);
+                return this.createTransactionRecord(manager, fromAccount, toAccount, transactionAmount, TransactionTypeEnum.Transfer, transactionAuthorizationResult, TransactionStatusEnum.Completed, remark, '转账', attachInfo);
             case TransactionHandleTypeEnum.ToBeConfirmedContractPayment:
-                return this.createTransactionRecord(manager, fromAccount, toAccount, transactionAmount, TransactionTypeEnum.ContractTransaction, transactionAuthorizationResult, TransactionStatusEnum.ToBeConfirmation, remark, attachInfo);
+                const subjectTypeName = attachInfo.subjectType === 1 ? '资源' : attachInfo.subjectType === 2 ? '展品' : attachInfo.subjectType === 3 ? '用户组' : '其他';
+                const digest = `${subjectTypeName}-${attachInfo.contractName}`;
+                return this.createTransactionRecord(manager, fromAccount, toAccount, transactionAmount, TransactionTypeEnum.ContractTransaction, transactionAuthorizationResult, TransactionStatusEnum.ToBeConfirmation, remark, digest, attachInfo);
             case TransactionHandleTypeEnum.ContractPaymentConfirmedSuccessful:
                 return this.updateTransactionRecord(manager, transactionRecord, TransactionStatusEnum.Completed);
             case TransactionHandleTypeEnum.ContractPaymentTimeOutCancel:
@@ -51,10 +53,11 @@ export class TransactionRecordHandler implements IValveHandler {
      * @param transactionAuthorizationResult
      * @param transactionStatus
      * @param remark
+     * @param digest
      * @param attachInfo
      * @private
      */
-    private async createTransactionRecord(manager: EntityManager, fromAccount: AccountInfo, toAccount: AccountInfo, transactionAmount: number, transactionType: TransactionTypeEnum, transactionAuthorizationResult: TransactionAuthorizationResult, transactionStatus: TransactionStatusEnum, remark: string, attachInfo?: object) {
+    private async createTransactionRecord(manager: EntityManager, fromAccount: AccountInfo, toAccount: AccountInfo, transactionAmount: number, transactionType: TransactionTypeEnum, transactionAuthorizationResult: TransactionAuthorizationResult, transactionStatus: TransactionStatusEnum, remark: string, digest: string, attachInfo?: object) {
         const confirmTimeoutDate = new Date();
         confirmTimeoutDate.setDate(confirmTimeoutDate.getDate() + 2);
         const transactionRecordInfo = {
@@ -68,6 +71,7 @@ export class TransactionRecordHandler implements IValveHandler {
             transactionAmount: -transactionAmount,
             transactionType: transactionType,
             remark: remark ?? '',
+            digest: digest ?? '',
             operatorId: transactionAuthorizationResult.operatorId,
             operatorName: transactionAuthorizationResult.operatorName,
             authorizationType: transactionAuthorizationResult.authorizationType,

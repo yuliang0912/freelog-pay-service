@@ -81,14 +81,15 @@ export class TransactionService extends BaseService<TransactionDetailInfo> {
      * @param password
      * @param transactionAmount
      * @param contractId
+     * @param subjectType
      * @param contractName
      * @param eventId
      * @param signature
      */
-    async toBeConfirmedContractPayment(fromAccount: AccountInfo, toAccount: AccountInfo, password: string, transactionAmount: number, contractId: string, contractName: string, eventId: string, signature: string) {
+    async toBeConfirmedContractPayment(fromAccount: AccountInfo, toAccount: AccountInfo, password: string, transactionAmount: number, contractId: string, subjectType: number, contractName: string, eventId: string, signature: string) {
 
         const contractTransactionInfo = {
-            fromAccount, toAccount, password, contractId, contractName, eventId, transactionAmount
+            fromAccount, toAccount, password, contractId, subjectType, contractName, eventId, transactionAmount
         } as ContractTransactionInfo;
 
         return this.transactionCoreService.toBeConfirmedContractPaymentHandle(this.ctx.identityInfo.userInfo, contractTransactionInfo);

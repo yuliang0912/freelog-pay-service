@@ -127,7 +127,8 @@ export class TransactionDetailHandler implements IValveHandler {
             transactionType: transactionRecordInfo.transactionType,
             status: TransactionStatusEnum.ToBeConfirmation,
             attachInfo: transactionRecordInfo.attachInfo,
-            remark: transactionRecordInfo.remark ?? ''
+            remark: transactionRecordInfo.remark ?? '',
+            digest: transactionRecordInfo.digest,
         } as TransactionDetailInfo;
 
         return this.saveTransactionDetails(manager, [transactionDetailInfo]);
@@ -157,8 +158,10 @@ export class TransactionDetailHandler implements IValveHandler {
             transactionType: transactionRecordInfo.transactionType,
             status: TransactionStatusEnum.Completed,
             attachInfo: transactionRecordInfo.attachInfo,
-            remark: transactionRecordInfo.remark ?? ''
+            remark: transactionRecordInfo.remark ?? '',
+            digest: transactionRecordInfo.digest,
         } as TransactionDetailInfo;
+
 
         const incomeTransactionDetail = {
             transactionRecordId: transactionRecordInfo.recordId,
@@ -173,6 +176,7 @@ export class TransactionDetailHandler implements IValveHandler {
             afterBalance: new Decimal(toAccountInfo.balance).add(-transactionRecordInfo.transactionAmount).toFixed(2),
             transactionType: transactionRecordInfo.transactionType,
             status: TransactionStatusEnum.Completed,
+            digest: transactionRecordInfo.digest,
             attachInfo: transactionRecordInfo.attachInfo
         } as TransactionDetailInfo;
 

@@ -12,6 +12,7 @@ export class ResponseHandler implements IMethodAspect {
     // }
 
     afterReturn(joinPoint: JoinPoint, result: any) {
+
         if (isPromise(result)) {
             return result.then(data => buildApiFormatData(RetCodeEnum.success, ErrCodeEnum.success, 'success', data));
         }

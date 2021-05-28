@@ -49,6 +49,20 @@ export class AccountInfoController {
         return this.accountService.activateIndividualAccount(accountInfo, password);
     }
 
+    // 修改交易密码
+    @Put('/individualAccounts')
+    @visitorIdentityValidator(IdentityTypeEnum.LoginUser)
+    async updateAccount() {
+        const ctx = this.ctx;
+        const oldPassword = ctx.checkBody('oldPassword').exist().isNumeric().len(6, 6).value;
+        const password = ctx.checkBody('password').exist().isNumeric().len(6, 6).value;
+        ctx.validateParams();
+
+        const accountInfo = await this.accountService.getAccountInfo(this.ctx.userId.toString(), AccountTypeEnum.IndividualAccount);
+
+        return this.accountService.updatePassword(accountInfo, oldPassword, password);
+    }
+
     // 创建合约账户(此处需要做幂等,一个合约只能创建一个账户,权限需要设置为内部调用权限)
     @Post('/contractAccounts/:contractId')
     @visitorIdentityValidator(IdentityTypeEnum.InternalClient)

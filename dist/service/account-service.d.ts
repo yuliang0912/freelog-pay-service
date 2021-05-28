@@ -20,6 +20,13 @@ export declare class AccountService extends BaseService<AccountInfo> {
      */
     activateIndividualAccount(accountInfo: AccountInfo, password: string): Promise<boolean>;
     /**
+     * 修改交易密码
+     * @param accountInfo
+     * @param oldPassword
+     * @param password
+     */
+    updatePassword(accountInfo: AccountInfo, oldPassword: string, password: string): Promise<boolean>;
+    /**
      * 创建合同账号
      * @param contractId
      * @param contractName

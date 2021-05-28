@@ -66,6 +66,27 @@ export class AccountService extends BaseService<AccountInfo> {
     }
 
     /**
+     * 修改交易密码
+     * @param accountInfo
+     * @param oldPassword
+     * @param password
+     */
+    async updatePassword(accountInfo: AccountInfo, oldPassword: string, password: string) {
+        if (accountInfo.accountType !== AccountTypeEnum.IndividualAccount) {
+            throw new ArgumentError('账号类型交易失败');
+        }
+        if (!this.accountHelper.accountSignatureVerify(accountInfo)) {
+            throw new LogicError('账号签名校验失败,数据完整性校验失败');
+        }
+        if (accountInfo.password !== this.accountHelper.generateAccountPassword(accountInfo.accountId, accountInfo.saltValue, accountInfo.ownerId, oldPassword)) {
+            throw new LogicError('原始密码错误');
+        }
+        accountInfo.password = this.accountHelper.generateAccountPassword(accountInfo.accountId, accountInfo.saltValue, accountInfo.ownerId, password);
+        accountInfo.signature = this.accountHelper.accountInfoSignature(accountInfo);
+        return this.accountRepository.save(accountInfo).then(() => true);
+    }
+
+    /**
      * 创建合同账号
      * @param contractId
      * @param contractName

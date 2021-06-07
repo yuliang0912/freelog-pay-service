@@ -36,7 +36,7 @@ export class TransactionInfoController {
             throw new AuthorizationError(ctx.gettext('user-authorization-failed'));
         }
 
-        return this.transactionService.findPageList({where: {accountId}, skip, take: limit});
+        return this.transactionService.findPageList({where: {accountId}, skip, take: limit, order: {serialNo: -1}});
     }
 
     // 个人账户转账

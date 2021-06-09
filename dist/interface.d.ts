@@ -1,4 +1,4 @@
-import { EachBatchPayload } from 'kafkajs';
+import { EachMessagePayload } from 'kafkajs';
 import { AccountInfo, TransactionStatusEnum } from '.';
 /**
  * 节点信息
@@ -50,5 +50,5 @@ export interface TransactionAuthorizationResult {
 export interface IKafkaSubscribeMessageHandle {
     subscribeTopicName: string;
     consumerGroupId: string;
-    messageHandle(payload: EachBatchPayload): Promise<void>;
+    messageHandle(payload: EachMessagePayload): Promise<void>;
 }

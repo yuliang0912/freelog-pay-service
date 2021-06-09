@@ -1,4 +1,4 @@
-import {EachBatchPayload} from 'kafkajs';
+import {EachMessagePayload} from 'kafkajs';
 import {AccountInfo, TransactionStatusEnum} from '.';
 
 /**
@@ -63,5 +63,5 @@ export interface IKafkaSubscribeMessageHandle {
 
     consumerGroupId: string;
 
-    messageHandle(payload: EachBatchPayload): Promise<void>;
+    messageHandle(payload: EachMessagePayload): Promise<void>;
 }

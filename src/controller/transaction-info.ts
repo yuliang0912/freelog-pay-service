@@ -132,6 +132,7 @@ export class TransactionInfoController {
         const transactionAmount = ctx.checkBody('transactionAmount').toFloat().gt(0).value;
         const signature = ctx.checkBody('signature').exist().value;
         const remark = ctx.checkBody('remark').optional().type('string').len(0, 200).value;
+        const digest = ctx.checkBody('digest').optional().type('string').len(0, 200).value;
         ctx.validateParams();
 
         // 签约文本构成格式 (私钥进行签名)
@@ -143,7 +144,7 @@ export class TransactionInfoController {
             throw new ArgumentError('参数校验失败');
         }
 
-        return this.transactionService.organizationAccountTransfer(fromAccount, toAccount, transactionAmount, signature, remark);
+        return this.transactionService.organizationAccountTransfer(fromAccount, toAccount, transactionAmount, signature, digest, remark);
     }
 
     // 测试代币交易签名

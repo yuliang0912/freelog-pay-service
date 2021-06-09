@@ -28,7 +28,7 @@ export class TransactionRecordHandler implements IValveHandler {
         const {manager, transactionRecord, toAccount, fromAccount, transactionAmount, transactionAuthorizationResult, transactionHandleType, remark, attachInfo} = ctx.args;
         switch (transactionHandleType as TransactionHandleTypeEnum) {
             case TransactionHandleTypeEnum.ForthwithTransfer:
-                return this.createTransactionRecord(manager, fromAccount, toAccount, transactionAmount, TransactionTypeEnum.Transfer, transactionAuthorizationResult, TransactionStatusEnum.Completed, remark, '转账', attachInfo);
+                return this.createTransactionRecord(manager, fromAccount, toAccount, transactionAmount, TransactionTypeEnum.Transfer, transactionAuthorizationResult, TransactionStatusEnum.Completed, remark, ctx.args.digest ?? '转账', attachInfo);
             case TransactionHandleTypeEnum.ToBeConfirmedContractPayment:
                 const subjectTypeName = attachInfo.subjectType === 1 ? '资源' : attachInfo.subjectType === 2 ? '展品' : attachInfo.subjectType === 3 ? '用户组' : '其他';
                 const digest = `${subjectTypeName}-${attachInfo.contractName}`;

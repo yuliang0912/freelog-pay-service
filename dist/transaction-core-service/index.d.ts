@@ -20,9 +20,10 @@ export declare class TransactionCoreService {
      * @param toAccount
      * @param transactionAmount
      * @param signature
+     * @param digest
      * @param remark
      */
-    organizationAccountTransfer(fromAccount: AccountInfo, toAccount: AccountInfo, transactionAmount: number, signature: string, remark?: string): Promise<TransactionDetailInfo>;
+    organizationAccountTransfer(fromAccount: AccountInfo, toAccount: AccountInfo, transactionAmount: number, signature: string, digest?: string, remark?: string): Promise<TransactionDetailInfo>;
     /**
      * 待确认的合约支付
      * @param userInfo

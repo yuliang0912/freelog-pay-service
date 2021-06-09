@@ -53,11 +53,12 @@ export class TransactionCoreService {
      * @param toAccount
      * @param transactionAmount
      * @param signature
+     * @param digest
      * @param remark
      */
-    async organizationAccountTransfer(fromAccount: AccountInfo, toAccount: AccountInfo, transactionAmount: number, signature: string, remark?: string): Promise<TransactionDetailInfo> {
+    async organizationAccountTransfer(fromAccount: AccountInfo, toAccount: AccountInfo, transactionAmount: number, signature: string, digest?: string, remark?: string): Promise<TransactionDetailInfo> {
         const args: any = {
-            fromAccount, toAccount, transactionAmount, remark, signature,
+            fromAccount, toAccount, transactionAmount, digest, remark, signature,
             transactionHandleType: TransactionHandleTypeEnum.ForthwithTransfer
         };
         args.signText = `fromAccountId_${fromAccount.accountId}_toAccountId_${toAccount.accountId}_transactionAmount_${transactionAmount}`;

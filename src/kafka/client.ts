@@ -1,5 +1,5 @@
 import {
-    Consumer, EachBatchPayload,
+    Consumer, EachMessagePayload,
     Kafka, Producer, ProducerBatch,
     ProducerRecord, RecordMetadata
 } from 'kafkajs';
@@ -22,7 +22,7 @@ export class KafkaClient {
     consumers: Consumer[] = [];
     producerIsReady = false;
 
-    consumerTopicAsyncHandleFunc = new Map<string, (payload: EachBatchPayload) => Promise<void>>();
+    consumerTopicAsyncHandleFunc = new Map<string, (payload: EachMessagePayload) => Promise<void>>();
 
     @init()
     async initial() {
@@ -51,9 +51,9 @@ export class KafkaClient {
             }
             await consumer.run({
                 partitionsConsumedConcurrently: 2,
-                eachBatch: async (...args) => {
-                    const {batch} = first(args);
-                    const asyncHandleFunc = this.consumerTopicAsyncHandleFunc.get(buildTopicGroupKey(batch.topic, groupId));
+                eachMessage: async (...args) => {
+                    const {topic} = first(args);
+                    const asyncHandleFunc = this.consumerTopicAsyncHandleFunc.get(buildTopicGroupKey(topic, groupId));
                     await Reflect.apply(asyncHandleFunc, null, args);
                 }
             });

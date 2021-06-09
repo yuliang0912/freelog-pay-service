@@ -62,16 +62,17 @@ export class TransactionService extends BaseService<TransactionDetailInfo> {
      * @param toAccount
      * @param transactionAmount
      * @param signature
+     * @param digest
      * @param remark
      */
-    async organizationAccountTransfer(fromAccount: AccountInfo, toAccount: AccountInfo, transactionAmount: number, signature: string, remark?: string) {
+    async organizationAccountTransfer(fromAccount: AccountInfo, toAccount: AccountInfo, transactionAmount: number, signature: string, digest?: string, remark?: string) {
         if (!fromAccount || !toAccount || !signature) {
             throw new ArgumentError('参数校验失败');
         }
         if (fromAccount.accountType !== AccountTypeEnum.OrganizationAccount) {
             throw new LogicError('账号类型校验失败');
         }
-        return this.transactionCoreService.organizationAccountTransfer(fromAccount, toAccount, transactionAmount, signature, remark);
+        return this.transactionCoreService.organizationAccountTransfer(fromAccount, toAccount, transactionAmount, signature, digest, remark);
     }
 
     /**

@@ -1,5 +1,5 @@
 import {Inject, Provide, Scope, ScopeEnum} from '@midwayjs/decorator';
-import {EachBatchPayload} from 'kafkajs';
+import {EachMessagePayload} from 'kafkajs';
 import {IKafkaSubscribeMessageHandle, TransactionRecordInfo, TransactionStatusEnum} from '..';
 import {TransactionCoreService} from '../transaction-core-service';
 import {InjectEntityModel, Repository} from '../index';
@@ -24,37 +24,28 @@ export class ContractPaymentConfirmResultHandle implements IKafkaSubscribeMessag
      * 合约支付确认结果处理
      * @param payload
      */
-    async messageHandle(payload: EachBatchPayload): Promise<void> {
-        const {batch, resolveOffset, heartbeat} = payload;
-        for (let message of batch.messages) {
+    async messageHandle(payload: EachMessagePayload): Promise<void> {
 
-            const eventInfo = JSON.parse(message.value.toString());
-            console.log('接收到合约支付结果确认事件' + JSON.stringify(eventInfo));
+        const {message} = payload;
+        const eventInfo = JSON.parse(message.value.toString());
+        console.log(`接收到合约支付结果确认事件(offset:${message.offset})` + JSON.stringify(eventInfo));
 
-            const transactionRecord = await this.transactionRecordRepository.findOne(eventInfo.transactionRecordId);
-            if (!transactionRecord || transactionRecord.status !== TransactionStatusEnum.ToBeConfirmation) {
-                // .... 容错处理
-                resolveOffset(message.offset);
-                continue;
-            }
-
-            let handler = null;
-            switch (eventInfo.transactionStatus) {
-                case TransactionStatusEnum.Completed:
-                    const attachInfo = Object.assign({}, transactionRecord.attachInfo, {stateId: eventInfo.stateId});
-                    handler = this.transactionCoreService.contractPaymentConfirmCompletedHandle(transactionRecord, attachInfo);
-                    break;
-                case TransactionStatusEnum.Closed:
-                    handler = this.transactionCoreService.contractPaymentConfirmCanceledHandle(transactionRecord);
-                    break;
-                default:
-                    console.log('错误的数据格式');
-                    return;
-            }
-            await handler.then(() => {
-                resolveOffset(message.offset);
-            });
+        const transactionRecord = await this.transactionRecordRepository.findOne(eventInfo.transactionRecordId);
+        if (!transactionRecord || transactionRecord.status !== TransactionStatusEnum.ToBeConfirmation) {
+            return;
         }
-        await heartbeat();
+
+        switch (eventInfo.transactionStatus) {
+            case TransactionStatusEnum.Completed:
+                const attachInfo = Object.assign({}, transactionRecord.attachInfo, {stateId: eventInfo.stateId});
+                await this.transactionCoreService.contractPaymentConfirmCompletedHandle(transactionRecord, attachInfo);
+                return;
+            case TransactionStatusEnum.Closed:
+                await this.transactionCoreService.contractPaymentConfirmCanceledHandle(transactionRecord);
+                return;
+            default:
+                console.log('错误的数据格式');
+                return;
+        }
     }
 }

@@ -1,4 +1,4 @@
-import {Pipeline, Provide, Scope, ScopeEnum} from '@midwayjs/decorator';
+import {Inject, Pipeline, Provide, Scope, ScopeEnum} from '@midwayjs/decorator';
 import {IPipelineHandler} from '@midwayjs/core';
 import {
     AccountInfo,
@@ -14,10 +14,14 @@ import {first} from 'lodash';
 import {IPipelineResult} from '@midwayjs/core/dist/features/pipeline';
 import {ApplicationError} from 'egg-freelog-base';
 import {InjectEntityModel, Repository} from '../index';
+import {TransactionHelper} from '../extend/transaction-helper';
 
 @Provide()
 @Scope(ScopeEnum.Singleton)
 export class TransactionCoreService {
+
+    @Inject()
+    transactionHelper: TransactionHelper;
 
     @InjectEntityModel(AccountInfo)
     accountRepository: Repository<AccountInfo>;
@@ -52,16 +56,22 @@ export class TransactionCoreService {
      * @param fromAccount
      * @param toAccount
      * @param transactionAmount
+     * @param outsideTransactionId
      * @param signature
      * @param digest
      * @param remark
      */
-    async organizationAccountTransfer(fromAccount: AccountInfo, toAccount: AccountInfo, transactionAmount: number, signature: string, digest?: string, remark?: string): Promise<TransactionDetailInfo> {
+    async organizationAccountTransfer(fromAccount: AccountInfo, toAccount: AccountInfo, transactionAmount: number, outsideTransactionId: string, signature: string, digest?: string, remark?: string): Promise<TransactionDetailInfo> {
         const args: any = {
             fromAccount, toAccount, transactionAmount, digest, remark, signature,
             transactionHandleType: TransactionHandleTypeEnum.ForthwithTransfer
         };
-        args.signText = `fromAccountId_${fromAccount.accountId}_toAccountId_${toAccount.accountId}_transactionAmount_${transactionAmount}`;
+        const signatureData = {
+            transactionAmount, outsideTransactionId,
+            toAccountId: toAccount.accountId,
+            fromAccountId: fromAccount.accountId,
+        };
+        args.signText = this.transactionHelper.generateSignatureText(signatureData, '=');
         args.transactionAuthorizationResult = await this.transactionAuthorizationAndAccountCheck(args);
         const transactionResult = await this.execTransaction(args);
         if (!transactionResult.success) {

@@ -124,19 +124,20 @@ export class TransactionInfoController {
 
     // 组织账户转账
     @Post('/organizationTransfer')
-    @visitorIdentityValidator(IdentityTypeEnum.LoginUser)
+    @visitorIdentityValidator(IdentityTypeEnum.InternalClient)
     async organizationTransfer() {
         const {ctx} = this;
         const fromAccountId = ctx.checkBody('fromAccountId').exist().value;
         const toAccountId = ctx.checkBody('toAccountId').exist().value;
         const transactionAmount = ctx.checkBody('transactionAmount').toFloat().gt(0).value;
         const signature = ctx.checkBody('signature').exist().value;
+        const outsideTransactionId = ctx.checkBody('outsideTransactionId').exist().len(8, 128).value;
         const remark = ctx.checkBody('remark').optional().type('string').len(0, 200).value;
         const digest = ctx.checkBody('digest').optional().type('string').len(0, 200).value;
         ctx.validateParams();
 
         // 签约文本构成格式 (私钥进行签名)
-        // signText = `fromAccountId_${fromAccount.accountId}_toAccountId_${toAccount.accountId}_transactionAmount_${transactionAmount}`;
+        // signText = `fromAccountId_${fromAccount.accountId}_toAccountId_${toAccount.accountId}_transactionAmount_${transactionAmount}_outsideTransactionId_${outsideTransactionId}`;
         const accounts = await this.accountService.findByIds([fromAccountId, toAccountId]);
         const toAccount = accounts.find(x => x.accountId === toAccountId);
         const fromAccount = accounts.find(x => x.accountId === fromAccountId);
@@ -144,7 +145,7 @@ export class TransactionInfoController {
             throw new ArgumentError('参数校验失败');
         }
 
-        return this.transactionService.organizationAccountTransfer(fromAccount, toAccount, transactionAmount, signature, digest, remark);
+        return this.transactionService.organizationAccountTransfer(fromAccount, toAccount, transactionAmount, outsideTransactionId, signature, digest, remark);
     }
 
     // 测试代币交易签名
@@ -154,13 +155,14 @@ export class TransactionInfoController {
         const {ctx} = this;
         const userId = ctx.checkBody('userId').exist().isUserId().toInt().value;
         const transactionAmount = ctx.checkBody('transactionAmount').toFloat().gt(0).value;
+        const outsideTransactionId = ctx.checkBody('outsideTransactionId').exist().len(8, 128).value;
         ctx.validateParams();
 
         const toAccount = await this.accountService.getAccountInfo(userId.toString(), AccountTypeEnum.IndividualAccount);
         if (!toAccount) {
             throw new ArgumentError('参数校验失败');
         }
-        const signature = await this.transactionService.testTokenTransferSignature(toAccount, transactionAmount);
+        const signature = await this.transactionService.testTokenTransferSignature(toAccount, transactionAmount, outsideTransactionId);
         return {signature};
     }
 }

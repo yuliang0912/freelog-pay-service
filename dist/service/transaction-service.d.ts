@@ -4,11 +4,13 @@ import { FreelogContext } from 'egg-freelog-base';
 import { TransactionCoreService } from '../transaction-core-service';
 import { AccountService } from './account-service';
 import { RsaHelper } from '../extend/rsa-helper';
+import { TransactionHelper } from '../extend/transaction-helper';
 export declare class TransactionService extends BaseService<TransactionDetailInfo> {
     ctx: FreelogContext;
     rsaHelper: RsaHelper;
     transactionCoreService: TransactionCoreService;
     accountService: AccountService;
+    transactionHelper: TransactionHelper;
     transactionRecordRepository: Repository<TransactionRecordInfo>;
     transactionDetailRepository: Repository<TransactionDetailInfo>;
     constructorBaseService(): void;
@@ -26,11 +28,12 @@ export declare class TransactionService extends BaseService<TransactionDetailInf
      * @param fromAccount
      * @param toAccount
      * @param transactionAmount
+     * @param outsideTransactionId
      * @param signature
      * @param digest
      * @param remark
      */
-    organizationAccountTransfer(fromAccount: AccountInfo, toAccount: AccountInfo, transactionAmount: number, signature: string, digest?: string, remark?: string): Promise<TransactionDetailInfo>;
+    organizationAccountTransfer(fromAccount: AccountInfo, toAccount: AccountInfo, transactionAmount: number, outsideTransactionId: string, signature: string, digest?: string, remark?: string): Promise<TransactionDetailInfo>;
     /**
      * 待确认的合约支付
      * @param fromAccount
@@ -59,6 +62,7 @@ export declare class TransactionService extends BaseService<TransactionDetailInf
      * 测试代币转账(领取)
      * @param toAccountInfo
      * @param transactionAmount
+     * @param outsideTransactionId
      */
-    testTokenTransferSignature(toAccountInfo: AccountInfo, transactionAmount: number): Promise<string>;
+    testTokenTransferSignature(toAccountInfo: AccountInfo, transactionAmount: number, outsideTransactionId: string): Promise<string>;
 }

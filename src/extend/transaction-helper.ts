@@ -1,10 +1,10 @@
 import {Provide, Scope, ScopeEnum} from '@midwayjs/decorator';
 import * as Snowflake from '@axihe/snowflake';
-import {pick, random} from 'lodash';
+import {pick, random, isObject, isEqual} from 'lodash';
 import {TransactionDetailInfo, TransactionRecordInfo} from '..';
 import {hmacSha1, md5} from 'egg-freelog-base/lib/crypto-helper';
 import {v4} from 'uuid';
-import {ApplicationError} from 'egg-freelog-base';
+import {ApplicationError, ArgumentError} from 'egg-freelog-base';
 
 @Provide()
 @Scope(ScopeEnum.Singleton)
@@ -31,6 +31,19 @@ export class TransactionHelper {
      */
     generateSaltValue(): string {
         return (v4() + v4()).replace(/-/g, '');
+    }
+
+    /**
+     * 生成签名文本
+     * @param signatureData
+     * @param keyValueSeparator
+     * @param keySeparator
+     */
+    generateSignatureText(signatureData: object, keyValueSeparator = '=', keySeparator = '_'): string {
+        if (!isObject(signatureData) || isEqual(signatureData, {})) {
+            throw new ArgumentError('参数signatureData不是一个有效对象');
+        }
+        return Object.keys(signatureData).sort().map(key => `${key}${keyValueSeparator}${signatureData[key]}`).join(keySeparator);
     }
 
     /**

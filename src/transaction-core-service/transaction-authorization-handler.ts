@@ -107,7 +107,7 @@ export class TransactionAuthorizationHandler implements IValveHandler {
     }
 
     /**
-     * 合同授权检查(合同的交易发出方需要对请求的数据进行签名,然后合约服务会使用公钥对签名进行校验)
+     * 组织账户授权检查(组织账号交易发出方需要对请求的数据进行签名,然后合约服务会使用公钥对签名进行校验)
      * @param args
      */
     organizationAccountAuthorizationCheck(args: { fromAccount: AccountInfo, signText: string, signature: string }): TransactionAuthorizationResult {

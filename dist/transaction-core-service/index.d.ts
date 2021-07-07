@@ -1,7 +1,9 @@
 import { AccountInfo, ContractTransactionInfo, TransactionRecordInfo, TransactionDetailInfo } from '..';
 import { UserInfo } from '../interface';
 import { Repository } from '../index';
+import { TransactionHelper } from '../extend/transaction-helper';
 export declare class TransactionCoreService {
+    transactionHelper: TransactionHelper;
     accountRepository: Repository<AccountInfo>;
     private transactionStages;
     /**
@@ -19,11 +21,12 @@ export declare class TransactionCoreService {
      * @param fromAccount
      * @param toAccount
      * @param transactionAmount
+     * @param outsideTransactionId
      * @param signature
      * @param digest
      * @param remark
      */
-    organizationAccountTransfer(fromAccount: AccountInfo, toAccount: AccountInfo, transactionAmount: number, signature: string, digest?: string, remark?: string): Promise<TransactionDetailInfo>;
+    organizationAccountTransfer(fromAccount: AccountInfo, toAccount: AccountInfo, transactionAmount: number, outsideTransactionId: string, signature: string, digest?: string, remark?: string): Promise<TransactionDetailInfo>;
     /**
      * 待确认的合约支付
      * @param userInfo

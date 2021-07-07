@@ -28,7 +28,7 @@ export declare class RsaHelper {
      */
     publicKeyDecrypt(text: string, encoding?: string): string;
     /**
-     * 公钥加密
+     * 私钥加密
      * @param text
      * @param encoding
      * @param sourceEncoding

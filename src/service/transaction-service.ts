@@ -15,6 +15,7 @@ import {TransactionCoreService} from '../transaction-core-service';
 import {AccountService} from './account-service';
 import {testFreelogOrganizationInfo} from '../mock-data/test-freelog-organization-info';
 import {RsaHelper} from '../extend/rsa-helper';
+import {TransactionHelper} from '../extend/transaction-helper';
 
 @Provide()
 export class TransactionService extends BaseService<TransactionDetailInfo> {
@@ -27,6 +28,9 @@ export class TransactionService extends BaseService<TransactionDetailInfo> {
     transactionCoreService: TransactionCoreService;
     @Inject()
     accountService: AccountService;
+    @Inject()
+    transactionHelper: TransactionHelper;
+
     @InjectEntityModel(TransactionRecordInfo)
     transactionRecordRepository: Repository<TransactionRecordInfo>;
     @InjectEntityModel(TransactionDetailInfo)
@@ -61,18 +65,19 @@ export class TransactionService extends BaseService<TransactionDetailInfo> {
      * @param fromAccount
      * @param toAccount
      * @param transactionAmount
+     * @param outsideTransactionId
      * @param signature
      * @param digest
      * @param remark
      */
-    async organizationAccountTransfer(fromAccount: AccountInfo, toAccount: AccountInfo, transactionAmount: number, signature: string, digest?: string, remark?: string) {
+    async organizationAccountTransfer(fromAccount: AccountInfo, toAccount: AccountInfo, transactionAmount: number, outsideTransactionId: string, signature: string, digest?: string, remark?: string) {
         if (!fromAccount || !toAccount || !signature) {
             throw new ArgumentError('参数校验失败');
         }
         if (fromAccount.accountType !== AccountTypeEnum.OrganizationAccount) {
             throw new LogicError('账号类型校验失败');
         }
-        return this.transactionCoreService.organizationAccountTransfer(fromAccount, toAccount, transactionAmount, signature, digest, remark);
+        return this.transactionCoreService.organizationAccountTransfer(fromAccount, toAccount, transactionAmount, outsideTransactionId, signature, digest, remark);
     }
 
     /**
@@ -124,8 +129,9 @@ export class TransactionService extends BaseService<TransactionDetailInfo> {
      * 测试代币转账(领取)
      * @param toAccountInfo
      * @param transactionAmount
+     * @param outsideTransactionId
      */
-    async testTokenTransferSignature(toAccountInfo: AccountInfo, transactionAmount: number): Promise<string> {
+    async testTokenTransferSignature(toAccountInfo: AccountInfo, transactionAmount: number, outsideTransactionId: string): Promise<string> {
         let fromAccount = await this.accountService.findOne({
             ownerId: testFreelogOrganizationInfo.organizationId.toString(),
             accountType: AccountTypeEnum.OrganizationAccount
@@ -133,7 +139,12 @@ export class TransactionService extends BaseService<TransactionDetailInfo> {
         if (!fromAccount) {
             fromAccount = await this.accountService.createOrganizationAccount();
         }
-        const signText = `fromAccountId_${fromAccount.accountId}_toAccountId_${toAccountInfo.accountId}_transactionAmount_${transactionAmount}`;
+        const signatureData = {
+            transactionAmount, outsideTransactionId,
+            toAccountId: toAccountInfo.accountId,
+            fromAccountId: fromAccount.accountId,
+        };
+        const signText = this.transactionHelper.generateSignatureText(signatureData, '=');
         const nodeRsaHelper = this.rsaHelper.build(null, testFreelogOrganizationInfo.privateKey);
         return nodeRsaHelper.sign(signText);
     }

@@ -15,6 +15,13 @@ export declare class TransactionHelper {
      */
     generateSaltValue(): string;
     /**
+     * 生成签名文本
+     * @param signatureData
+     * @param keyValueSeparator
+     * @param keySeparator
+     */
+    generateSignatureText(signatureData: object, keyValueSeparator?: string, keySeparator?: string): string;
+    /**
      * 交易记录签名
      * @param transactionRecordInfo
      */

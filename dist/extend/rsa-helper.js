@@ -68,7 +68,7 @@ let RsaHelper = class RsaHelper {
         return this.nodeRSA.decryptPublic(text, encoding);
     }
     /**
-     * 公钥加密
+     * 私钥加密
      * @param text
      * @param encoding
      * @param sourceEncoding

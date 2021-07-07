@@ -65,7 +65,7 @@ export class RsaHelper {
     }
 
     /**
-     * 公钥加密
+     * 私钥加密
      * @param text
      * @param encoding
      * @param sourceEncoding

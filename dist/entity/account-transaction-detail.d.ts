@@ -1,3 +1,4 @@
+/// <reference types="lodash" />
 import { AccountTypeEnum, TransactionStatusEnum, TransactionTypeEnum } from '../enum';
 import { TransactionAttachInfo } from '..';
 /**
@@ -87,5 +88,5 @@ export declare class TransactionDetailInfo {
     /**
      * 自定义序列化
      */
-    toJSON(this: TransactionDetailInfo): Pick<TransactionDetailInfo, "createDate" | "updateDate" | "accountId" | "accountName" | "accountType" | "status" | "toJSON" | "reciprocalAccountId" | "reciprocalAccountType" | "reciprocalAccountName" | "transactionAmount" | "transactionType" | "digest" | "attachInfo" | "remark" | "serialNo" | "transactionRecordId" | "beforeBalance" | "afterBalance">;
+    toJSON(this: TransactionDetailInfo): import("lodash").Omit<TransactionDetailInfo, "saltValue" | "signature">;
 }

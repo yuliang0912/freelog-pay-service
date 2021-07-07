@@ -1,3 +1,4 @@
+/// <reference types="lodash" />
 import { AccountTypeEnum } from '../enum';
 /**
  * 平台代币账户
@@ -62,5 +63,5 @@ export declare class AccountInfo {
     /**
      * 自定义序列化
      */
-    toJSON(this: AccountInfo): Pick<AccountInfo, "createDate" | "updateDate" | "accountId" | "accountName" | "accountType" | "ownerId" | "ownerName" | "ownerUserId" | "balance" | "freezeBalance" | "status" | "toJSON">;
+    toJSON(this: AccountInfo): import("lodash").Omit<AccountInfo, "password" | "saltValue" | "signature">;
 }

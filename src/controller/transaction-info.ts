@@ -136,8 +136,8 @@ export class TransactionInfoController {
         const digest = ctx.checkBody('digest').optional().type('string').len(0, 200).value;
         ctx.validateParams();
 
-        // 签约文本构成格式 (私钥进行签名)
-        // signText = `fromAccountId_${fromAccount.accountId}_toAccountId_${toAccount.accountId}_transactionAmount_${transactionAmount}_outsideTransactionId_${outsideTransactionId}`;
+        // 签约文本构成格式 (私钥进行签名),具体参考transactionHelper.generateSignatureText()函数
+
         const accounts = await this.accountService.findByIds([fromAccountId, toAccountId]);
         const toAccount = accounts.find(x => x.accountId === toAccountId);
         const fromAccount = accounts.find(x => x.accountId === fromAccountId);
